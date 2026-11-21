@@ -32,8 +32,6 @@ const en = {
   truckOrder: 'Order',
   truckOrderTitle: (thing: string) => `${thing} · order`,
   truckControls: 'WASD: walk · mouse: look · E or click: use · L: Data Lens · Esc: menu',
-  truckStart: 'Click to look around',
-  truckStartHint: 'WASD to walk, the mouse to look. Aim at something and press E.',
   truckAnswerAt: (where: string) => `Answer ${where} (aim + E)`,
   truckWhere: {
     tablet: 'on the tablet',
@@ -178,8 +176,6 @@ const id: UiText = {
   truckOrder: 'Pesanan',
   truckOrderTitle: (thing: string) => `${thing} · pesanan`,
   truckControls: 'WASD: jalan · mouse: melihat · E atau klik: pakai · L: Data Lens · Esc: menu',
-  truckStart: 'Klik untuk melihat sekeliling',
-  truckStartHint: 'WASD untuk berjalan, mouse untuk melihat. Bidik sesuatu lalu tekan E.',
   truckAnswerAt: (where: string) => `Jawab ${where} (bidik + E)`,
   truckWhere: {
     tablet: 'di tablet',

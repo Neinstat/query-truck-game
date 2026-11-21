@@ -198,12 +198,6 @@ export function TruckApp() {
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
           </>
         )}
-        {ready && !consoleOpen && !locked && !dayDone && !lens && !menuOpen && (
-          <div className="truck-start" aria-hidden="true">
-            <p className="truck-start-title">🖱 {t.truckStart}</p>
-            <p className="truck-start-hint">{t.truckStartHint}</p>
-          </div>
-        )}
         {front && order && anchor && !consoleOpen && !lens && !menuOpen && view.width > 0 && (
           <div
             className="order-bubble"

@@ -26,7 +26,7 @@ export const GUIDE: readonly GuidePage[] = [
     id: 'controls',
     icon: '🎮',
     title: 'Controls',
-    paragraphs: ['Click the view to start looking around with the mouse.'],
+    paragraphs: ['Just move the mouse to look around — no need to click first. Esc frees the mouse and pauses the game.'],
     items: [
       { icon: '⌨️', name: 'W A S D / arrows', text: 'Walk around inside the truck.' },
       { icon: '🖱', name: 'Mouse', text: 'Look around. Aim the dot in the middle at something.' },

@@ -977,30 +977,6 @@ body {
   white-space: nowrap;
 }
 
-.truck-start {
-  position: absolute;
-  left: 50%;
-  bottom: 12%;
-  transform: translateX(-50%);
-  padding: 0.6rem 1rem;
-  border: 2px solid #25304f;
-  border-radius: 8px;
-  background: rgba(244, 234, 213, 0.94);
-  color: #25304f;
-  text-align: center;
-  box-shadow: 3px 3px 0 #e4573d;
-  pointer-events: none;
-}
-
-.truck-start-title {
-  margin: 0;
-  font-weight: 700;
-}
-
-.truck-start-hint {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-}
 
 /* Look-around console (4.7): a line under the title explaining nothing is graded. */
 .explore-hint {

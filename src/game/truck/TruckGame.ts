@@ -152,7 +152,9 @@ export class TruckGame {
       bridge.on('lens', (on) => {
         this.lensOn = on;
         // The lens frees the mouse so its cards can be clicked; dragging still looks around.
+        // Turning it off captures the mouse again (no click needed).
         if (on && document.pointerLockElement) document.exitPointerLock();
+        if (!on && !this.paused) this.lockMouse();
       }),
       bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
@@ -165,7 +167,7 @@ export class TruckGame {
       }),
     );
     // The app may have stopped time before the game existed (e.g. the title screen is open).
-    this.setPaused(bridge.last('pause') ?? false);
+    this.paused = bridge.last('pause') ?? false;
     this.lensOn = bridge.last('lens') ?? false;
     this.loop(performance.now());
   }
@@ -215,7 +217,10 @@ export class TruckGame {
 
     const onMove = (e: MouseEvent) => {
       if (this.paused) return;
-      if (document.pointerLockElement === canvas || this.dragging) {
+      // Captured mouse, dragging, or — when the browser would not capture it — simply moving the
+      // mouse over the view: no click is ever needed to look around (Esc frees the mouse).
+      const free = !this.lensOn && e.target === canvas;
+      if (document.pointerLockElement === canvas || this.dragging || free) {
         this.yaw -= e.movementX * MOUSE_SENSITIVITY;
         this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * MOUSE_SENSITIVITY));
       }
@@ -226,10 +231,14 @@ export class TruckGame {
         this.use();
         return;
       }
-      // First click captures the mouse; until then, dragging looks around too. With the Data Lens
-      // on, the mouse stays free (to click its cards) and dragging is how you look around.
+      // The mouse is free (the browser refused to capture it, or the Data Lens is on): a click
+      // uses what is aimed at and tries to capture the mouse again. With the Data Lens on, the
+      // mouse stays free (to click its cards) and dragging is how you look around.
       this.dragging = true;
-      if (!this.lensOn) this.lockMouse();
+      if (!this.lensOn) {
+        this.lockMouse();
+        this.use();
+      }
       e.preventDefault();
     };
     const onUp = () => (this.dragging = false);
@@ -262,7 +271,11 @@ export class TruckGame {
   }
 
   private setPaused(paused: boolean): void {
+    const resuming = this.paused && !paused;
     this.paused = paused;
+    // Back from a console or a menu (just after the player's click or key): capture the mouse
+    // again straight away, so nobody has to click into the game first.
+    if (resuming && !this.lensOn) this.lockMouse();
     this.keys = { forward: false, back: false, left: false, right: false };
     this.dragging = false;
     if (paused && document.pointerLockElement) document.exitPointerLock();

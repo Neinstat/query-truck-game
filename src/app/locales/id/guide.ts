@@ -18,7 +18,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
     id: 'controls',
     icon: '🎮',
     title: 'Kontrol',
-    paragraphs: ['Klik layar untuk mulai melihat sekeliling dengan mouse.'],
+    paragraphs: ['Cukup gerakkan mouse untuk melihat sekeliling — tidak perlu klik dulu. Esc melepas mouse dan menjeda permainan.'],
     items: [
       { icon: '⌨️', name: 'W A S D / panah', text: 'Berjalan di dalam truck.' },
       { icon: '🖱', name: 'Mouse', text: 'Melihat sekeliling. Arahkan titik di tengah layar ke sebuah benda.' },
