@@ -16,8 +16,10 @@ with their source and licence. Earlier 2D art lives only in git history (see `do
 | Red espresso machine, wall clock, menu board, recipe binders | 🟥 Placeholder | Clock hands should follow the time of day |
 | Back door, spare apron | 🟥 Placeholder | |
 | Guide book on the back counter, "GUIDE ?" sign (text drawn in a canvas) | 🟥 Placeholder | |
-| Park: lawn, path, benches, picnic tables, lamps, string lights, trees, skyline, sun | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7) |
-| Customers (blocky people with swinging limbs, 5 looks in `looks.ts`) | 🟥 Placeholder | CC0 animated low-poly characters (walk, idle, happy, annoyed) |
+| Places (`scenery.ts`): park, skatepark under the overpass, behind the school, harbour pier, town square — ground, props, backdrops, moving cars, skater, ball, boats, gulls, fountain | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7); CC0 city/props kits later |
+| Rain (`rain.ts`): streaks, splash rings, lightning flashes | 🟨 Style chosen | |
+| Sound (`src/audio/sound.ts`): all synthesized | 🟨 Style chosen | Mixing levels to tune in a playtest; could be swapped for CC0 recordings |
+| Customers (`character.ts`: faceted heads, open jackets, hands; 5 looks in `looks.ts`) | 🟨 Style chosen | CC0 animated low-poly characters (walk, idle, happy, annoyed) |
 | The Manager (suit, red tie, glasses, report tablet) | 🟥 Placeholder | |
 | Crosshair, aim label, speech bubble (HTML) | 🟨 Style chosen | |
 | Data Lens: blueprint mode in the shader, table cards (HTML) | 🟨 Style chosen | Cards may need a smarter layout when several overlap |

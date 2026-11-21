@@ -34,7 +34,7 @@ CREATE TABLE inventory (
 `;
 
 const SUPPLIERS = [
-  [1, 'Valley Dairy', 'milk', '06:00', 1.1, 'L', '2019-03-01', '2026-09-30'],
+  [1, 'Meadow Dairy', 'milk', '06:00', 1.1, 'L', '2019-03-01', '2026-09-30'],
   [2, 'Highland Dairy', 'milk', '12:00', 0.85, 'L', '2026-10-01', null],
   [3, 'Hillside Roasters', 'coffee beans', '07:00', 18.5, 'kg', '2020-05-01', null],
   [4, 'Mill & Grain', 'flour', '08:00', 1.2, 'kg', '2018-01-15', null],
@@ -65,7 +65,7 @@ export function stockSeedSql(): string {
     const d = new Date(t);
     const day = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
     const october = d.getUTCMonth() === 9;
-    // Milk: Valley Dairy at 6:00 until September; Highland Dairy at noon from October.
+    // Milk: Meadow Dairy at 6:00 until September; Highland Dairy at noon from October.
     const soldOut = shortMilkDays.includes(day) ? `07:${pad(5 + Math.floor(rand() * 50))}` : null;
     rows.push(
       [++id, sql(day), "'milk'", october ? 2 : 1, 40, "'L'", october ? "'12:00'" : "'06:00'", sql(soldOut)].join(', '),

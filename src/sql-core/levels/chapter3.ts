@@ -244,7 +244,7 @@ export const chapter3: Chapter = {
           },
         },
         {
-          prompt: "The Regular says Tuesday is market day — the whole valley is at the market. What's the best idea?",
+          prompt: "The Regular says Tuesday is market day — the whole town is at the market. What's the best idea?",
           answer: {
             kind: 'choice',
             choices: [

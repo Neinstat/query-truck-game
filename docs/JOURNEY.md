@@ -1,6 +1,6 @@
-# The Design Journey of SQL Valley
+# The Design Journey of Query Truck
 
-How SQL Valley changed from a **top-down 2D café** into a **first-person 3D food truck in a risograph style**: every stage, what was built, why it changed, and what we learned. Written on 17 November 2026, when the 3D version was locked in.
+How Query Truck changed from a **top-down 2D café** into a **first-person 3D food truck in a risograph style**: every stage, what was built, why it changed, and what we learned. Written on 17 November 2026, when the 3D version was locked in.
 
 > Every old version can still be opened from git:
 > - `git checkout v1-cafe-mvp` — the top-down café (v1 MVP, Phases 1–3)
@@ -108,6 +108,14 @@ The signature look is the **risograph shader**: the scene is rendered with big p
 - Recent Three.js versions use **physical light units**: light intensities must be multiplied by π, or everything renders far too dark.
 - Ink colours must be used **exactly as written** (no sRGB → linear conversion) in both the scene and the shader. Otherwise colours map to the wrong ink and everything turns green.
 - All the 3D code is only **127 KB** gzipped.
+
+---
+
+## 5.2c · Query Truck: a new place every day
+
+On 21 Nov 2026 the owner first asked for a cyberpunk restyle (a neon city in the rain). It was built and then reverted the same evening: low-poly shapes felt too plain for cyberpunk, which needs a lot of detail. The owner's own fix for a view that could get boring was better: **the truck parks somewhere new every day** — the park, a skatepark under the overpass, behind the school, the harbour pier, the town square. The rain and the synthesized sound from the restyle were kept, the people were rebuilt with big faceted heads, sunglasses and open jackets after a reference picture, and the game got its name: **Query Truck**.
+
+![A skatepark under the overpass: ramps, graffiti pillars and a skater](journey/v2-5-2c-skatepark.jpg)
 
 ---
 

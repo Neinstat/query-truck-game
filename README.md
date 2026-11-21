@@ -1,6 +1,6 @@
-# SQL Valley
+# Query Truck
 
-A first-person 3D game for learning SQL: you run a food truck in a city park, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.
+A first-person 3D game for learning SQL: you run a food truck that parks somewhere new in the city every day, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.
 
 ![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
 
@@ -9,11 +9,11 @@ A first-person 3D game for learning SQL: you run a food truck in a city park, an
 - **SQLBolt** has a great, easy-to-follow learning curve, but it isn't very interactive or fun.
 - **LeetCode** is interactive, but many of its case-study problems jump too far in difficulty for beginners.
 
-SQL Valley sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
+Query Truck sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
 
 ## The concept
 
-You are the new hire at **Rolling Roast**, a coffee food truck parked in a city park. Customers walk up the park path and queue at your window. Each one asks for something ("what can I get for under $3?", "which coffees can I actually order today?"), and you answer by writing SQL on the truck's tablet. Later, **The Manager** in a suit knocks on the back door with harder questions: sales this month, what keeps selling out, why revenue dropped.
+You are the new hire at **Query Truck**, a coffee food truck that parks somewhere new every day: the city park, a skatepark under the overpass, behind the school, the harbour pier, the town square. Customers walk up and queue at your window, sometimes in the rain. Each one asks for something ("what can I get for under $3?", "which coffees can I actually order today?"), and you answer by writing SQL on the truck's tablet. Later, **The Manager** in a suit knocks on the back door with harder questions: sales this month, what keeps selling out, why revenue dropped.
 
 - Runs entirely in the browser: real **PostgreSQL** via PGlite, no backend
 - From `SELECT` to `JOIN`s, aggregation and real analysis cases

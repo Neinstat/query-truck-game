@@ -29,7 +29,7 @@ describe('stock ledger', () => {
       "SELECT name, delivery_time, since FROM suppliers WHERE product = 'milk' ORDER BY since;",
     );
     expect(milk).toEqual([
-      { name: 'Valley Dairy', delivery_time: '06:00:00', since: '2019-03-01' },
+      { name: 'Meadow Dairy', delivery_time: '06:00:00', since: '2019-03-01' },
       { name: 'Highland Dairy', delivery_time: '12:00:00', since: '2026-10-01' },
     ]);
     const late = await rows<{ n: number }>(

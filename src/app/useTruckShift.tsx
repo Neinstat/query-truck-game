@@ -24,13 +24,26 @@ import { getDayDatabase } from './database';
  * - any other object with data opens a "look around" console on its own tables, ungraded;
  * - the back door has nothing yet (The Manager comes in 4.11).
  */
-const DAY_KEY = 'sql-valley.truck-day';
+const DAY_KEY = 'query-truck.truck-day';
 /** Every finished day, oldest first: their sales are replayed, and mastery is worked out from them. */
-const PAST_KEY = 'sql-valley.truck-past';
+const PAST_KEY = 'query-truck.truck-past';
+
+/** The keys the game saved under before it was called Query Truck. */
+export function legacyKey(key: string): string {
+  return key.replace(/^query-truck\./, 'sql-valley.');
+}
 
 function read(key: string): string | null {
   try {
-    return localStorage.getItem(key);
+    // Saves from before the rename are moved over once, so nobody loses their progress.
+    const saved = localStorage.getItem(key);
+    if (saved !== null) return saved;
+    const old = localStorage.getItem(legacyKey(key));
+    if (old !== null) {
+      localStorage.setItem(key, old);
+      localStorage.removeItem(legacyKey(key));
+    }
+    return old;
   } catch {
     return null;
   }
@@ -72,7 +85,7 @@ export function startNextDay(past: readonly DayLog[], day: DayLog): void {
 }
 
 /** Set before a reload into a new or restarted day: go straight back into the truck, no title. */
-export const SKIP_TITLE_KEY = 'sql-valley.skip-title';
+export const SKIP_TITLE_KEY = 'query-truck.skip-title';
 const skipTitleNextLoad = () => {
   try {
     sessionStorage.setItem(SKIP_TITLE_KEY, '1');

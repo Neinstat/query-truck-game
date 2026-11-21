@@ -337,13 +337,14 @@ const id: UiText = {
 
 export const ui: Record<Lang, UiText> = { en, id };
 
-const STORAGE_KEY = 'sql-valley.lang';
+const STORAGE_KEY = 'query-truck.lang';
 
 /** The player's language, remembered in this browser. */
 export function useLang(): [Lang, (lang: Lang) => void] {
   const [lang, setLangState] = useState<Lang>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      // Also the key from before the game was called Query Truck.
+      const saved = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem('sql-valley.lang');
       return saved === 'id' || saved === 'en' ? saved : 'en';
     } catch {
       return 'en';

@@ -28,7 +28,7 @@ export const chapter5Id: ChapterTranslation = {
         'SELECT name, product, delivery_time FROM suppliers ORDER BY delivery_time;',
       ],
       success:
-        'Valley Dairy jam enam, pemanggang kopi jam tujuh… dan pemasok susu baru, Highland Dairy, jam dua belas siang. Lebih murah, kata Nenek. Kita lihat saja.',
+        'Meadow Dairy jam enam, pemanggang kopi jam tujuh… dan pemasok susu baru, Highland Dairy, jam dua belas siang. Lebih murah, kata Nenek. Kita lihat saja.',
     },
     'ch5-2': {
       title: 'Papan Bulanan',
@@ -110,7 +110,7 @@ export const chapter5Id: ChapterTranslation = {
         "SELECT day, delivered_at, sold_out_at FROM inventory WHERE ingredient = 'milk' AND day >= '2026-09-25' ORDER BY day;",
       ],
       success:
-        'Susunya! Menghemat beberapa sen per liter membuat Nenek kehilangan seperlima penjualan. Besok pagi Nenek langsung menelepon Valley Dairy. Terima kasih, Nak — Kakek pasti sangat bangga padamu.',
+        'Susunya! Menghemat beberapa sen per liter membuat Nenek kehilangan seperlima penjualan. Besok pagi Nenek langsung menelepon Meadow Dairy. Terima kasih, Nak — Kakek pasti sangat bangga padamu.',
     },
   },
 };

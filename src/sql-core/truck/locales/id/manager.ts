@@ -6,7 +6,7 @@ export const MANAGER_CASE_ID: LevelText = {
   title: 'Angka. Sekarang.',
   dialogue: [
     '*Tok tok.*',
-    'Valley Eats Co., manajer wilayah. Saya tidak suka basa-basi.',
+    'Query Truck Co., manajer wilayah. Saya tidak suka basa-basi.',
     'Tiga angka sebelum saya pergi: berapa pesanan hari ini, berapa pendapatan hari ini, dan channel terbaik kita bulan lalu.',
     'Sematkan buktinya. Saya tidak percaya perasaan. Saya percaya baris data.',
   ],
@@ -28,7 +28,7 @@ export const MANAGER_CASE_ID: LevelText = {
 export const MANAGER_INTRO_ID: ManagerIntro = {
   lines: [
     '*Tok tok.*',
-    'Valley Eats Co., manajer wilayah. Saya tidak suka basa-basi.',
+    'Query Truck Co., manajer wilayah. Saya tidak suka basa-basi.',
     'Tiga angka sebelum saya pergi: berapa pesanan hari ini, berapa pendapatan hari ini, dan channel terbaik kita bulan lalu.',
   ],
   replies: [

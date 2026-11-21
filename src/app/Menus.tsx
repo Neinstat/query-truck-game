@@ -84,7 +84,9 @@ export function TitleScreen(props: {
         <h1 className="title-name">Query Truck</h1>
         <p className="title-tagline">{t.titleTagline}</p>
         <p className="title-place">
-          <span aria-hidden="true">{place.icon}</span> {t.todayAt} <strong>{place.name[lang]}</strong>
+          <span>
+            <span aria-hidden="true">{place.icon}</span> {t.todayAt} <strong>{place.name[lang]}</strong>
+          </span>
           <span className="title-place-blurb">{place.blurb[lang]}</span>
         </p>
         {ready ? (

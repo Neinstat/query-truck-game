@@ -4,7 +4,7 @@
  * and testable). GAME_DESIGN.md §11.
  *
  * Period: 1 August – 31 October 2026. Hidden patterns, each found later with SQL:
- * - Tuesdays are quiet: it's market day in the valley, so fewer orders (but normal-sized ones).
+ * - Tuesdays are quiet: it's market day in town, so fewer orders (but normal-sized ones).
  *   → Chapter 3 Mini Case "The Quiet Day".
  * - Four regulars came for Grandma's Secret Cake. It was taken off the menu after August,
  *   and those four never came back. → Chapter 4 Mini Case "Where Did the Regulars Go?".

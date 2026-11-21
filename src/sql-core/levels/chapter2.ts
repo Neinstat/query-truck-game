@@ -78,7 +78,7 @@ export const chapter2: Chapter = {
         example: 'SELECT DISTINCT is_available FROM menu_items;',
       },
       dialogue: [
-        "I'm writing about this café for the valley newsletter. Best coffee in the valley, of course.",
+        "I'm writing about this café for the town newsletter. Best coffee in town, of course.",
         'What kinds of things do you sell? Just the categories, each one once.',
       ],
       task: 'Show every category on the menu, each one only once.',

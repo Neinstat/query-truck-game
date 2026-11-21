@@ -38,7 +38,7 @@ export const chapter5: Chapter = {
         'SELECT name, product, delivery_time FROM suppliers ORDER BY delivery_time;',
       ],
       success:
-        "Valley Dairy at six, the roasters at seven… and the new milk people, Highland Dairy, at noon. Cheaper, Grandma said. We'll see.",
+        "Meadow Dairy at six, the roasters at seven… and the new milk people, Highland Dairy, at noon. Cheaper, Grandma said. We'll see.",
     },
     {
       id: 'ch5-2',
@@ -189,7 +189,7 @@ export const chapter5: Chapter = {
         "SELECT day, delivered_at, sold_out_at FROM inventory WHERE ingredient = 'milk' AND day >= '2026-09-25' ORDER BY day;",
       ],
       success:
-        "The milk! Saving a few cents a litre cost me a fifth of my sales. I'm calling Valley Dairy first thing tomorrow. Thank you, dear — Grandpa would be so proud of you.",
+        "The milk! Saving a few cents a litre cost me a fifth of my sales. I'm calling Meadow Dairy first thing tomorrow. Thank you, dear — Grandpa would be so proud of you.",
     },
   ],
 };

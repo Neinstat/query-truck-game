@@ -25,7 +25,7 @@ export type ManagerIntro = {
 export const MANAGER_INTRO: ManagerIntro = {
   lines: [
     '*Knock knock.*',
-    "Valley Eats Co., regional manager. I don't do small talk.",
+    "Query Truck Co., regional manager. I don't do small talk.",
     'Three numbers before I leave: how many orders today, how much revenue today, and our best channel last month.',
   ],
   replies: [
@@ -86,7 +86,7 @@ export async function buildManagerCase(db: CafeDatabase, date: string): Promise<
     station: 'back-office',
     dialogue: [
       '*Knock knock.*',
-      "Valley Eats Co., regional manager. I don't do small talk.",
+      "Query Truck Co., regional manager. I don't do small talk.",
       'Three numbers before I leave: how many orders today, how much revenue today, and our best channel last month.',
       "Pin your proof. I don't trust feelings. I trust rows.",
     ],
