@@ -18,7 +18,8 @@ import { inkColour } from './colour';
 import type { LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { buildCustomer, buildManager, buildPark, buildTruck, type CustomerModel } from './build';
-import { RisoPass } from './risoPass';
+import { LookPass } from './lookPass';
+import { skyAt } from './sky';
 import {
   aimedInteractable,
   EYE_Y,
@@ -34,8 +35,8 @@ import {
   type InteractableId,
 } from './world';
 
-/** About this many screen pixels per scene pixel: big riso pixels, light on the GPU. */
-const TARGET_LINES = 300;
+/** Sharp on high-density screens, but never more than 2× (light on the GPU). */
+const MAX_PIXEL_RATIO = 2;
 const MOUSE_SENSITIVITY = 0.0024;
 const MAX_PITCH = 1.25;
 /** Seconds for the Data Lens to dissolve in or out. */
@@ -50,7 +51,13 @@ export class TruckGame {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(70, 16 / 9, 0.05, 120);
-  private readonly riso = new RisoPass();
+  private readonly look = new LookPass();
+  private readonly ambient = new THREE.AmbientLight(0xffffff, 0.8 * Math.PI);
+  private readonly sun = new THREE.DirectionalLight(0xffffff, 0.4 * Math.PI);
+  /** A warm light inside the truck that comes on as it gets dark. */
+  private readonly inside = new THREE.PointLight(0xffd9a0, 0, 7, 1.2);
+  private setSky: (sky: ReturnType<typeof skyAt>) => void = () => {};
+  private lastSkyMinute = -1;
   private readonly observer: ResizeObserver;
   private readonly offs: (() => void)[] = [];
   private frame = 0;
@@ -105,21 +112,21 @@ export class TruckGame {
     // Colours are used exactly as written (colour.ts); no conversion on output either.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-    this.renderer.setPixelRatio(1);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
     this.renderer.domElement.className = 'truck-canvas';
     parent.appendChild(this.renderer.domElement);
 
     this.scene.background = inkColour('peach');
     this.scene.fog = new THREE.Fog(inkColour('lilac'), 18, 80);
-    // Neutral light so every ink keeps its own colour; shading then dithers towards darker inks.
-    // (Three.js lights are physical: × π gives a surface its own colour at full light.)
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.8 * Math.PI));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.4 * Math.PI);
-    sun.position.set(-4, 9, -6);
-    this.scene.add(sun);
+    // Neutral light so every colour stays itself at full light; the sky (sky.ts) changes the
+    // light's colour and strength over the day. (Three.js lights are physical: × π gives a
+    // surface its own colour at full light.)
+    this.scene.add(this.ambient, this.sun);
     const fill = new THREE.DirectionalLight(0xffffff, 0.15 * Math.PI);
     fill.position.set(3, 4, 8);
     this.scene.add(fill);
+    this.inside.position.set(0, TRUCK.height - 0.15, 0);
+    this.scene.add(this.inside);
     const truck = buildTruck();
     this.setWallClock = truck.userData.setClock as (minutes: number) => void;
     this.setWallClock(this.clock);
@@ -129,7 +136,10 @@ export class TruckGame {
     this.manager.position.set(TRUCK.length / 2 + 0.42, 0, 0.05);
     this.manager.rotation.y = Math.PI / 2;
     this.manager.visible = false;
-    this.scene.add(truck, buildPark(), this.manager);
+    const park = buildPark();
+    this.setSky = park.userData.setSky as typeof this.setSky;
+    this.scene.add(truck, park, this.manager);
+    this.applySky();
 
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(parent);
@@ -145,11 +155,18 @@ export class TruckGame {
         if (on && document.pointerLockElement) document.exitPointerLock();
       }),
       bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
+      // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
+      bridge.on('lock', () => {
+        if (!this.lensOn) this.lockMouse();
+      }),
       bridge.on('managerDone', () => {
         this.managerDone = true;
         this.knocking = false;
       }),
     );
+    // The app may have stopped time before the game existed (e.g. the title screen is open).
+    this.setPaused(bridge.last('pause') ?? false);
+    this.lensOn = bridge.last('lens') ?? false;
     this.loop(performance.now());
   }
 
@@ -163,8 +180,8 @@ export class TruckGame {
     this.renderer.domElement.style.height = '100%';
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    const scale = Math.max(1, Math.round(h / TARGET_LINES));
-    this.riso.setSize(Math.ceil(w / scale), Math.ceil(h / scale));
+    const ratio = this.renderer.getPixelRatio();
+    this.look.setSize(Math.round(w * ratio), Math.round(h * ratio), ratio);
   }
 
   private bindInput(): void {
@@ -212,7 +229,7 @@ export class TruckGame {
       // First click captures the mouse; until then, dragging looks around too. With the Data Lens
       // on, the mouse stays free (to click its cards) and dragging is how you look around.
       this.dragging = true;
-      if (!this.lensOn) canvas.requestPointerLock?.();
+      if (!this.lensOn) this.lockMouse();
       e.preventDefault();
     };
     const onUp = () => (this.dragging = false);
@@ -231,6 +248,19 @@ export class TruckGame {
     });
   }
 
+  /**
+   * Capture the mouse for looking around. Browsers may refuse (e.g. right after Esc, or in an
+   * embedded preview); then dragging still looks around and "click to look around" shows.
+   */
+  private lockMouse(): void {
+    try {
+      const result = this.renderer.domElement.requestPointerLock?.() as unknown;
+      if (result instanceof Promise) result.catch(() => {});
+    } catch {
+      // Refused: see above.
+    }
+  }
+
   private setPaused(paused: boolean): void {
     this.paused = paused;
     this.keys = { forward: false, back: false, left: false, right: false };
@@ -240,6 +270,23 @@ export class TruckGame {
 
   private use(): void {
     if (!this.paused && this.aimed) this.bridge.emit('use', this.aimed);
+  }
+
+  /** The sky, the sun and the lamps for the clock's time (changes once a game minute). */
+  private applySky(): void {
+    const minute = Math.floor(this.clock);
+    if (minute === this.lastSkyMinute) return;
+    this.lastSkyMinute = minute;
+    const sky = skyAt(this.clock);
+    (this.scene.background as THREE.Color).set(sky.sky);
+    this.scene.fog?.color.set(sky.sky);
+    this.ambient.intensity = sky.ambient * Math.PI;
+    this.sun.color.set(sky.sunColour);
+    this.sun.intensity = sky.sunLight * Math.PI;
+    const up = (Math.max(sky.elevation, 5) * Math.PI) / 180;
+    this.sun.position.set(sky.across * 10, Math.sin(up) * 10, -Math.cos(up) * 10);
+    this.inside.intensity = sky.lamps * 1.6 * Math.PI;
+    this.setSky(sky);
   }
 
   // ── Every frame ──────────────────────────────────────────────────────────────────────
@@ -274,12 +321,13 @@ export class TruckGame {
     // The lens dissolves in and out even while time is stopped (it is part of the interface).
     const lensStep = seconds / LENS_SECONDS;
     this.lensAmount = Math.min(1, Math.max(0, this.lensAmount + (this.lensOn ? lensStep : -lensStep)));
-    this.riso.setLens(this.lensAmount);
+    this.look.setLens(this.lensAmount);
     // The back door: opens for the Manager (even while time is stopped), rattles while they knock.
     this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget ? 1 : -1) * seconds * 2.2));
     this.setDoor(this.doorAmount, this.knocking && this.doorAmount === 0 ? this.walkClock : undefined);
     this.manager.visible = this.knocking && this.doorAmount > 0.02;
-    this.riso.render(this.renderer, this.scene, this.camera);
+    this.applySky();
+    this.look.render(this.renderer, this.scene, this.camera);
     this.emitAnchor();
     this.emitLensCards();
   }
@@ -424,7 +472,7 @@ export class TruckGame {
     this.observer.disconnect();
     this.offs.forEach((off) => off());
     if (document.pointerLockElement) document.exitPointerLock();
-    this.riso.dispose();
+    this.look.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

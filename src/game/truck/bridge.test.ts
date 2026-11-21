@@ -24,4 +24,12 @@ describe('TruckBridge', () => {
     bridge.emit('pause', false);
     expect(calls).toBe(3);
   });
+
+  it('remembers the last payload of each event for a listener that joins late', () => {
+    const bridge = new TruckBridge();
+    expect(bridge.last('pause')).toBeUndefined();
+    bridge.emit('pause', true);
+    bridge.emit('pause', false);
+    expect(bridge.last('pause')).toBe(false);
+  });
 });

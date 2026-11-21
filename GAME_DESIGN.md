@@ -62,7 +62,8 @@ A **completely fresh start** (owner's decision, 16 Nov 2026): v1's story (Grandm
 **Time and pressure (decided):**
 - **The clock stops while the tablet is open.** Writing SQL is never timed.
 - A customer's patience only drops while they wait in the queue, and **only affects the tip**. There is no losing. A customer who waits too long leaves without tipping, but their task comes back on another day.
-- One day takes about 8–12 real minutes (8–12 orders + 1 manager case). Built in 4.10: the clock runs at 0.7 game minutes per real second (≈ 10 minutes for 10:00–17:00), and **4× faster while nobody is waiting**, so there is no idle waiting.
+- One day takes about 5–8 real minutes (7 orders + 1 manager case, plus time spent writing SQL). The clock runs at **1.2 game minutes per real second** (≈ 6 minutes for 10:00–17:00; it was 0.7 ≈ 10 minutes until the 21 Nov 2026 playtest found it too long), and **4× faster while nobody is waiting**, so there is no idle waiting.
+- **The sky follows the clock** (`src/game/truck/sky.ts`, tested): the working day is shown as a whole day — a pale morning at 10:00, a bright noon, a warm afternoon, a sunset around 16:00 and night at 17:00. The sun crosses the sky, the light changes colour, and at dusk the park's lamps, the string lights and a warm light inside the truck come on.
 - Customers arrive **spread over the day** (prototype: 10:00, 10:35, 11:15, 12:00, 12:50, 13:50, 15:00). Patience is **60 game minutes** in the line; their mood shows in the speech bubble (😊 / 😐 / 😠 with a patience bar), and the tip is **$1.00 / $0.50 / $0** by mood when the order is handed over.
 - v1's Rush Hour becomes **"Lunch Rush"**: an optional event from 12:00 to 13:00 with quick orders and a running clock, from week 3.
 
@@ -124,9 +125,9 @@ The look was found through six prototypes (see [`docs/JOURNEY.md`](docs/JOURNEY.
 - **First-person 3D** with **Three.js**. The player stands inside the truck: **WASD / arrow keys** to walk, the **mouse** to look (pointer lock, Esc frees the mouse), aim the **crosshair** at something and press **E** or click. Movement stays inside the truck so the focus stays on SQL.
 - **The truck** (6 × 2.4 × 2.4 m): serving window + counter + tablet in the front wall; **fridge & stock shelves** at the left end (`inventory`); a **back counter** with a red espresso machine, a clock, the **menu board** (`menu_items`) and the **recipe binders** (`recipes`); the **back door** at the right end (The Manager).
 - **Parked in a city park:** a striped lawn, the path customers queue on, benches and picnic tables with umbrellas (which will **fill with visitors when business is good**, Phase 7), lamp posts and string lights, trees, a distant city skyline, a low sun. The park ground is 0.35 m lower than the truck floor so customers' heads sit in the window.
-- **A "risograph print" style** — the signature look, deliberately not playing it safe: the scene is rendered at low resolution (about 300 lines, big pixels), then a shader maps every pixel to the **riso inks** (`src/game/art/riso.ts`) with a **4×4 Bayer dither**, draws **ink outlines** where depth jumps, and prints a **red copy of each outline one pixel off**, like a mis-registered riso layer. Ink colours are used exactly as written (no sRGB → linear conversion), and lights are neutral × π (Three.js uses physical light units).
-- **Signature feature: the "Data Lens"** (built in 4.8) — **L** or the 🔍 button dissolves the world, pixel by pixel in Bayer order, into a teal blueprint on paper with a grid, and a card floats over every object with its tables (row counts, columns, two sample rows). The tables the current order needs are starred in mustard, so the lens also hints where to look. The world and the database feel like one.
-- **Placeholder models** made from basic shapes (boxes, cylinders, spheres). Final models will come from **CC0** 3D packs (Kenney, Quaternius, Poly Pizza), recoloured to the riso inks. The status of every part is in [`docs/ASSETS.md`](docs/ASSETS.md); sources and licences go in `CREDITS.md`.
+- **A clean low-poly style** (changed 21 Nov 2026): flat-shaded shapes in a small palette (`src/game/art/riso.ts`), drawn at full screen resolution, with a thin, soft ink outline where depth jumps (`src/game/truck/lookPass.ts`). Until then the game used a "risograph print" look (low resolution, a 4×4 Bayer dither onto a few inks, a mis-registered red outline); the owner found the dither tiring to look at while playing, so it was dropped. Colours are used exactly as written (no sRGB → linear conversion), and lights are neutral × π (Three.js uses physical light units).
+- **Signature feature: the "Data Lens"** (built in 4.8) — **L** or the 🔍 button fades the world into a teal blueprint on paper with a grid, and a card floats over every object with its tables (row counts, columns, two sample rows). The tables the current order needs are starred in mustard, so the lens also hints where to look. The world and the database feel like one.
+- **Placeholder models** made from basic shapes (boxes, cylinders, spheres). Final models will come from **CC0** 3D packs (Kenney, Quaternius, Poly Pizza), recoloured to the palette. The status of every part is in [`docs/ASSETS.md`](docs/ASSETS.md); sources and licences go in `CREDITS.md`.
 - React draws the overlays (the SQL tablet, the speech bubble that follows the customer's head, the crosshair, the HUD). The 3D code never imports React; the two only talk through `src/game/truck/bridge.ts`.
 - Size: the 3D code (Three.js + game) is about 128 KB gzipped and loads after the page appears.
 - Not yet: phone controls (see §13).
@@ -183,7 +184,7 @@ Indonesian text lives in `src/sql-core/levels/locales/id/` (text only — SQL, b
 | Topic | Decision | Why |
 |---|---|---|
 | Platform | **Web app** in the browser | Easy to reach and to share |
-| Game world | **Three.js** (first-person 3D, risograph post-processing) | Chosen after the 3D prototype (17 Nov 2026); small, flexible, and lots of CC0 3D assets |
+| Game world | **Three.js** (first-person 3D, low-poly with an outline pass) | Chosen after the 3D prototype (17 Nov 2026); small, flexible, and lots of CC0 3D assets |
 | SQL tablet | **HTML overlay over the canvas** (React, CodeMirror 6) | Editors, autocomplete and result tables are far easier in HTML than inside a canvas |
 | Architecture | **SQL core separate from the game world** | The SQL core was built and tested first; the world could be replaced several times without touching it |
 | Backend | **None** for now | Free to host, quick to build; progress is saved in the browser |
@@ -196,10 +197,10 @@ Indonesian text lives in `src/sql-core/levels/locales/id/` (text only — SQL, b
 - `src/sql-core/` — database (PGlite), answer checker, cases, levels, data, orders. **Must not** import React or Three.js.
 - `src/console/` — the SQL console (React): blocks, fill-in-the-blank, editor, result table, case notes.
 - `src/game/` — the 3D world (Three.js). **Must not** import React.
-  - `art/riso.ts` — the riso inks.
+  - `art/riso.ts` — the palette (named after the old riso look).
   - `truck/world.ts` — sizes, layout, walking, aiming, the queue path (pure logic, tested).
   - `truck/build.ts` — low-poly models; `truck/looks.ts` — customers' looks.
-  - `truck/risoPass.ts` — the riso shader; `truck/colour.ts` — exact ink colours.
+  - `truck/lookPass.ts` — the outline pass and the Data Lens; `truck/sky.ts` — the sky over the day; `truck/colour.ts` — exact colours.
   - `truck/queue.ts` — the customer queue (pure logic, tested).
 - `src/sql-core/truck/` — the truck's rules: `objects.ts` (what each object sees), `templates.ts` + `orders.ts` (orders), `concepts.ts` + `repetition.ts` (mastery and day planning), `day.ts` (the clock, the day log, sales), `manager.ts` (the Manager's case).
   - `truck/TruckGame.ts` — the game loop, input, customers.
@@ -293,6 +294,7 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 |---|---|---|
 | 5.1 ✅ | **Order templates, mastery and days that follow:** templates with variants replace the hand-written orders; concept mastery + spaced repetition plan each day; "Open the next day" | Day 2, day 3… bring different orders, and weak concepts come back sooner |
 | 5.2 ✅ | **Input grows with mastery:** a well-known concept gets more blanks (a whole condition), then free typing | A level-4 concept is answered without a template |
+| 5.2b ✅ | **A proper game shell** (owner's request before 5.3): title + loading screen, Esc pause menu, how-to-play guide (also a book on the back counter), a calmer low-poly look, the sun from morning to night, a shorter day | A new player can start, pause and learn the controls and the truck without help |
 | 5.3 | Owner playtest of several days + fixes | The owner plays three days and they feel different |
 
 **5.1 as built (20 Nov 2026):**
@@ -305,6 +307,12 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 - Not yet: weekends and weeks (every calendar day is a working day for now; weeks come with the curriculum in Phase 6).
 
 **5.2 as built (21 Nov 2026):** how much of the query the player writes follows their mastery of the order's concept **before today** (so it stays the same all day and after a reload): level 0–1 → fill in one word or value (the template's own gap); level 2–3 → fill in **the whole condition** after `WHERE` (a wider gap); level 4–5 → **free typing** in the editor with autocomplete. `inputStage` and `stagedInput` in `orders.ts`; every order's solution has the form `SELECT … FROM … WHERE condition;`, so one rule builds the condition gap for all templates (tested: every variant is solvable at every stage). A short note under the task says why ("You know this one well: write the whole condition after WHERE."). Checked in the browser with a made-up history: a level-4 concept opened the editor and was served, a level-2 concept asked for the whole condition, and a new concept kept its one-word gap and lesson card.
+
+**5.2b as built (21 Nov 2026) — the game shell:**
+- **Title screen** (`src/app/Menus.tsx`): the truck renders softly behind a card with the title, a tagline, *▶ Start day N* (or *Continue day N (13:20)* mid-day), *How to play* and the language. It is also the **loading screen**: until the 3D truck and the records (database) are ready it shows a bar and what is loading. After *Open the next day* or *Play this day again* the page reloads straight into the truck with a short loading screen (`sessionStorage`), not the title.
+- **Pause menu**: **Esc** (or the ☰ Menu button) pauses — time stops, the player can't move — with *Carry on*, *How to play*, *Play this day again* (asks first), *Title screen* and the language. When the mouse is captured, the browser frees it on Esc; losing the mouse that way also opens the menu (unless a console, the Data Lens or the guide took it). Esc while a console is open only closes the console; Esc with the Data Lens on turns it off.
+- **How to play** (`src/app/guide.ts`, Indonesian in `src/app/locales/id/guide.ts`, tested to match): six pages — your job, controls, the truck (every object, its tables and what it is for, including the fridge and The Manager at the back door), the Data Lens, writing SQL (input stages, `;`, hints and stars), days & practice. Opened from the title screen, the pause menu, or the **guide book** on the back counter: an open red book with a "GUIDE ?" sign (`guide-book` object, aim + E).
+- Time also stops while any menu is open. The bridge now remembers the last value of each event, so the game, created after the app, starts paused when the title screen is up.
 
 ## 13. Open questions
 

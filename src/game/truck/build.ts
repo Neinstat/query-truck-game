@@ -1,18 +1,20 @@
 /**
- * Low-poly models for the food truck, built from boxes, cylinders and spheres in the
- * riso inks. ⚠ PLACEHOLDER models (docs/ASSETS.md): to be replaced by CC0 3D packs later.
+ * Low-poly models for the food truck, built from boxes, cylinders and spheres in the palette
+ * (art/riso.ts), flat-shaded. ⚠ PLACEHOLDER models (docs/ASSETS.md): to be replaced by CC0 3D
+ * packs later.
  */
 import * as THREE from 'three';
 import type { Ink } from '../art/riso';
 import { inkColour } from './colour';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { LOOKS } from './looks';
+import type { Sky } from './sky';
 import { CLOCK3D, GROUND_Y, LAYOUT, PARK, QUEUE_PATH_3D, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
 export function mat(ink: Ink): THREE.MeshLambertMaterial {
   let m = materials.get(ink);
-  if (!m) materials.set(ink, (m = new THREE.MeshLambertMaterial({ color: inkColour(ink) })));
+  if (!m) materials.set(ink, (m = new THREE.MeshLambertMaterial({ color: inkColour(ink), flatShading: true })));
   return m;
 }
 
@@ -205,9 +207,56 @@ export function buildTruck(): THREE.Group {
     hinge.rotation.y = open * 1.35 + rattle;
   };
 
+  // The how-to-play book, open on the back counter, with a sign so players notice it.
+  const gb = LAYOUT.guideBook;
+  const bx = (gb.min.x + gb.max.x) / 2;
+  const bz = gb.min.z + 0.17;
+  const book = new THREE.Group();
+  book.position.set(bx, gb.min.y, bz);
+  book.rotation.y = 0.15;
+  block(book, 'red', [-0.17, 0, -0.12, 0.17, 0.02, 0.12]);
+  for (const side of [-1, 1]) {
+    const page = block(book, 'white', [-0.15, 0, -0.11, 0, 0.012, 0.11]);
+    page.position.set(side * 0.078, 0.026, 0);
+    page.rotation.z = side * -0.12;
+    for (let k = 0; k < 4; k++) {
+      const line = block(book, 'inkSoft', [-0.11, 0, -0.002, -0.03, 0.004, 0.006]);
+      line.position.set(side * 0.078, 0.036, -0.07 + k * 0.04);
+      line.rotation.z = side * -0.12;
+    }
+  }
+  g.add(book);
+  g.add(guideSign(bx, gb.max.y - 0.06, gb.max.z - 0.02));
+
   // A spare apron on a hook near the door.
   block(g, 'teal', [HX - 0.02, 0.9, -0.95, HX - 0.01, 1.6, -0.65]);
   return g;
+}
+
+/** A small standing sign with "GUIDE ?" written on it (text drawn into a canvas once). */
+function guideSign(x: number, y: number, z: number): THREE.Group {
+  const sign = new THREE.Group();
+  sign.position.set(x, y, z);
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 96;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#f2b234';
+    ctx.fillRect(0, 0, 256, 96);
+    ctx.fillStyle = '#25304f';
+    ctx.font = 'bold 44px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('GUIDE ?', 128, 50);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.1), new THREE.MeshBasicMaterial({ map: texture }));
+  // Faces into the truck (−z), leaning back a little.
+  face.rotation.set(-0.25, Math.PI, 0);
+  sign.add(face);
+  block(sign, 'woodDark', [-0.01, -0.12, 0.01, 0.01, -0.04, 0.03]);
+  return sign;
 }
 
 // ── The park outside ──────────────────────────────────────────────────────────────────
@@ -256,9 +305,20 @@ function picnicTable(g: THREE.Group, x: number, z: number): void {
   g.add(p);
 }
 
+/**
+ * Lamp bulbs share these materials so the whole park lights up together at dusk (`setSky`).
+ * Their "on" colours; off, they are a pale glass colour.
+ */
+const LAMP_ON = { mustard: inkColour('mustard'), red: inkColour('red') };
+const LAMP_OFF = new THREE.Color('#e9e2cf');
+const lampMaterials = {
+  mustard: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
+  red: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
+};
+
 function lampPost(g: THREE.Group, x: number, z: number): THREE.Vector3 {
   block(g, 'ink', [x - 0.05, GROUND_Y, z - 0.05, x + 0.05, GROUND_Y + 3.2, z + 0.05]);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial({ color: inkColour('mustard') }));
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), lampMaterials.mustard);
   bulb.position.set(x, GROUND_Y + 3.3, z);
   g.add(bulb);
   return bulb.position.clone();
@@ -299,10 +359,7 @@ export function buildPark(): THREE.Group {
     const b = lamps[i];
     for (let k = 1; k < 12; k++) {
       const t = k / 12;
-      const bulb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.06, 6, 4),
-        new THREE.MeshBasicMaterial({ color: inkColour(k % 2 ? 'mustard' : 'red') }),
-      );
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), k % 2 ? lampMaterials.mustard : lampMaterials.red);
       bulb.position.lerpVectors(a, b, t);
       bulb.position.y -= Math.sin(t * Math.PI) * 0.6;
       g.add(bulb);
@@ -313,16 +370,28 @@ export function buildPark(): THREE.Group {
   for (const t of PARK.trees) tree(g, t.x, t.z, t.size);
   for (let x = -40; x <= 40; x += 5) tree(g, x + ((x * 7) % 3), -24 - ((x * 13) % 4), 1.5);
 
-  // The far-away city skyline and a low sun.
+  // The far-away city skyline and the sun, which crosses the sky over the day (`setSky`).
   for (let i = 0, x = -70; x < 70; i++) {
     const w = 3 + ((i * 7) % 5);
     const h = 6 + ((i * 11) % 14);
     block(g, i % 2 ? 'lilac' : 'inkSoft', [x, GROUND_Y, -58 - (i % 3) * 3, x + w, GROUND_Y + h, -55 - (i % 3) * 3]);
     x += w + 0.6;
   }
-  const sun = new THREE.Mesh(new THREE.CircleGeometry(7, 20), new THREE.MeshBasicMaterial({ color: inkColour('mustard') }));
-  sun.position.set(14, GROUND_Y + 3, -75);
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: inkColour('mustard'), fog: false });
+  const sun = new THREE.Mesh(new THREE.CircleGeometry(6, 24), sunMaterial);
   g.add(sun);
+  /** Moves the sun (or moon) and lights the lamps for the time of day (sky.ts). */
+  g.userData.setSky = (sky: Sky) => {
+    const distance = 90;
+    const up = (sky.elevation * Math.PI) / 180;
+    sun.position.set(sky.across * 70, GROUND_Y + Math.sin(up) * distance, -distance * Math.cos(up));
+    sun.lookAt(0, GROUND_Y + 1, 0);
+    sun.visible = sky.elevation > -6 || sky.lamps > 0.95;
+    if (sky.lamps > 0.95) sun.position.set(-30, GROUND_Y + 35, -80); // the moon
+    sunMaterial.color.set(sky.disc);
+    lampMaterials.mustard.color.copy(LAMP_OFF).lerp(LAMP_ON.mustard, sky.lamps);
+    lampMaterials.red.color.copy(LAMP_OFF).lerp(LAMP_ON.red, sky.lamps);
+  };
 
   // The truck's own awning over the window, seen from inside.
   const w = LAYOUT.window;

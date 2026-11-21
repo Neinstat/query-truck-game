@@ -46,6 +46,8 @@ export const LAYOUT = {
   menuBoard: box(-0.1, 1.35, HZ - 0.05, 1.0, 2.1, HZ),
   recipeShelf: box(1.15, 1.42, HZ - 0.3, 1.75, 1.78, HZ),
   door: box(HX - 0.05, 0, -0.5, HX, 2.1, 0.5),
+  /** The how-to-play book, open on the back counter, with a little "GUIDE" sign. */
+  guideBook: box(0.2, 0.95, HZ - 0.4, 0.62, 1.22, HZ - 0.06),
 } as const;
 
 /** Clock on the back wall, above the coffee machine. */
@@ -63,6 +65,7 @@ export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = 
   { id: 'menu-board', box: LAYOUT.menuBoard },
   { id: 'recipe-shelf', box: LAYOUT.recipeShelf },
   { id: 'back-door', box: LAYOUT.door },
+  { id: 'guide-book', box: LAYOUT.guideBook },
 ];
 
 /**

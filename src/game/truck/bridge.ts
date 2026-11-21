@@ -14,6 +14,7 @@
  *   game → app   'patience' how much patience the customer at the window has left (0–1), or null
  *   game → app   'gaveUp'  a customer waited too long and left without buying (their order id)
  *   game → app   'knock'   The Manager is knocking on the back door (once a day)
+ *   app → game   'lock'    back to playing from a menu (called from a click): capture the mouse again
  *   app → game   'door'    open (true) or close the back door: the Manager stands outside
  *   app → game   'managerDone' the Manager got their answers and leaves
  *   game → app   'closed'  the day is over: closing time (or no one left to come), the line is empty,
@@ -51,6 +52,7 @@ type TruckEvents = {
   lensKey: true;
   lens: boolean;
   lensCards: LensCard[];
+  lock: true;
 };
 
 type Listener<T> = (payload: T) => void;
@@ -59,6 +61,7 @@ type Listener<T> = (payload: T) => void;
 export class Emitter<Events extends Record<string, unknown>> {
   // Typed by on()/emit(); stored loosely inside.
   private listeners = new Map<keyof Events, Set<Listener<never>>>();
+  private lastPayloads = new Map<keyof Events, unknown>();
 
   on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): () => void {
     let set = this.listeners.get(event);
@@ -68,7 +71,13 @@ export class Emitter<Events extends Record<string, unknown>> {
   }
 
   emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+    this.lastPayloads.set(event, payload);
     for (const listener of [...(this.listeners.get(event) ?? [])]) (listener as Listener<Events[K]>)(payload);
+  }
+
+  /** The last payload sent for an event (for a listener that joins late, e.g. the game on load). */
+  last<K extends keyof Events>(event: K): Events[K] | undefined {
+    return this.lastPayloads.get(event) as Events[K] | undefined;
   }
 }
 

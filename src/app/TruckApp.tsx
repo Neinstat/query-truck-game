@@ -6,14 +6,28 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { restartDay, startNextDay, useTruckShift } from './useTruckShift';
+import { restartDay, SKIP_TITLE_KEY, startNextDay, useTruckShift } from './useTruckShift';
+import { Guide, LoadingScreen, PauseMenu, TitleScreen } from './Menus';
 import { DaySummary } from './DaySummary';
 import { CLOSING, formatClock } from '../sql-core/truck/day';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
 
-/** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §14). */
+/** After "next day" or "play again" the page reloads straight into the truck (no title). */
+function skipTitleOnce(): boolean {
+  try {
+    const skip = sessionStorage.getItem(SKIP_TITLE_KEY) === '1';
+    sessionStorage.removeItem(SKIP_TITLE_KEY);
+    return skip;
+  } catch {
+    return false;
+  }
+}
+
+type Screen = 'title' | 'playing' | 'paused';
+
+/** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §7). */
 export function TruckApp() {
   const [lang, setLang] = useLang();
   const t = ui[lang];
@@ -34,8 +48,14 @@ export function TruckApp() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const { front, order, answerWhere, orderTables, db, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
-    useTruckShift(bridge, lang, t);
+  const [screen, setScreen] = useState<Screen>(() => (skipTitleOnce() ? 'playing' : 'title'));
+  const [guideOpen, setGuideOpen] = useState(false);
+  // Time stops in the truck while a menu is open, and until the records are open.
+  const [dataReady, setDataReady] = useState(false);
+  const menuOpen = screen !== 'playing' || guideOpen || !ready || !dataReady;
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
+    useTruckShift(bridge, lang, t, menuOpen);
+  useEffect(() => setDataReady(db !== null), [db]);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
   const shut = day.clock >= CLOSING || dayDone;
@@ -59,6 +79,36 @@ export function TruckApp() {
   useEffect(() => bridge.on('lensKey', () => setLens((on) => !on)), [bridge]);
   useEffect(() => bridge.on('lensCards', setLensCards), [bridge]);
   useEffect(() => bridge.emit('lens', lens), [bridge, lens, ready]);
+
+  // Into the truck (from the title, the pause menu or the guide): capture the mouse again.
+  const play = () => {
+    setScreen('playing');
+    bridge.emit('lock', true);
+  };
+  // The guide book on the back counter opens the guide.
+  useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
+  // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
+  // console, the Data Lens or the guide took the mouse.
+  const wasLocked = useRef(false);
+  useEffect(() => {
+    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone) {
+      setScreen('paused');
+    }
+    wasLocked.current = locked;
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (guideOpen) {
+        setGuideOpen(false);
+        if (screen === 'playing') bridge.emit('lock', true);
+      } else if (screen === 'paused') play();
+      else if (screen === 'playing' && lens && !consoleOpen) setLens(false);
+      else if (screen === 'playing' && !consoleOpen && !dayDone) setScreen('paused');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +138,14 @@ export function TruckApp() {
         </span>
         <span className="truck-controls">{t.truckControls}</span>
         <button
+          className="lens-button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setScreen('paused')}
+          title={t.pausedTitle}
+        >
+          ☰ Menu <kbd>Esc</kbd>
+        </button>
+        <button
           className={lens ? 'lens-button lens-button-on' : 'lens-button'}
           aria-pressed={lens}
           onMouseDown={(e) => e.preventDefault()}
@@ -110,18 +168,13 @@ export function TruckApp() {
         </div>
       </header>
       <div className="truck-view" ref={parentRef}>
-        {!ready && (
-          <div className="world-loading" role="status">
-            <p className="world-loading-title">SQL Valley</p>
-            <div className="loading-bar" aria-hidden="true" />
-          </div>
-        )}
-        {ready && knocking && !consoleOpen && !dayDone && (
+
+        {ready && knocking && !consoleOpen && !dayDone && !menuOpen && (
           <p className="knock-alert" role="status">
             🚪 {t.knockAlert}
           </p>
         )}
-        {ready && dayDone && !front && !consoleOpen && (
+        {ready && dayDone && !front && !consoleOpen && !menuOpen && (
           <DaySummary
             db={db}
             day={day}
@@ -133,25 +186,25 @@ export function TruckApp() {
             onReplay={() => restartDay(day)}
           />
         )}
-        {ready && !consoleOpen && lens && (
+        {ready && !consoleOpen && !menuOpen && lens && (
           <>
             <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} onOpen={openTable} t={t} />
             <p className="lens-hint">🔍 {t.lensClickHint}</p>
           </>
         )}
-        {ready && !consoleOpen && !dayDone && (
+        {ready && !consoleOpen && !dayDone && !menuOpen && (
           <>
             <div className={aimed ? 'crosshair crosshair-on' : 'crosshair'} aria-hidden="true" />
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
           </>
         )}
-        {ready && !consoleOpen && !locked && !dayDone && !lens && (
+        {ready && !consoleOpen && !locked && !dayDone && !lens && !menuOpen && (
           <div className="truck-start" aria-hidden="true">
             <p className="truck-start-title">🖱 {t.truckStart}</p>
             <p className="truck-start-hint">{t.truckStartHint}</p>
           </div>
         )}
-        {front && order && anchor && !consoleOpen && !lens && view.width > 0 && (
+        {front && order && anchor && !consoleOpen && !lens && !menuOpen && view.width > 0 && (
           <div
             className="order-bubble"
             role="status"
@@ -171,6 +224,42 @@ export function TruckApp() {
           </div>
         )}
         {overlays}
+        {screen === 'title' && (
+          <TitleScreen
+            dayNumber={past.length + 1}
+            clock={day.clock}
+            worldReady={ready}
+            dataReady={dataReady}
+            dataError={dbError}
+            onStart={play}
+            onGuide={() => setGuideOpen(true)}
+            lang={lang}
+            setLang={setLang}
+            t={t}
+          />
+        )}
+        {screen === 'playing' && (!ready || !dataReady) && <LoadingScreen t={t} />}
+        {screen === 'paused' && (
+          <PauseMenu
+            onResume={play}
+            onGuide={() => setGuideOpen(true)}
+            onRestart={() => restartDay(day)}
+            onTitle={() => setScreen('title')}
+            lang={lang}
+            setLang={setLang}
+            t={t}
+          />
+        )}
+        {guideOpen && (
+          <Guide
+            lang={lang}
+            t={t}
+            onClose={() => {
+              setGuideOpen(false);
+              if (screen === 'playing') bridge.emit('lock', true);
+            }}
+          />
+        )}
       </div>
     </div>
   );

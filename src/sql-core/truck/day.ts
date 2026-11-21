@@ -19,8 +19,11 @@ export const CLOSING = 17 * 60;
  */
 export const KNOCK_TIME = 13 * 60 + 30;
 
-/** About ten real minutes for a 7-hour day; the clock stops while a console is open. */
-export const GAME_MINUTES_PER_SECOND = 0.7;
+/**
+ * About six real minutes for a 7-hour day (less when nobody is waiting); the clock stops while a
+ * console or the menu is open. Was 0.7 (ten minutes) until the 21 Nov 2026 playtest: too long.
+ */
+export const GAME_MINUTES_PER_SECOND = 1.2;
 /** With nobody waiting at the window, time runs this much faster (no idle waiting). */
 export const QUIET_SPEEDUP = 4;
 /** How long (game minutes) a customer waits in the queue before giving up. */

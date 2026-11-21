@@ -1,6 +1,6 @@
 # SQL Valley
 
-A first-person 3D game for learning SQL: you run a food truck in a city park, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a risograph-print look.
+A first-person 3D game for learning SQL: you run a food truck in a city park, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.
 
 ![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
 
@@ -36,7 +36,7 @@ You are the new hire at **Rolling Roast**, a coffee food truck parked in a city 
 
 ## The look
 
-Everything is drawn through a **risograph shader**: the 3D scene is rendered at a low resolution, every pixel is mapped to a small set of riso inks with a 4×4 Bayer dither, ink outlines are drawn where depth jumps, and a red copy of each outline is printed one pixel off, like a riso print whose red layer didn't line up. The models are simple low-poly placeholders for now (see [docs/ASSETS.md](docs/ASSETS.md)).
+The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink outline, and the sky goes from morning to night over each working day. The models are simple placeholders for now (see [docs/ASSETS.md](docs/ASSETS.md)).
 
 **The Data Lens** turns the same picture into a teal blueprint: the world dissolves pixel by pixel, and a card floats over every object with its tables, row counts and sample rows.
 
@@ -44,7 +44,7 @@ Everything is drawn through a **risograph shader**: the 3D scene is rendered at 
 
 ## Status
 
-🚧 **Phase 4: the one-day prototype.** The 3D truck, the park, the queue, the riso look, and objects that each open their own tables, the Data Lens, sales that go into the database (and survive a reload), the clock from 10:00 to 17:00 with customers' patience and tips, and the end-of-day summary are in. Next: The Manager.
+🚧 **Phase 5: order generator & repetition.** The one-day prototype (Phase 4) is done. Orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, an Esc pause menu and a how-to-play guide.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
@@ -67,7 +67,7 @@ npm run preview    # serve the production build at http://localhost:4173
 
 | Part | Choice |
 |---|---|
-| 3D world | [Three.js](https://threejs.org/) with a custom risograph post-processing shader (about 130 KB gzipped, loaded on demand) |
+| 3D world | [Three.js](https://threejs.org/) with a small outline post-processing pass (about 130 KB gzipped, loaded on demand) |
 | SQL tablet and overlays | React 19 + [CodeMirror 6](https://codemirror.net/) (SQL highlighting and autocomplete) |
 | Database | [PGlite](https://pglite.dev/): real PostgreSQL in the browser, running in a Web Worker so a slow query can be stopped |
 | Language and tooling | TypeScript, Vite, Vitest |
@@ -94,8 +94,8 @@ src/
 │   └── truck/       # customer orders (locales/id for translations)
 ├── console/       # SQL console UI (React): blocks, fill-in-the-blank, editor, case notes
 ├── game/          # the 3D world (Three.js): no React code allowed here
-│   ├── art/riso.ts  # the riso inks
-│   └── truck/       # world layout, models, riso shader, queue, the game loop, and the bridge to React
+│   ├── art/riso.ts  # the colour palette
+│   └── truck/       # world layout, models, outline pass, sky, queue, the game loop, and the bridge to React
 ├── app/           # the page around the world: HUD, tablet, the shift's logic, the database worker
 └── i18n.ts        # UI text in both languages
 docs/

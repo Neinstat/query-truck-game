@@ -58,6 +58,7 @@ const saveDay = (log: DayLog) => write(DAY_KEY, log);
 /** Throw away today's progress and play the same day again (the page reloads to rebuild the data). */
 export function restartDay(day: DayLog): void {
   saveDay(newDay(day.date, day.orders));
+  skipTitleNextLoad();
   window.location.reload();
 }
 
@@ -66,10 +67,24 @@ export function startNextDay(past: readonly DayLog[], day: DayLog): void {
   const done = [...past, day];
   write(PAST_KEY, done);
   saveDay(nextDay(done));
+  skipTitleNextLoad();
   window.location.reload();
 }
 
-export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
+/** Set before a reload into a new or restarted day: go straight back into the truck, no title. */
+export const SKIP_TITLE_KEY = 'sql-valley.skip-title';
+const skipTitleNextLoad = () => {
+  try {
+    sessionStorage.setItem(SKIP_TITLE_KEY, '1');
+  } catch {
+    // Without session storage the title screen just shows again.
+  }
+};
+
+/**
+ * @param menuOpen a menu (title, pause, guide) is open: time stops, like with a console.
+ */
+export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOpen = false) {
   const [progressOnLoad] = useState(loadProgress);
   const past = progressOnLoad.past;
   const [day, setDay] = useState<DayLog>(progressOnLoad.day);
@@ -168,7 +183,9 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     () =>
       bridge.on('use', (id) => {
         if (order && id === orderObject) setOrderOpen(true);
-        else if (OBJECT_STATION[id]) {
+        else if (id === 'guide-book') {
+          // The app opens the guide (TruckApp listens too).
+        } else if (OBJECT_STATION[id]) {
           setExploreTable(undefined);
           setExploring(id);
         }
@@ -213,7 +230,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
 
   // Time stops while a console is open.
   const open = orderOpen || exploring !== null || managerOpen || managerTalk;
-  useEffect(() => bridge.emit('pause', open), [bridge, open]);
+  useEffect(() => bridge.emit('pause', open || menuOpen), [bridge, open, menuOpen]);
 
   const closeOrder = useCallback(() => {
     setOrderOpen(false);
@@ -351,6 +368,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText) {
     /** The tables the current order needs (highlighted by the Data Lens). */
     orderTables: level ? tablesInQuery(level.solution) : [],
     db,
+    dbError,
     /** Today so far: the date, and the orders served (each one is in `sales`). */
     day,
     /** Today's customers, in the order they arrive. */
