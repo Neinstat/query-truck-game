@@ -92,6 +92,11 @@ const en = {
   guidePrev: 'Back',
   guideNext: 'Next',
   guideDone: 'Got it',
+  guideTables: 'Tables:',
+  guideExample: 'A customer might ask:',
+  tourStart: 'Truck tour',
+  tourTitle: 'Truck tour',
+  tourDone: 'End the tour',
   inputStageNote: {
     condition: 'You know this one well: write the whole condition after WHERE.',
     free: 'You know this one by heart: write the whole query.',
@@ -236,6 +241,11 @@ const id: UiText = {
   guidePrev: 'Kembali',
   guideNext: 'Lanjut',
   guideDone: 'Mengerti',
+  guideTables: 'Tabel:',
+  guideExample: 'Contoh pertanyaan pelanggan:',
+  tourStart: 'Tur truck',
+  tourTitle: 'Tur truck',
+  tourDone: 'Selesai tur',
   inputStageNote: {
     condition: 'Kamu sudah paham yang ini: tulis seluruh syarat setelah WHERE.',
     free: 'Kamu sudah hafal yang ini: tulis seluruh query-nya.',

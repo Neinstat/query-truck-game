@@ -7,7 +7,8 @@ import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { restartDay, SKIP_TITLE_KEY, startNextDay, useTruckShift } from './useTruckShift';
-import { Guide, LoadingScreen, PauseMenu, TitleScreen } from './Menus';
+import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
+import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
 import { CLOSING, formatClock } from '../sql-core/truck/day';
 
@@ -50,9 +51,13 @@ export function TruckApp() {
   }, []);
   const [screen, setScreen] = useState<Screen>(() => (skipTitleOnce() ? 'playing' : 'title'));
   const [guideOpen, setGuideOpen] = useState(false);
+  /** The truck tour: which stop the camera is at (null: no tour). */
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
+  const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
   const [dataReady, setDataReady] = useState(false);
-  const menuOpen = screen !== 'playing' || guideOpen || !ready || !dataReady;
+  const menuOpen = screen !== 'playing' || guideOpen || tourStep !== null || !ready || !dataReady;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
     useTruckShift(bridge, lang, t, menuOpen);
   useEffect(() => setDataReady(db !== null), [db]);
@@ -85,6 +90,27 @@ export function TruckApp() {
     setScreen('playing');
     bridge.emit('lock', true);
   };
+  // The truck tour follows the guide's truck page, one object per stop.
+  const tourItems = useMemo(
+    () => (guideFor(lang).find((p) => p.id === 'truck')?.items ?? []).filter((i) => i.object),
+    [lang],
+  );
+  useEffect(() => {
+    bridge.emit('tour', tourStep === null ? null : (tourItems[tourStep]?.object ?? null));
+  }, [bridge, tourStep, tourItems, ready]);
+  const startTour = () => {
+    setGuideOpen(false);
+    setTourStep(0);
+  };
+  const endTour = () => {
+    setTourStep(null);
+    if (screen === 'playing') bridge.emit('lock', true);
+  };
+  // Fresh pictures each time the guide opens (the sky changes over the day).
+  useEffect(() => bridge.on('snapshots', setPictures), [bridge]);
+  useEffect(() => {
+    if (guideOpen && ready) bridge.emit('snapshotRequest', true);
+  }, [bridge, guideOpen, ready]);
   // The guide book on the back counter opens the guide.
   useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
   // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
@@ -99,7 +125,8 @@ export function TruckApp() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return;
-      if (guideOpen) {
+      if (tourStep !== null) endTour();
+      else if (guideOpen) {
         setGuideOpen(false);
         if (screen === 'playing') bridge.emit('lock', true);
       } else if (screen === 'paused') play();
@@ -218,7 +245,7 @@ export function TruckApp() {
           </div>
         )}
         {overlays}
-        {screen === 'title' && (
+        {screen === 'title' && tourStep === null && (
           <TitleScreen
             dayNumber={past.length + 1}
             clock={day.clock}
@@ -227,16 +254,18 @@ export function TruckApp() {
             dataError={dbError}
             onStart={play}
             onGuide={() => setGuideOpen(true)}
+            onTour={startTour}
             lang={lang}
             setLang={setLang}
             t={t}
           />
         )}
         {screen === 'playing' && (!ready || !dataReady) && <LoadingScreen t={t} />}
-        {screen === 'paused' && (
+        {screen === 'paused' && tourStep === null && (
           <PauseMenu
             onResume={play}
             onGuide={() => setGuideOpen(true)}
+            onTour={startTour}
             onRestart={() => restartDay(day)}
             onTitle={() => setScreen('title')}
             lang={lang}
@@ -244,10 +273,15 @@ export function TruckApp() {
             t={t}
           />
         )}
+        {tourStep !== null && (
+          <TruckTour items={tourItems} step={tourStep} onStep={setTourStep} onClose={endTour} t={t} />
+        )}
         {guideOpen && (
           <Guide
             lang={lang}
             t={t}
+            pictures={pictures}
+            onTour={startTour}
             onClose={() => {
               setGuideOpen(false);
               if (screen === 'playing') bridge.emit('lock', true);

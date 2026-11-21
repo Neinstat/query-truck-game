@@ -27,8 +27,10 @@ import {
   GROUND_Y,
   LENS_SPOTS,
   lensPoint,
+  lookAtAngles,
   lookDirection,
   queuePosition,
+  TOUR_STOPS,
   START,
   TRUCK,
   walkStep,
@@ -38,11 +40,30 @@ import {
 /** Sharp on high-density screens, but never more than 2× (light on the GPU). */
 const MAX_PIXEL_RATIO = 2;
 const MOUSE_SENSITIVITY = 0.0024;
+/** The camera's field of view: normally, zoomed in during the truck tour, and for the guide's pictures. */
+const FOV = 70;
+const TOUR_FOV = 50;
+const PICTURE_FOV = 42;
 const MAX_PITCH = 1.25;
 /** Seconds for the Data Lens to dissolve in or out. */
 const LENS_SECONDS = 0.45;
 /** Cards further away than this (m) are hidden: the truck is small, the park is not. */
 const LENS_MAX_DISTANCE = 6;
+
+type Pose = { x: number; y: number; z: number; yaw: number; pitch: number };
+
+/** A stop of the truck tour as a camera pose. */
+function stopPose(object: InteractableId): Pose | null {
+  const stop = TOUR_STOPS.find((s) => s.object === object);
+  if (!stop) return null;
+  return { ...stop.eye, ...lookAtAngles(stop.eye, stop.target) };
+}
+
+/** The shortest way from one angle to another. */
+const angleStep = (from: number, to: number) => {
+  const d = (((to - from + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+  return d;
+};
 
 /** One of today's customers: their order id, and how they look. */
 export type DayCustomer = { id: string; look: CustomerLook };
@@ -50,7 +71,7 @@ export type DayCustomer = { id: string; look: CustomerLook };
 export class TruckGame {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(70, 16 / 9, 0.05, 120);
+  private readonly camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 120);
   private readonly look = new LookPass();
   private readonly ambient = new THREE.AmbientLight(0xffffff, 0.8 * Math.PI);
   private readonly sun = new THREE.DirectionalLight(0xffffff, 0.4 * Math.PI);
@@ -93,6 +114,10 @@ export class TruckGame {
   private lensOn = false;
   private lensAmount = 0;
   private lastCards = '';
+  /** The truck tour: where the camera is and where it is flying to (null: the player's own view). */
+  private tourView: Pose | null = null;
+  private tourTarget: Pose | null = null;
+  private tourReturning = false;
 
   /** All of today's customers, in the order they arrive (their place sets their arrival time). */
   private readonly allOrders: readonly DayCustomer[];
@@ -157,6 +182,8 @@ export class TruckGame {
         if (!on && !this.paused) this.lockMouse();
       }),
       bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
+      bridge.on('tour', (object) => this.setTour(object)),
+      bridge.on('snapshotRequest', () => this.bridge.emit('snapshots', this.snapshots())),
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
       bridge.on('lock', () => {
         if (!this.lensOn) this.lockMouse();
@@ -302,6 +329,85 @@ export class TruckGame {
     this.setSky(sky);
   }
 
+  // ── The truck tour and the guide's pictures ──────────────────────────────────────────
+
+  private playerPose(): Pose {
+    return { x: this.at.x, y: EYE_Y, z: this.at.z, yaw: this.yaw, pitch: this.pitch };
+  }
+
+  /** Fly the camera to an object's tour stop, or (null) back to where the player stands. */
+  private setTour(object: InteractableId | null): void {
+    const stop = object ? stopPose(object) : null;
+    // Look a little lower than the object, so it sits in the upper half of the screen, above the
+    // tour's card.
+    const pose = stop ? { ...stop, pitch: stop.pitch - 0.32 } : null;
+    if (pose) {
+      this.tourView ??= this.playerPose();
+      this.tourTarget = pose;
+      this.tourReturning = false;
+    } else if (this.tourView) {
+      this.tourTarget = this.playerPose();
+      this.tourReturning = true;
+    }
+  }
+
+  /** Moves the tour camera a little closer to its target; ends the tour once back with the player. */
+  private updateTour(seconds: number): void {
+    if (!this.tourView || !this.tourTarget) return;
+    const k = 1 - Math.exp(-seconds * 4.5);
+    const v = this.tourView;
+    const t = this.tourTarget;
+    v.x += (t.x - v.x) * k;
+    v.y += (t.y - v.y) * k;
+    v.z += (t.z - v.z) * k;
+    v.yaw += angleStep(v.yaw, t.yaw) * k;
+    v.pitch += (t.pitch - v.pitch) * k;
+    const near = Math.hypot(t.x - v.x, t.z - v.z) < 0.01 && Math.abs(angleStep(v.yaw, t.yaw)) < 0.01;
+    if (this.tourReturning && near) {
+      this.tourView = null;
+      this.tourTarget = null;
+      this.tourReturning = false;
+    }
+  }
+
+  /**
+   * A small picture of every object, from its tour stop, in the game's own look (so the guide
+   * always matches the game). Drawn straight after rendering, then the normal view comes back.
+   */
+  private snapshots(): Record<string, string> {
+    const pictures: Record<string, string> = {};
+    const canvas = this.renderer.domElement;
+    const out = document.createElement('canvas');
+    out.width = 320;
+    out.height = 200;
+    const ctx = out.getContext('2d');
+    if (!ctx) return pictures;
+    const lens = this.lensAmount;
+    this.look.setLens(0);
+    const knocked = this.manager.visible;
+    this.manager.visible = false;
+    const fov = this.camera.fov;
+    this.camera.fov = PICTURE_FOV;
+    this.camera.updateProjectionMatrix();
+    for (const stop of TOUR_STOPS) {
+      const pose = stopPose(stop.object)!;
+      this.camera.position.set(pose.x, pose.y, pose.z);
+      this.camera.rotation.set(pose.pitch, pose.yaw, 0, 'YXZ');
+      this.camera.updateMatrixWorld();
+      this.look.render(this.renderer, this.scene, this.camera);
+      // The middle of the view, at the picture's shape (16:10).
+      const w = Math.min(canvas.width, (canvas.height * out.width) / out.height);
+      const h = (w * out.height) / out.width;
+      ctx.drawImage(canvas, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h, 0, 0, out.width, out.height);
+      pictures[stop.object] = out.toDataURL('image/jpeg', 0.85);
+    }
+    this.look.setLens(lens);
+    this.manager.visible = knocked;
+    this.camera.fov = fov;
+    this.camera.updateProjectionMatrix();
+    return pictures;
+  }
+
   // ── Every frame ──────────────────────────────────────────────────────────────────────
 
   private loop = (now: number): void => {
@@ -320,8 +426,20 @@ export class TruckGame {
     const moving = Object.values(this.keys).some(Boolean) && dt > 0;
     this.walkClock += dt;
     const bob = moving ? Math.sin(this.walkClock * 9) * 0.025 : 0;
-    this.camera.position.set(this.at.x, EYE_Y + bob, this.at.z);
-    this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
+    this.updateTour(seconds);
+    // Zoom in a little while touring, smoothly.
+    const fovTarget = this.tourView && !this.tourReturning ? TOUR_FOV : FOV;
+    if (Math.abs(this.camera.fov - fovTarget) > 0.05) {
+      this.camera.fov += (fovTarget - this.camera.fov) * (1 - Math.exp(-seconds * 4.5));
+      this.camera.updateProjectionMatrix();
+    }
+    if (this.tourView) {
+      this.camera.position.set(this.tourView.x, this.tourView.y, this.tourView.z);
+      this.camera.rotation.set(this.tourView.pitch, this.tourView.yaw, 0, 'YXZ');
+    } else {
+      this.camera.position.set(this.at.x, EYE_Y + bob, this.at.z);
+      this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
+    }
 
     const eye = { x: this.at.x, y: EYE_Y, z: this.at.z };
     const aimed = this.paused ? null : aimedInteractable(eye, lookDirection(this.yaw, this.pitch));

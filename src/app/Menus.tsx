@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { UiText } from '../i18n';
 import { LANGS, type Lang } from '../sql-core/feedback';
 import { formatClock, OPENING } from '../sql-core/truck/day';
-import { guideFor } from './guide';
+import { guideFor, type GuideItem } from './guide';
 
 /**
  * The game's menus (GAME_DESIGN.md §7): the title screen (which is also the loading screen), the
@@ -36,11 +36,12 @@ export function TitleScreen(props: {
   dataError: string | null;
   onStart: () => void;
   onGuide: () => void;
+  onTour: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, clock, worldReady, dataReady, dataError, onStart, onGuide, lang, setLang, t } = props;
+  const { dayNumber, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   const started = clock > OPENING;
   return (
@@ -61,6 +62,9 @@ export function TitleScreen(props: {
         )}
         <button className="menu-button" onClick={onGuide}>
           📖 {t.howToPlay}
+        </button>
+        <button className="menu-button" onClick={onTour} disabled={!worldReady}>
+          🎥 {t.tourStart}
         </button>
         <LangSwitch lang={lang} setLang={setLang} t={t} />
       </div>
@@ -87,13 +91,14 @@ export function LoadingScreen({ t }: { t: UiText }) {
 export function PauseMenu(props: {
   onResume: () => void;
   onGuide: () => void;
+  onTour: () => void;
   onRestart: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onRestart, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onRestart, onTitle, lang, setLang, t } = props;
   const [confirmRestart, setConfirmRestart] = useState(false);
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
@@ -105,6 +110,9 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onGuide}>
           📖 {t.howToPlay}
+        </button>
+        <button className="menu-button" onClick={onTour}>
+          🎥 {t.tourStart}
         </button>
         {confirmRestart ? (
           <div className="pause-confirm">
@@ -131,7 +139,21 @@ export function PauseMenu(props: {
 }
 
 /** How to play: one page at a time, chosen from the tabs on the left. */
-export function Guide({ lang, t, onClose }: { lang: Lang; t: UiText; onClose: () => void }) {
+export function Guide({
+  lang,
+  t,
+  onClose,
+  pictures,
+  onTour,
+}: {
+  lang: Lang;
+  t: UiText;
+  onClose: () => void;
+  /** Pictures of the truck's objects, taken in the game (object id → image URL). */
+  pictures: Record<string, string>;
+  /** Start the truck tour (shown on the pages that list the truck's objects). */
+  onTour: () => void;
+}) {
   const pages = guideFor(lang);
   const [index, setIndex] = useState(0);
   const page = pages[Math.min(index, pages.length - 1)];
@@ -172,25 +194,15 @@ export function Guide({ lang, t, onClose }: { lang: Lang; t: UiText; onClose: ()
             {page.paragraphs.map((text) => (
               <p key={text}>{text}</p>
             ))}
+            {page.items?.some((item) => item.object) && (
+              <button className="menu-button menu-button-main guide-tour-button" onClick={onTour}>
+                🎥 {t.tourStart}
+              </button>
+            )}
             {page.items && (
               <ul className="guide-items">
                 {page.items.map((item) => (
-                  <li key={item.name}>
-                    <span className="guide-item-icon" aria-hidden="true">
-                      {item.icon}
-                    </span>
-                    <div>
-                      <p className="guide-item-name">{item.name}</p>
-                      {item.tables && (
-                        <p className="guide-item-tables">
-                          {item.tables.map((table) => (
-                            <code key={table}>{table}</code>
-                          ))}
-                        </p>
-                      )}
-                      <p>{item.text}</p>
-                    </div>
-                  </li>
+                  <GuideEntry key={item.name} item={item} picture={item.object ? pictures[item.object] : undefined} t={t} />
                 ))}
               </ul>
             )}
@@ -213,6 +225,127 @@ export function Guide({ lang, t, onClose }: { lang: Lang; t: UiText; onClose: ()
             </footer>
           </article>
         </div>
+      </section>
+    </div>
+  );
+}
+
+/** One object or control in the guide: its picture from the game (or an icon), and what it is for. */
+function GuideEntry({ item, picture, t }: { item: GuideItem; picture?: string; t: UiText }) {
+  return (
+    <li className={picture || item.object ? 'guide-entry guide-entry-pictured' : 'guide-entry'}>
+      {item.object ? (
+        picture ? (
+          <img className="guide-picture" src={picture} alt={item.name} />
+        ) : (
+          <div className="guide-picture guide-picture-empty" aria-hidden="true">
+            {item.icon}
+          </div>
+        )
+      ) : (
+        <span className="guide-item-icon" aria-hidden="true">
+          {item.icon}
+        </span>
+      )}
+      <div>
+        <p className="guide-item-name">{item.name}</p>
+        {item.where && <p className="guide-item-where">📍 {item.where}</p>}
+        {item.tables && (
+          <p className="guide-item-tables">
+            <span>{t.guideTables}</span>
+            {item.tables.map((table) => (
+              <code key={table}>{table}</code>
+            ))}
+          </p>
+        )}
+        <p>{item.text}</p>
+        {item.example && (
+          <p className="guide-item-example">
+            💬 {t.guideExample} {item.example}
+          </p>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * The truck tour: the camera flies to each object while this card, at the bottom of the screen,
+ * says what it is for. Same words as the guide's truck page.
+ */
+export function TruckTour({
+  items,
+  step,
+  onStep,
+  onClose,
+  t,
+}: {
+  items: GuideItem[];
+  step: number;
+  onStep: (step: number) => void;
+  onClose: () => void;
+  t: UiText;
+}) {
+  const item = items[step];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (step < items.length - 1) onStep(step + 1);
+        else onClose();
+      }
+      if (e.key === 'ArrowLeft' && step > 0) onStep(step - 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step, items.length, onStep, onClose]);
+  if (!item) return null;
+  return (
+    <div className="tour" role="dialog" aria-label={t.tourTitle}>
+      <section className="tour-card">
+        <header className="tour-header">
+          <span className="tour-step">
+            🎥 {t.tourTitle} · {step + 1}/{items.length}
+          </span>
+          <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
+            ✕
+          </button>
+        </header>
+        <h2 className="tour-name">{item.name}</h2>
+        {item.where && <p className="guide-item-where">📍 {item.where}</p>}
+        {item.tables && (
+          <p className="guide-item-tables">
+            <span>{t.guideTables}</span>
+            {item.tables.map((table) => (
+              <code key={table}>{table}</code>
+            ))}
+          </p>
+        )}
+        <p className="tour-text">{item.text}</p>
+        {item.example && (
+          <p className="guide-item-example">
+            💬 {t.guideExample} {item.example}
+          </p>
+        )}
+        <footer className="tour-nav">
+          <button className="link-button" disabled={step === 0} onClick={() => onStep(step - 1)}>
+            ← {t.guidePrev}
+          </button>
+          <div className="tour-dots" aria-hidden="true">
+            {items.map((it, i) => (
+              <span key={it.name} className={i === step ? 'tour-dot tour-dot-on' : 'tour-dot'} />
+            ))}
+          </div>
+          {step < items.length - 1 ? (
+            <button className="menu-button menu-button-main" onClick={() => onStep(step + 1)} autoFocus>
+              {t.guideNext} →
+            </button>
+          ) : (
+            <button className="menu-button menu-button-main" onClick={onClose} autoFocus>
+              {t.tourDone} ✓
+            </button>
+          )}
+        </footer>
       </section>
     </div>
   );

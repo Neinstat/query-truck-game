@@ -17,7 +17,9 @@ import {
   PARK_RADIUS,
   PATH_CLEARANCE,
   LAYOUT,
+  lookAtAngles,
   lookDirection,
+  TOUR_STOPS,
   queuePosition,
   rayBox,
   REACH,
@@ -180,3 +182,25 @@ describe('the park', () => {
   });
 });
 
+
+describe('the truck tour', () => {
+  it('stands inside the truck at every stop, looking at the object shown', () => {
+    for (const stop of TOUR_STOPS) {
+      expect(stop.eye.x).toBeGreaterThanOrEqual(WALK.minX);
+      expect(stop.eye.x).toBeLessThanOrEqual(WALK.maxX);
+      expect(stop.eye.z).toBeGreaterThanOrEqual(WALK.minZ);
+      expect(stop.eye.z).toBeLessThanOrEqual(WALK.maxZ);
+      const { yaw, pitch } = lookAtAngles(stop.eye, stop.target);
+      // Nothing else stands between the camera and the object it shows.
+      const dir = lookDirection(yaw, pitch);
+      const hits = INTERACTABLE_BOXES.map((b) => ({ id: b.id, t: rayBox(stop.eye, dir, b.box) }))
+        .filter((h): h is { id: typeof h.id; t: number } => h.t !== null)
+        .sort((a, b) => a.t - b.t);
+      expect(hits[0]?.id, stop.object).toBe(stop.object);
+    }
+  });
+
+  it('visits every object the player can use, once', () => {
+    expect(TOUR_STOPS.map((s) => s.object).sort()).toEqual([...new Set(INTERACTABLE_BOXES.map((b) => b.id))].sort());
+  });
+});

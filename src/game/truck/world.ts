@@ -154,6 +154,29 @@ export function aimedInteractable(eye: Vec3, dir: Vec3): InteractableId | null {
   return best?.id ?? null;
 }
 
+/** The yaw and pitch that look from `eye` straight at `target` (inverse of lookDirection). */
+export function lookAtAngles(eye: Vec3, target: Vec3): { yaw: number; pitch: number } {
+  const dx = target.x - eye.x;
+  const dy = target.y - eye.y;
+  const dz = target.z - eye.z;
+  return { yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)) };
+}
+
+const centre = (b: Box3): Vec3 => ({ x: (b.min.x + b.max.x) / 2, y: (b.min.y + b.max.y) / 2, z: (b.min.z + b.max.z) / 2 });
+
+/**
+ * The truck tour (GAME_DESIGN.md §7): where the camera stands to show each object, looking
+ * straight at it (a step back where that frames it better, so not always within reach). Also used for the pictures in the how-to-play guide. In tour order.
+ */
+export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: Vec3 }[] = [
+  { object: 'tablet', eye: { x: 0.2, y: EYE_Y, z: 0.15 }, target: centre(LAYOUT.tablet) },
+  { object: 'fridge', eye: { x: -0.9, y: EYE_Y, z: 0.35 }, target: centre(LAYOUT.fridge) },
+  { object: 'recipe-shelf', eye: { x: 1.2, y: EYE_Y, z: -0.25 }, target: centre(LAYOUT.recipeShelf) },
+  { object: 'menu-board', eye: { x: 0.45, y: EYE_Y, z: -0.35 }, target: centre(LAYOUT.menuBoard) },
+  { object: 'back-door', eye: { x: 0.4, y: EYE_Y, z: 0 }, target: centre(LAYOUT.door) },
+  { object: 'guide-book', eye: { x: 0.4, y: EYE_Y, z: -0.05 }, target: centre(LAYOUT.guideBook) },
+];
+
 // ── The queue in the park ───────────────────────────────────────────────────────────
 
 /** Waypoints on the park ground, in queue progress units (queue.ts). */

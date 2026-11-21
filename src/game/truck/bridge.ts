@@ -14,6 +14,9 @@
  *   game → app   'patience' how much patience the customer at the window has left (0–1), or null
  *   game → app   'gaveUp'  a customer waited too long and left without buying (their order id)
  *   game → app   'knock'   The Manager is knocking on the back door (once a day)
+ *   app → game   'tour'    the truck tour: fly the camera to this object (null: back to the player)
+ *   app → game   'snapshotRequest'  draw a picture of every object (for the guide) → 'snapshots'
+ *   game → app   'snapshots'  object id → a small JPEG data URL of that object, seen from its tour stop
  *   app → game   'lock'    back to playing from a menu (called from a click): capture the mouse again
  *   app → game   'door'    open (true) or close the back door: the Manager stands outside
  *   app → game   'managerDone' the Manager got their answers and leaves
@@ -53,6 +56,9 @@ type TruckEvents = {
   lens: boolean;
   lensCards: LensCard[];
   lock: true;
+  tour: InteractableId | null;
+  snapshotRequest: true;
+  snapshots: Record<string, string>;
 };
 
 type Listener<T> = (payload: T) => void;
