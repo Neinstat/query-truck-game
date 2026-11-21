@@ -10,19 +10,17 @@ with their source and licence. Earlier 2D art lives only in git history (see `do
 
 | Part | Status | Notes for the final version |
 |---|---|---|
-| Low-poly neon look: flat shading, thin ink outlines, bloom glow, vignette, a smoggy sky over the day (cyberpunk since 21 Nov 2026) | 🟨 Style chosen | Tune glow strength and sky colours once final models are in |
+| Low-poly look: flat shading, thin ink outlines, sky over the day (the riso dither was dropped 21 Nov 2026) | 🟨 Style chosen | Tune outline strength and sky colours once final models are in |
 | Truck interior: walls, serving window, counters, tablet, tip jar, plant | 🟥 Placeholder | A CC0 kitchen / food-truck kit |
 | Fridge with bottles, stock shelves with boxes and coffee sacks | 🟥 Placeholder | |
 | Red espresso machine, wall clock, menu board, recipe binders | 🟥 Placeholder | Clock hands should follow the time of day |
 | Back door, spare apron | 🟥 Placeholder | |
 | Guide book on the back counter, "GUIDE ?" sign (text drawn in a canvas) | 🟥 Placeholder | |
-| Neon street (`city.ts`): wet asphalt, sidewalk and guide lights, benches, standing tables with neon umbrellas, street lamps, string lights, holo pylons, raised walkway, shop fronts, towers with lit windows (canvas textures), neon signs (canvas text), flying cars, fake neon reflections | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7); a CC0 city kit could replace the boxes |
-| Rain (`rain.ts`): GPU streaks and splash rings, lightning flashes | 🟨 Style chosen | Drops on the serving window could come later |
-| Sound (`src/audio/sound.ts`): all synthesized — city hum, rain, roof drops, thunder, flying cars, sirens, till, chimes, knocks, footsteps, UI clicks | 🟨 Style chosen | Could be replaced by CC0 recordings; mixing levels to tune in a playtest |
+| Park: lawn, path, benches, picnic tables, lamps, string lights, trees, skyline, sun | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7) |
 | Customers (blocky people with swinging limbs, 5 looks in `looks.ts`) | 🟥 Placeholder | CC0 animated low-poly characters (walk, idle, happy, annoyed) |
 | The Manager (suit, red tie, glasses, report tablet) | 🟥 Placeholder | |
 | Crosshair, aim label, speech bubble (HTML) | 🟨 Style chosen | |
-| Data Lens: cyan hologram mode in the shader, table cards (HTML) | 🟨 Style chosen | Cards may need a smarter layout when several overlap |
+| Data Lens: blueprint mode in the shader, table cards (HTML) | 🟨 Style chosen | Cards may need a smarter layout when several overlap |
 | Title screen, pause menu, how-to-play guide (HTML) | 🟨 Style chosen | |
 
 Legend: 🟥 placeholder · 🟨 style chosen, may be polished · 🟩 final · ⬜ not made yet

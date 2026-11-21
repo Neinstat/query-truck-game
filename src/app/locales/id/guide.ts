@@ -7,7 +7,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
     icon: '🚚',
     title: 'Tugasmu',
     paragraphs: [
-      'Kamu karyawan baru di Rolling Roast, truck kopi yang parkir di jalan penuh neon di Neo Valley, kota raksasa yang sering hujan di tahun 2077. Buka dari jam 10.00 sampai 17.00.',
+      'Kamu karyawan baru di Rolling Roast, truck kopi yang parkir di taman kota. Buka dari jam 10.00 sampai 17.00.',
       'Pelanggan antre di jendela. Masing-masing bertanya soal menu, stok, atau resep. Kamu mencari jawabannya dengan SQL — dan jawaban itu adalah pesanan mereka.',
       'Kalau hasilmu sudah benar, serahkan pesanannya. Truck mencatat penjualannya di tabel sales, jadi pekerjaanmu sendiri menjadi data.',
       'Jam berhenti selama konsol atau menu ini terbuka: menulis SQL tidak pernah diberi batas waktu.',

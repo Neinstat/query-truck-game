@@ -1,42 +1,40 @@
 /**
- * The palette (GAME_DESIGN.md §7): the only colours the 3D world uses. Since 21 Nov 2026 the game
- * is ORDER BY 2077, a cyberpunk night city, so the inks are dark metals, wet asphalt and neon. The
- * ink names are kept from the earlier risograph palette (paper, ink, teal…) so every model keeps
- * its role: "paper" is now a dark steel panel, "teal" a cyan neon, "mustard" amber, "red" hot pink.
- * Our own palette (no third-party licence).
+ * The riso inks (GAME_DESIGN.md §14.8): the only colours the game uses. Models are painted in
+ * these inks, and the risograph shader (truck/risoPass.ts) maps every pixel back onto them with
+ * dithered dots and mis-registered red outlines. Our own palette (no third-party licence).
  */
 export const RISO = {
-  // Steel panels (the truck's walls) and light trim.
-  paper: '#2e3352',
-  paperShade: '#2a2f4a',
-  white: '#c9d4f0',
-  // Ink (outlines, dark metal): near black with a blue tint.
-  ink: '#0a0c18',
-  inkSoft: '#22273f',
-  // Hot pink neon.
-  red: '#ff2e88',
-  redDark: '#9a1450',
-  pink: '#ff8cc6',
-  // Cyan neon.
-  teal: '#0fb5c4',
-  tealDark: '#0b4a5c',
-  tealLight: '#62f4ff',
-  // Amber neon.
-  mustard: '#ffb21e',
-  mustardDark: '#b8650a',
-  // Night haze.
-  peach: '#2a1840',
-  lilac: '#4b2f7a',
-  // Wet asphalt.
-  grass: '#151827',
-  grassDark: '#0f1120',
-  // Dark composite "wood" (counters, benches).
-  wood: '#4a3a52',
-  woodDark: '#2b2236',
+  // Paper.
+  paper: '#f4ead5',
+  paperShade: '#e6d6b6',
+  white: '#fffaf0',
+  // Ink (outlines, text) — a deep blue, not black.
+  ink: '#25304f',
+  inkSoft: '#4a5878',
+  // Tomato red (the "mis-registered" layer).
+  red: '#e4573d',
+  redDark: '#a83b2a',
+  pink: '#f3a59a',
+  // Teal.
+  teal: '#2b9c8e',
+  tealDark: '#1c6b63',
+  tealLight: '#9ad6c8',
+  // Mustard.
+  mustard: '#f2b234',
+  mustardDark: '#c58a1f',
+  // Dusk sky.
+  peach: '#f8c7a4',
+  lilac: '#c9b3d9',
+  // Park.
+  grass: '#79b25d',
+  grassDark: '#4f8a49',
+  // Wood.
+  wood: '#c27b4b',
+  woodDark: '#8a5134',
   // Skin tones.
-  skin1: '#f0c4a2',
-  skin2: '#c98d68',
-  skin3: '#8a573c',
+  skin1: '#f6cfae',
+  skin2: '#d9a07a',
+  skin3: '#9a6446',
 } as const;
 
 export type Ink = keyof typeof RISO;

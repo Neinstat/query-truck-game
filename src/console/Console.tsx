@@ -10,7 +10,6 @@ import { SchemaPanel, type Table } from './SchemaPanel';
 import { SqlEditor } from './SqlEditor';
 import { BlockInput } from './BlockInput';
 import { FillBlankInput } from './FillBlankInput';
-import { sound } from '../audio/sound';
 
 type Props = {
   db: CafeDatabase;
@@ -48,15 +47,9 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
       const next = await checkAnswer(db, sql, level.solution, level.check, level.station);
       setOutcome(next);
       setCrash(null);
-      if (next.verdict.correct) {
-        sound.play('correct');
-        onCorrect(mistakes);
-      }
+      if (next.verdict.correct) onCorrect(mistakes);
       // A query the player stopped isn't a wrong answer.
-      else if (next.verdict.feedback.kind !== 'stopped') {
-        sound.play('wrong');
-        setMistakes((n) => n + 1);
-      }
+      else if (next.verdict.feedback.kind !== 'stopped') setMistakes((n) => n + 1);
     } catch (err) {
       // Only happens when the level's own solution is broken.
       setCrash(String(err));

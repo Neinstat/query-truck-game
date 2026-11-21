@@ -1,10 +1,8 @@
-# ORDER BY 2077 — Game Design Document
+# SQL Valley — Game Design Document
 
-> A first-person 3D web game for learning SQL while learning to **think like a Business Intelligence (BI) analyst**. You run a coffee food truck on a neon street in **Neo Valley**, a rainy cyberpunk megacity in 2077; customers at the window bring requests you answer with SQL on the truck's tablet, and a bossy manager knocks on the back door with business questions.
+> A first-person 3D web game for learning SQL while learning to **think like a Business Intelligence (BI) analyst**. You run a coffee food truck parked in a city park; customers at the window bring requests you answer with SQL on the truck's tablet, and a bossy manager knocks on the back door with business questions.
 >
 > **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. Phase 4 (the one-day prototype) is done; **Phase 5 (order generator & repetition) is in progress.** Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
->
-> The game was called **SQL Valley** (in a city park) until 21 Nov 2026, when the owner renamed it and moved it to a cyberpunk city (see §7).
 >
 > This document is the single source of truth for design decisions. Update it whenever a new decision is made.
 >
@@ -19,7 +17,7 @@ Most SQL resources only teach **syntax**:
 - **SQLBolt** has a gentle, easy-to-follow learning curve, but it is not very interactive or fun.
 - **LeetCode** is interactive, but its case studies often jump too far in difficulty for beginners.
 
-**ORDER BY 2077** keeps SQLBolt's gentle curve, wraps it in game mechanics that make players want to keep going, and ends with the skill real data jobs need: **answering business questions with data** — all the way to "sales dropped last month, why?".
+**SQL Valley** keeps SQLBolt's gentle curve, wraps it in game mechanics that make players want to keep going, and ends with the skill real data jobs need: **answering business questions with data** — all the way to "sales dropped last month, why?".
 
 ## 2. Players
 
@@ -42,7 +40,7 @@ The end goal: people who want a career as a **data / BI analyst**, who need both
 ### Story and characters
 A **completely fresh start** (owner's decision, 16 Nov 2026): v1's story (Grandma's café) and its characters are not used.
 
-- The player is the **new hire** at **Rolling Roast**, a coffee food truck owned by a small company, **Valley Eats Co.** The truck is parked on a neon street in **Neo Valley**, a rainy megacity in the year **2077** (since 21 Nov 2026; before that, a city park), and opens **10:00–17:00**. The name is an SQL pun: the game's own `ORDER BY`, and the year.
+- The player is the **new hire** at **Rolling Roast**, a coffee food truck owned by a small company, **Valley Eats Co.** The truck is parked in a city park and opens **10:00–17:00**.
 - **The Manager** — a boss in a sharp suit and tie, carrying a report tablet. Now and then they knock on the truck's back door and ask for numbers: sales, revenue, what keeps selling out, this month's target. They are **bossy**: short, demanding, no small talk ("Numbers. Now.", "I don't want feelings, I want revenue by day."). A right answer earns a small, stiff compliment.
 - **Customers** queue at the window: new faces, each with their own way of talking. Some become regulars who come back on other days.
 - **A supplier's courier** delivers stock in the morning and brings tasks about `inventory`.
@@ -126,15 +124,12 @@ The look was found through six prototypes (see [`docs/JOURNEY.md`](docs/JOURNEY.
 
 - **First-person 3D** with **Three.js**. The player stands inside the truck: **WASD / arrow keys** to walk, the **mouse** to look (captured automatically, no click needed; Esc frees it and pauses), aim the **crosshair** at something and press **E** or click. Movement stays inside the truck so the focus stays on SQL.
 - **The truck** (6 × 2.4 × 2.4 m): serving window + counter + tablet in the front wall; **fridge & stock shelves** at the left end (`inventory`); a **back counter** with a red espresso machine, a clock, the **menu board** (`menu_items`) and the **recipe binders** (`recipes`); the **back door** at the right end (The Manager).
-- **A cyberpunk night city** (owner's request, 21 Nov 2026, after a reference picture of a neon street in the rain: *a bit dark, but with futuristic neon, and sometimes rain*). The truck is parked on a wet street in **Neo Valley** (`src/game/truck/city.ts`): a sidewalk with amber guide lights along the path customers queue on, metal benches and standing tables under dark umbrellas with neon rims (which will **fill with visitors when business is good**, Phase 7), street lamps with cyan tubes and string lights, holographic ad pylons, a raised walkway with a railing, shop fronts with lit glass under it, towers with lit windows, vertical and horizontal **neon signs with SQL puns** (*NOODLE JOIN*, *NULL BAR*, *GROUP BY*, *LIMIT 1*, *SELECT \* FROM DREAMS*, a giant *ORDER BY 2077*), and flying cars crossing the sky. Some signs flicker. Neon on the ground is faked with soft additive streaks, stronger when the street is wet. The ground is 0.35 m lower than the truck floor so customers' heads sit in the window. Inside, the truck has neon strips, glowing screens (tablet, menu board) and a cool light; customers wear a glowing seam.
-- **The day in the sky** (`sky.ts`): the city is never bright — a hazy teal morning under the smog, a dim grey noon, a violet afternoon, a magenta dusk, a deep blue night. The neon is always on and glows strongest at night.
-- **Weather** (`weather.ts`, `rain.ts`): about 7 days in 10 bring one or two showers (40–110 game minutes, light to heavy, soft start and end), planned from the day's orders so a reload brings the same weather. Rain falls as GPU streaks with splash rings (never inside the truck); the street gets darker and its neon reflections stronger, the haze comes closer, and in heavy rain lightning flashes now and then. The clock card shows 🌧 *Rain*. `?rain` in the address forces a downpour from opening time (for testing).
-- **Sound design** (`src/audio/sound.ts`): every sound is **synthesized** with the Web Audio API — no audio files, nothing to license. Ambience: the city's hum, rain (hiss, roar and drops on the roof, louder the harder it rains), thunder after lightning, flying cars passing from one ear to the other, a far-away siren. Effects: a chime when a customer arrives, the till when an order is served, a rising arpeggio for a right answer and a low buzz for a wrong one, the Manager's knock (repeated until the door opens), the door, footsteps on the metal floor, the tablet opening and closing, the Data Lens, the end of the day, soft clicks on buttons. Menus and consoles muffle the street. **Sound on/off and volume** are on the title screen and in the pause menu (saved in the browser). The app plays sounds from bridge events (`useSound.ts`), so the 3D code stays free of audio.
-- **A clean low-poly neon style** (changed 21 Nov 2026): flat-shaded shapes in a small palette of dark metals, wet asphalt and neon (`src/game/art/riso.ts`; the ink names are kept from the risograph days, so *paper* is now a steel panel and *teal* a cyan neon), drawn at full screen resolution, with a thin, soft ink outline where depth jumps, a **bloom** glow (bright parts blurred at a half and a sixth of the size and added back) and a soft vignette (`src/game/truck/lookPass.ts`). The UI (cards, HUD, SQL editor) is dark with neon pink, cyan and amber. Until then the game used a "risograph print" look (low resolution, a 4×4 Bayer dither onto a few inks, a mis-registered red outline); the owner found the dither tiring to look at while playing, so it was dropped. Colours are used exactly as written (no sRGB → linear conversion), and lights are neutral × π (Three.js uses physical light units).
-- **Signature feature: the "Data Lens"** (built in 4.8) — **L** or the 🔍 button fades the world into a cyan hologram on black with a grid (a teal blueprint on paper before 21 Nov 2026), and a card floats over every object with its tables (row counts, columns, two sample rows). The tables the current order needs are starred in mustard, so the lens also hints where to look. The world and the database feel like one.
+- **Parked in a city park:** a striped lawn, the path customers queue on, benches and picnic tables with umbrellas (which will **fill with visitors when business is good**, Phase 7), lamp posts and string lights, trees, a distant city skyline, a low sun. The park ground is 0.35 m lower than the truck floor so customers' heads sit in the window.
+- **A clean low-poly style** (changed 21 Nov 2026): flat-shaded shapes in a small palette (`src/game/art/riso.ts`), drawn at full screen resolution, with a thin, soft ink outline where depth jumps (`src/game/truck/lookPass.ts`). Until then the game used a "risograph print" look (low resolution, a 4×4 Bayer dither onto a few inks, a mis-registered red outline); the owner found the dither tiring to look at while playing, so it was dropped. Colours are used exactly as written (no sRGB → linear conversion), and lights are neutral × π (Three.js uses physical light units).
+- **Signature feature: the "Data Lens"** (built in 4.8) — **L** or the 🔍 button fades the world into a teal blueprint on paper with a grid, and a card floats over every object with its tables (row counts, columns, two sample rows). The tables the current order needs are starred in mustard, so the lens also hints where to look. The world and the database feel like one.
 - **Placeholder models** made from basic shapes (boxes, cylinders, spheres). Final models will come from **CC0** 3D packs (Kenney, Quaternius, Poly Pizza), recoloured to the palette. The status of every part is in [`docs/ASSETS.md`](docs/ASSETS.md); sources and licences go in `CREDITS.md`.
 - React draws the overlays (the SQL tablet, the speech bubble that follows the customer's head, the crosshair, the HUD). The 3D code never imports React; the two only talk through `src/game/truck/bridge.ts`.
-- Size: the 3D code (Three.js + game) is about 140 KB gzipped and loads after the page appears.
+- Size: the 3D code (Three.js + game) is about 128 KB gzipped and loads after the page appears.
 - Not yet: phone controls (see §13).
 
 ## 8. Data
@@ -300,7 +295,6 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 | 5.1 ✅ | **Order templates, mastery and days that follow:** templates with variants replace the hand-written orders; concept mastery + spaced repetition plan each day; "Open the next day" | Day 2, day 3… bring different orders, and weak concepts come back sooner |
 | 5.2 ✅ | **Input grows with mastery:** a well-known concept gets more blanks (a whole condition), then free typing | A level-4 concept is answered without a template |
 | 5.2b ✅ | **A proper game shell** (owner's request before 5.3): title + loading screen, Esc pause menu, how-to-play guide (also a book on the back counter), a calmer low-poly look, the sun from morning to night, a shorter day | A new player can start, pause and learn the controls and the truck without help |
-| 5.2c ✅ | **ORDER BY 2077** (owner's request): the game renamed and moved to a rainy cyberpunk city — neon street, glow, rain and lightning, synthesized sound design, dark neon UI | The owner sees the new look and hears it |
 | 5.3 | Owner playtest of several days + fixes | The owner plays three days and they feel different |
 
 **5.1 as built (20 Nov 2026):**
@@ -325,17 +319,15 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 - **No click to start looking around** (owner's request): the "Click to look around" card is gone. The game captures the mouse by itself whenever play resumes — after *Start*, closing a console or a menu (just after the player's click or key, so the browser allows it). Esc is the only way to free the mouse, and it pauses the game.
 - Time also stops while any menu is open. The bridge now remembers the last value of each event, so the game, created after the app, starts paused when the title screen is up.
 
-**5.2c as built (21 Nov 2026) — ORDER BY 2077:** the owner renamed the game and asked for a cyberpunk setting like a reference picture (a neon street at night, dark but full of neon, sometimes rain) with sound for the rain, sales and more. Built in one go, as a first pass before a fuller brief: the palette, sky, street, truck interior and customers restyled (§7); bloom and a hologram Data Lens in the look pass; weather with rain, splashes, wet reflections and lightning; synthesized sound design with a volume control; the dark neon UI; the new title on the title screen, the page and the docs. Browser saves keep their old `sql-valley.*` keys so nobody loses progress. Checked in the browser: the title screen, the street by day and at dusk, a downpour (`?rain`), the tablet with the neon SQL colours, the 🌧 tag on the clock card, every sound effect playing without errors.
-
 ## 13. Open questions
 
-- [x] Game title: **ORDER BY 2077** (21 Nov 2026; was *SQL Valley*). The truck keeps its name, *Rolling Roast*, for now
+- [ ] Truck name and game title — for now **SQL Valley**, with the truck called *Rolling Roast*
 - [ ] Should `INSERT`/`UPDATE` be taught in later weeks (the player records orders or restocks themselves)?
 - [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
 - [ ] Locations: only visual, or does each have its own customers and data?
 - [ ] Phone controls for 3D: a virtual joystick + drag to look, or turning side by side like prototype 4.5
 - [ ] Hosting (e.g. GitHub Pages / Vercel / Netlify)
-- [ ] Town setting: Neo Valley, a generic cyberpunk megacity — add a local touch (e.g. Indonesian street food signs)?
+- [ ] Town setting: generic and international, or with a local touch?
 
 ## History
 

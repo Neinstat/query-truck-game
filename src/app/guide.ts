@@ -27,7 +27,7 @@ export const GUIDE: readonly GuidePage[] = [
     icon: '🚚',
     title: 'Your job',
     paragraphs: [
-      "You are the new hire at Rolling Roast, a coffee truck parked on a neon street in Neo Valley, a rainy megacity in 2077. It's open from 10:00 to 17:00.",
+      "You are the new hire at Rolling Roast, a coffee truck parked in a city park. It's open from 10:00 to 17:00.",
       'Customers queue at the window. Each one asks something about the menu, the stock or the recipes. You find the answer with SQL — and the answer is their order.',
       'When your result is right, hand the order over. The truck records the sale in the sales table, so your own work becomes data.',
       'The clock stops while a console or this menu is open: writing SQL is never timed.',

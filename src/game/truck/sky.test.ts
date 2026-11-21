@@ -11,10 +11,10 @@ describe('the sky over the day', () => {
     expect(skyAt(CLOSING).sky).toBe(SKY_KEYS[SKY_KEYS.length - 1].sky);
   });
 
-  it('has the sun high at noon, setting in the evening, and the neon always on, brightest at night', () => {
+  it('has the sun high at noon, setting in the evening, and the lamps on only at dusk and night', () => {
     expect(skyAt(OPENING + 150).elevation).toBeGreaterThan(skyAt(OPENING).elevation);
     expect(skyAt(CLOSING - 30).elevation).toBeLessThan(5);
-    for (let m = OPENING; m <= CLOSING; m += 10) expect(skyAt(m).lamps).toBeGreaterThanOrEqual(0.6);
+    expect(skyAt(OPENING + 120).lamps).toBe(0);
     expect(skyAt(CLOSING).lamps).toBe(1);
     // Night is darker than noon.
     expect(skyAt(CLOSING).ambient).toBeLessThan(skyAt(OPENING + 150).ambient);

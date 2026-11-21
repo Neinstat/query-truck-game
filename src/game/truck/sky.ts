@@ -1,9 +1,7 @@
 /**
  * The day in the sky (GAME_DESIGN.md §7): the truck's working day, 10:00–17:00, is shown as a
- * whole day from morning to night over the neon city of ORDER BY 2077 — a hazy teal morning
- * under the smog, a dim grey noon, a violet afternoon, a magenta dusk and a deep blue night. The
- * city is never bright: the neon is always on, and glows strongest at night. Pure logic (no
- * Three.js), tested on its own.
+ * whole day from morning to night — a pale morning, a bright noon, a warm afternoon, a sunset,
+ * and night with the park's lamps on. Pure logic (no Three.js), tested on its own.
  */
 import { CLOSING, OPENING } from '../../sql-core/truck/day';
 
@@ -19,18 +17,18 @@ export type Sky = {
   across: number;
   /** The disc's colour (sun by day, moon at night). */
   disc: string;
-  /** How bright the street's neon and the truck's inside light are (0.6 = smoggy day, 1 = night). */
+  /** How bright the park's lamps and the truck's inside light are (0 = off, 1 = night). */
   lamps: number;
 };
 
 /** Keyframes over the working day: 0 = opening, 1 = closing. */
 export const SKY_KEYS: readonly (Sky & { at: number })[] = [
-  { at: 0, sky: '#1d2d40', sunColour: '#9fd6e0', sunLight: 0.22, ambient: 0.46, elevation: 18, across: -0.8, disc: '#cfe8e6', lamps: 0.62 },
-  { at: 0.35, sky: '#253246', sunColour: '#d8e2ee', sunLight: 0.26, ambient: 0.5, elevation: 50, across: -0.2, disc: '#e8eef2', lamps: 0.6 },
-  { at: 0.62, sky: '#2c2450', sunColour: '#c9a6e8', sunLight: 0.22, ambient: 0.44, elevation: 28, across: 0.25, disc: '#f0b8e0', lamps: 0.72 },
-  { at: 0.82, sky: '#3a1748', sunColour: '#ff7ab0', sunLight: 0.18, ambient: 0.38, elevation: 6, across: 0.55, disc: '#ff5c8a', lamps: 0.86 },
-  { at: 0.92, sky: '#1b1236', sunColour: '#9a7ad8', sunLight: 0.12, ambient: 0.33, elevation: -4, across: 0.7, disc: '#ff5c8a', lamps: 0.95 },
-  { at: 1, sky: '#080a1c', sunColour: '#7f8cff', sunLight: 0.1, ambient: 0.28, elevation: -10, across: 0.8, disc: '#dfe6ff', lamps: 1 },
+  { at: 0, sky: '#cfe6ea', sunColour: '#fff1d6', sunLight: 0.38, ambient: 0.78, elevation: 22, across: -0.8, disc: '#fff3c4', lamps: 0 },
+  { at: 0.35, sky: '#a8d8ec', sunColour: '#ffffff', sunLight: 0.45, ambient: 0.85, elevation: 58, across: -0.2, disc: '#fff6d8', lamps: 0 },
+  { at: 0.62, sky: '#f4d9a6', sunColour: '#ffe2b0', sunLight: 0.42, ambient: 0.76, elevation: 32, across: 0.25, disc: '#ffd36b', lamps: 0 },
+  { at: 0.82, sky: '#f19a78', sunColour: '#ff9f70', sunLight: 0.32, ambient: 0.6, elevation: 7, across: 0.55, disc: '#f2703f', lamps: 0.5 },
+  { at: 0.92, sky: '#7b5f8f', sunColour: '#c48aa8', sunLight: 0.16, ambient: 0.45, elevation: -4, across: 0.7, disc: '#f2703f', lamps: 0.9 },
+  { at: 1, sky: '#2b3354', sunColour: '#9fb0ff', sunLight: 0.12, ambient: 0.36, elevation: -10, across: 0.8, disc: '#e8ecff', lamps: 1 },
 ];
 
 /** How far through the working day a clock time is (0 at opening, 1 at closing). */

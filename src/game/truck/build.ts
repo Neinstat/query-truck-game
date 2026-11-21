@@ -5,11 +5,11 @@
  */
 import * as THREE from 'three';
 import type { Ink } from '../art/riso';
-import { hexColour, inkColour } from './colour';
-import { RISO } from '../art/riso';
+import { inkColour } from './colour';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { LOOKS } from './looks';
-import { CLOCK3D, GROUND_Y, LAYOUT, TRUCK, type Box3 } from './world';
+import type { Sky } from './sky';
+import { CLOCK3D, GROUND_Y, LAYOUT, PARK, QUEUE_PATH_3D, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
 export function mat(ink: Ink): THREE.MeshLambertMaterial {
@@ -18,23 +18,10 @@ export function mat(ink: Ink): THREE.MeshLambertMaterial {
   return m;
 }
 
-/** Unlit, glowing materials (neon tubes, screens): always at full colour; the look pass makes them glow. */
-const glowMaterials = new Map<string, THREE.MeshBasicMaterial>();
-export function glow(colour: string): THREE.MeshBasicMaterial {
-  let m = glowMaterials.get(colour);
-  if (!m) glowMaterials.set(colour, (m = new THREE.MeshBasicMaterial({ color: hexColour(colour) })));
-  return m;
-}
-
 /** A box from min/max corners. */
-function block(
-  parent: THREE.Object3D,
-  ink: Ink | THREE.Material,
-  b: Box3 | [number, number, number, number, number, number],
-): THREE.Mesh {
+function block(parent: THREE.Object3D, ink: Ink, b: Box3 | [number, number, number, number, number, number]): THREE.Mesh {
   const [x1, y1, z1, x2, y2, z2] = Array.isArray(b) ? b : [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z];
-  const material = typeof ink === 'string' ? mat(ink) : ink;
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(z2 - z1)), material);
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(z2 - z1)), mat(ink));
   mesh.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
   parent.add(mesh);
   return mesh;
@@ -55,13 +42,7 @@ export function buildTruck(): THREE.Group {
   block(g, 'wood', [-HX, -0.1, -HZ, HX, 0, HZ]);
   for (let x = -HX + 0.4; x < HX; x += 0.4) block(g, 'woodDark', [x, 0, -HZ, x + 0.02, 0.003, HZ]);
   block(g, 'inkSoft', [-HX, H, -HZ, HX, H + 0.1, HZ]);
-  for (let x = -2; x <= 2; x += 2) block(g, glow('#e8f4ff'), [x - 0.3, H - 0.03, -0.1, x + 0.3, H, 0.1]);
-  // Neon strips along the ceiling: cyan over the window, pink along the back wall.
-  block(g, glow(RISO.tealLight), [-HX, H - 0.05, -HZ + 0.01, HX, H - 0.02, -HZ + 0.05]);
-  block(g, glow(RISO.red), [-HX, H - 0.05, HZ - 0.05, HX, H - 0.02, HZ - 0.01]);
-  // A violet strip under the front counter's lip and a cyan one under the back counter's.
-  block(g, glow('#9d7bff'), [LAYOUT.frontCounter.min.x, 0.02, LAYOUT.frontCounter.max.z + 0.01, LAYOUT.frontCounter.max.x, 0.05, LAYOUT.frontCounter.max.z + 0.03]);
-  block(g, glow(RISO.tealLight), [LAYOUT.backCounter.min.x, 0.02, LAYOUT.backCounter.min.z - 0.03, LAYOUT.backCounter.max.x, 0.05, LAYOUT.backCounter.min.z - 0.01]);
+  for (let x = -2; x <= 2; x += 2) block(g, 'mustard', [x - 0.3, H - 0.04, -0.1, x + 0.3, H, 0.1]);
 
   // Front wall with the serving window cut out.
   block(g, 'paper', [-HX, 0, -HZ - T, w.min.x, H, -HZ]);
@@ -92,8 +73,7 @@ export function buildTruck(): THREE.Group {
   // Front counter (under the window) with a white top.
   const fc = LAYOUT.frontCounter;
   block(g, 'wood', [fc.min.x, 0, fc.min.z, fc.max.x, fc.max.y - 0.04, fc.max.z]);
-  block(g, 'inkSoft', [fc.min.x - 0.02, fc.max.y - 0.04, fc.min.z - 0.05, fc.max.x + 0.02, fc.max.y, fc.max.z + 0.03]);
-  block(g, glow(RISO.tealLight), [fc.min.x - 0.02, fc.max.y - 0.03, fc.max.z + 0.03, fc.max.x + 0.02, fc.max.y - 0.01, fc.max.z + 0.04]);
+  block(g, 'white', [fc.min.x - 0.02, fc.max.y - 0.04, fc.min.z - 0.05, fc.max.x + 0.02, fc.max.y, fc.max.z + 0.03]);
   for (let x = fc.min.x + 0.1; x < fc.max.x - 0.5; x += 0.6) block(g, 'woodDark', [x, 0.12, fc.max.z, x + 0.5, 0.8, fc.max.z + 0.01]);
 
   // Tablet (POS) on a stand, tilted towards the player.
@@ -101,10 +81,10 @@ export function buildTruck(): THREE.Group {
   block(g, 'ink', [t.min.x + 0.15, t.min.y, t.min.z + 0.06, t.max.x - 0.15, t.min.y + 0.08, t.max.z - 0.06]);
   const tablet = new THREE.Group();
   block(tablet, 'ink', [-0.18, -0.12, -0.012, 0.18, 0.12, 0.012]);
-  block(tablet, glow('#06303c'), [-0.16, -0.1, 0.012, 0.16, 0.1, 0.016]);
-  block(tablet, glow(RISO.mustard), [-0.13, 0.05, 0.016, -0.02, 0.065, 0.018]);
-  block(tablet, glow(RISO.tealLight), [-0.13, 0.02, 0.016, 0.1, 0.03, 0.018]);
-  block(tablet, glow(RISO.tealLight), [-0.13, -0.01, 0.016, 0.06, 0.0, 0.018]);
+  block(tablet, 'tealDark', [-0.16, -0.1, 0.012, 0.16, 0.1, 0.016]);
+  block(tablet, 'mustard', [-0.13, 0.05, 0.016, -0.02, 0.065, 0.018]);
+  block(tablet, 'tealLight', [-0.13, 0.02, 0.016, 0.1, 0.03, 0.018]);
+  block(tablet, 'tealLight', [-0.13, -0.01, 0.016, 0.06, 0.0, 0.018]);
   tablet.position.set((t.min.x + t.max.x) / 2, t.min.y + 0.14, (t.min.z + t.max.z) / 2);
   tablet.rotation.x = -0.5;
   g.add(tablet);
@@ -156,7 +136,7 @@ export function buildTruck(): THREE.Group {
   // Back counter, red espresso machine, menu board, recipe binders.
   const bc = LAYOUT.backCounter;
   block(g, 'wood', [bc.min.x, 0, bc.min.z, bc.max.x, bc.max.y - 0.04, bc.max.z]);
-  block(g, 'inkSoft', [bc.min.x - 0.02, bc.max.y - 0.04, bc.min.z - 0.03, bc.max.x + 0.02, bc.max.y, bc.max.z]);
+  block(g, 'white', [bc.min.x - 0.02, bc.max.y - 0.04, bc.min.z - 0.03, bc.max.x + 0.02, bc.max.y, bc.max.z]);
   const c = LAYOUT.coffeeMachine;
   block(g, 'red', [c.min.x, c.min.y, c.min.z, c.max.x, c.max.y - 0.08, c.max.z]);
   block(g, 'paperShade', [c.min.x + 0.04, c.max.y - 0.08, c.min.z + 0.04, c.max.x - 0.04, c.max.y, c.max.z - 0.04]);
@@ -171,11 +151,11 @@ export function buildTruck(): THREE.Group {
   const m = LAYOUT.menuBoard;
   block(g, 'woodDark', [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
   block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z]);
-  block(g, glow(RISO.mustard), [m.min.x + 0.2, m.max.y - 0.14, m.min.z - 0.03, m.max.x - 0.2, m.max.y - 0.1, m.min.z - 0.02]);
+  block(g, 'mustard', [m.min.x + 0.2, m.max.y - 0.14, m.min.z - 0.03, m.max.x - 0.2, m.max.y - 0.1, m.min.z - 0.02]);
   for (let i = 0; i < 5; i++) {
     const y = m.max.y - 0.24 - i * 0.1;
-    block(g, glow('#cfe0ff'), [m.min.x + 0.08, y, m.min.z - 0.03, m.min.x + 0.45 + (i % 3) * 0.12, y + 0.03, m.min.z - 0.02]);
-    block(g, glow(i % 2 ? RISO.pink : RISO.tealLight), [m.max.x - 0.22, y, m.min.z - 0.03, m.max.x - 0.08, y + 0.03, m.min.z - 0.02]);
+    block(g, 'paper', [m.min.x + 0.08, y, m.min.z - 0.03, m.min.x + 0.45 + (i % 3) * 0.12, y + 0.03, m.min.z - 0.02]);
+    block(g, i % 2 ? 'pink' : 'tealLight', [m.max.x - 0.22, y, m.min.z - 0.03, m.max.x - 0.08, y + 0.03, m.min.z - 0.02]);
   }
   const r = LAYOUT.recipeShelf;
   block(g, 'woodDark', [r.min.x - 0.05, r.min.y - 0.04, r.min.z, r.max.x + 0.05, r.min.y, r.max.z]);
@@ -215,8 +195,7 @@ export function buildTruck(): THREE.Group {
   const local = (b: [number, number, number, number, number, number]) =>
     [b[0] - d.min.x, b[1], b[2] - d.min.z, b[3] - d.min.x, b[4], b[5] - d.min.z] as [number, number, number, number, number, number];
   block(hinge, 'inkSoft', local([d.min.x - 0.02, d.min.y, d.min.z, d.max.x, d.max.y, d.max.z]));
-  block(hinge, glow('#3a2a66'), local([d.min.x - 0.03, 1.3, -0.25, d.min.x - 0.02, 1.8, 0.25]));
-  block(hinge, glow(RISO.red), local([d.min.x - 0.03, 1.86, -0.25, d.min.x - 0.02, 1.9, 0.25]));
+  block(hinge, 'peach', local([d.min.x - 0.03, 1.3, -0.25, d.min.x - 0.02, 1.8, 0.25]));
   block(hinge, 'mustard', local([d.min.x - 0.03, 1.05, -0.3, d.min.x - 0.02, 1.15, 0.3]));
   block(hinge, 'mustard', local([d.min.x - 0.08, 0.95, 0.32, d.min.x - 0.02, 1.0, 0.42]));
   g.add(hinge);
@@ -263,12 +242,9 @@ function guideSign(x: number, y: number, z: number): THREE.Group {
   canvas.height = 96;
   const ctx = canvas.getContext('2d');
   if (ctx) {
-    ctx.fillStyle = '#12142a';
+    ctx.fillStyle = '#f2b234';
     ctx.fillRect(0, 0, 256, 96);
-    ctx.strokeStyle = RISO.mustard;
-    ctx.lineWidth = 6;
-    ctx.strokeRect(5, 5, 246, 86);
-    ctx.fillStyle = RISO.mustard;
+    ctx.fillStyle = '#25304f';
     ctx.font = 'bold 44px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -281,6 +257,152 @@ function guideSign(x: number, y: number, z: number): THREE.Group {
   sign.add(face);
   block(sign, 'woodDark', [-0.01, -0.12, 0.01, 0.01, -0.04, 0.03]);
   return sign;
+}
+
+// ── The park outside ──────────────────────────────────────────────────────────────────
+
+function tree(g: THREE.Group, x: number, z: number, size: number): void {
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * size, 0.16 * size, 1.4 * size, 6), mat('woodDark'));
+  trunk.position.set(x, GROUND_Y + 0.7 * size, z);
+  g.add(trunk);
+  const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1 * size, 0), mat(size > 1 ? 'tealDark' : 'teal'));
+  crown.position.set(x, GROUND_Y + 2.0 * size, z);
+  g.add(crown);
+}
+
+function bench(g: THREE.Group, x: number, z: number, yaw: number): void {
+  const b = new THREE.Group();
+  block(b, 'wood', [-0.8, 0.42, -0.22, 0.8, 0.48, 0.22]);
+  block(b, 'wood', [-0.8, 0.55, 0.18, 0.8, 0.85, 0.24]);
+  block(b, 'ink', [-0.7, 0, -0.2, -0.64, 0.42, 0.2]);
+  block(b, 'ink', [0.64, 0, -0.2, 0.7, 0.42, 0.2]);
+  b.position.set(x, GROUND_Y, z);
+  b.rotation.y = yaw;
+  g.add(b);
+}
+
+function picnicTable(g: THREE.Group, x: number, z: number): void {
+  const p = new THREE.Group();
+  block(p, 'wood', [-0.9, 0.72, -0.4, 0.9, 0.78, 0.4]);
+  block(p, 'woodDark', [-0.9, 0.42, -0.85, 0.9, 0.46, -0.6]);
+  block(p, 'woodDark', [-0.9, 0.42, 0.6, 0.9, 0.46, 0.85]);
+  // Table legs, and a leg under each end of both seats, tied together low down like a real
+  // picnic table (so the seats never float).
+  block(p, 'ink', [-0.7, 0, -0.06, -0.62, 0.72, 0.06]);
+  block(p, 'ink', [0.62, 0, -0.06, 0.7, 0.72, 0.06]);
+  for (const x of [-0.7, 0.62]) {
+    for (const z of [-0.77, 0.69]) block(p, 'ink', [x, 0, z, x + 0.08, 0.42, z + 0.08]);
+    block(p, 'inkSoft', [x, 0.16, -0.77, x + 0.08, 0.22, 0.77]);
+  }
+  block(p, 'ink', [-0.02, 0.78, -0.02, 0.02, 2.1, 0.02]);
+  const umbrella = new THREE.Mesh(new THREE.ConeGeometry(1.2, 0.5, 8), mat('red'));
+  umbrella.position.set(0, 2.1, 0);
+  p.add(umbrella);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.22, 8), mat('white'));
+  tip.position.set(0, 2.28, 0);
+  p.add(tip);
+  p.position.set(x, GROUND_Y, z);
+  g.add(p);
+}
+
+/**
+ * Lamp bulbs share these materials so the whole park lights up together at dusk (`setSky`).
+ * Their "on" colours; off, they are a pale glass colour.
+ */
+const LAMP_ON = { mustard: inkColour('mustard'), red: inkColour('red') };
+const LAMP_OFF = new THREE.Color('#e9e2cf');
+const lampMaterials = {
+  mustard: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
+  red: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
+};
+
+function lampPost(g: THREE.Group, x: number, z: number): THREE.Vector3 {
+  block(g, 'ink', [x - 0.05, GROUND_Y, z - 0.05, x + 0.05, GROUND_Y + 3.2, z + 0.05]);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), lampMaterials.mustard);
+  bulb.position.set(x, GROUND_Y + 3.3, z);
+  g.add(bulb);
+  return bulb.position.clone();
+}
+
+export function buildPark(): THREE.Group {
+  const g = new THREE.Group();
+  // Lawn and the winding path where customers queue.
+  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), mat('grass'));
+  lawn.rotation.x = -Math.PI / 2;
+  lawn.position.set(0, GROUND_Y, -40);
+  g.add(lawn);
+  for (let i = 1; i < QUEUE_PATH_3D.length - 1; i++) {
+    const a = QUEUE_PATH_3D[i - 1];
+    const b = QUEUE_PATH_3D[i];
+    const length = Math.hypot(b.x - a.x, b.z - a.z) + 1.2;
+    const piece = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, length), mat('paperShade'));
+    piece.position.set((a.x + b.x) / 2, GROUND_Y + 0.01, (a.z + b.z) / 2);
+    piece.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+    g.add(piece);
+  }
+  // Mowing stripes.
+  for (let z = -6; z > -40; z -= 4) {
+    const stripe = new THREE.Mesh(new THREE.PlaneGeometry(140, 2), mat('grassDark'));
+    stripe.rotation.x = -Math.PI / 2;
+    stripe.position.set(0, GROUND_Y + 0.005, z);
+    g.add(stripe);
+  }
+
+  // Seats that will fill with visitors when business is good (Phase 7).
+  for (const b of PARK.benches) bench(g, b.x, b.z, b.yaw);
+  for (const p of PARK.picnicTables) picnicTable(g, p.x, p.z);
+
+  // Lamp posts with string lights between them.
+  const lamps = PARK.lamps.map((l) => lampPost(g, l.x, l.z));
+  for (let i = 1; i < lamps.length; i++) {
+    const a = lamps[i - 1];
+    const b = lamps[i];
+    for (let k = 1; k < 12; k++) {
+      const t = k / 12;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), k % 2 ? lampMaterials.mustard : lampMaterials.red);
+      bulb.position.lerpVectors(a, b, t);
+      bulb.position.y -= Math.sin(t * Math.PI) * 0.6;
+      g.add(bulb);
+    }
+  }
+
+  // Trees: a few near, a row further back.
+  for (const t of PARK.trees) tree(g, t.x, t.z, t.size);
+  for (let x = -40; x <= 40; x += 5) tree(g, x + ((x * 7) % 3), -24 - ((x * 13) % 4), 1.5);
+
+  // The far-away city skyline and the sun, which crosses the sky over the day (`setSky`).
+  for (let i = 0, x = -70; x < 70; i++) {
+    const w = 3 + ((i * 7) % 5);
+    const h = 6 + ((i * 11) % 14);
+    block(g, i % 2 ? 'lilac' : 'inkSoft', [x, GROUND_Y, -58 - (i % 3) * 3, x + w, GROUND_Y + h, -55 - (i % 3) * 3]);
+    x += w + 0.6;
+  }
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: inkColour('mustard'), fog: false });
+  const sun = new THREE.Mesh(new THREE.CircleGeometry(6, 24), sunMaterial);
+  g.add(sun);
+  /** Moves the sun (or moon) and lights the lamps for the time of day (sky.ts). */
+  g.userData.setSky = (sky: Sky) => {
+    const distance = 90;
+    const up = (sky.elevation * Math.PI) / 180;
+    sun.position.set(sky.across * 70, GROUND_Y + Math.sin(up) * distance, -distance * Math.cos(up));
+    sun.lookAt(0, GROUND_Y + 1, 0);
+    sun.visible = sky.elevation > -6 || sky.lamps > 0.95;
+    if (sky.lamps > 0.95) sun.position.set(-30, GROUND_Y + 35, -80); // the moon
+    sunMaterial.color.set(sky.disc);
+    lampMaterials.mustard.color.copy(LAMP_OFF).lerp(LAMP_ON.mustard, sky.lamps);
+    lampMaterials.red.color.copy(LAMP_OFF).lerp(LAMP_ON.red, sky.lamps);
+  };
+
+  // The truck's own awning over the window, seen from inside.
+  const w = LAYOUT.window;
+  for (let i = 0; i < 8; i++) {
+    const x = w.min.x - 0.2 + i * ((w.max.x - w.min.x + 0.4) / 8);
+    const stripe = block(g, i % 2 ? 'white' : 'red', [x, 0, 0, x + (w.max.x - w.min.x + 0.4) / 8, 0.04, 0.9]);
+    stripe.position.y = w.max.y + 0.25;
+    stripe.position.z = -HZ - 0.5;
+    stripe.rotation.x = -0.35;
+  }
+  return g;
 }
 
 // ── Customers ─────────────────────────────────────────────────────────────────────────
@@ -313,8 +435,8 @@ export function buildCustomer(look: CustomerLook): CustomerModel {
   block(root, l.skin, [-0.16, 1.45, -0.16, 0.16, 1.75, 0.16]);
   block(root, 'ink', [-0.1, 1.6, -0.165, -0.06, 1.65, -0.16]);
   block(root, 'ink', [0.06, 1.6, -0.165, 0.1, 1.65, -0.16]);
-  block(root, 'redDark', [-0.13, 1.53, -0.165, -0.09, 1.56, -0.16]);
-  block(root, 'redDark', [0.09, 1.53, -0.165, 0.13, 1.56, -0.16]);
+  block(root, 'pink', [-0.13, 1.53, -0.165, -0.09, 1.56, -0.16]);
+  block(root, 'pink', [0.09, 1.53, -0.165, 0.13, 1.56, -0.16]);
   block(root, 'ink', [-0.04, 1.51, -0.165, 0.04, 1.525, -0.16]);
   const hair = l.hairStyle === 'cap' ? (l.hat ?? 'red') : l.hair;
   if (l.hairStyle === 'sides') {
@@ -327,9 +449,7 @@ export function buildCustomer(look: CustomerLook): CustomerModel {
     if (l.hairStyle === 'long') block(root, hair, [-0.18, 1.2, 0.08, 0.18, 1.75, 0.2]);
   }
   if (l.extra === 'glasses') block(root, 'ink', [-0.13, 1.61, -0.17, 0.13, 1.63, -0.165]);
-  if (l.extra === 'lanyard') block(root, glow(RISO.tealLight), [-0.07, 1.0, -0.15, 0.07, 1.12, -0.14]);
-  // A glowing seam down the jacket: everyone in the neon city wears a little light.
-  block(root, glow([RISO.tealLight, RISO.red, RISO.mustard][(l.top.length + l.legs.length) % 3]), [-0.245, 0.8, -0.145, -0.225, 1.4, -0.14]);
+  if (l.extra === 'lanyard') block(root, 'white', [-0.07, 1.0, -0.15, 0.07, 1.12, -0.14]);
   if (l.extra === 'straps') {
     block(root, 'red', [-0.18, 0.85, -0.15, -0.12, 1.4, -0.14]);
     block(root, 'red', [0.12, 0.85, -0.15, 0.18, 1.4, -0.14]);
