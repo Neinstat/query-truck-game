@@ -21,6 +21,11 @@ const en = {
   hideLesson: 'Hide the lesson',
   correct: 'Correct!',
   language: 'Language',
+  soundLabel: 'Sound',
+  soundOn: 'Sound on',
+  soundOff: 'Sound off',
+  volume: 'Volume',
+  raining: 'Rain',
   hintButton: (used: number, total: number) => (used === 0 ? 'Need a hint?' : `Another hint (${used}/${total})`),
   hintTitle: (n: number) => `Hint ${n}`,
   levels: 'Levels',
@@ -74,7 +79,7 @@ const en = {
   summaryBackIn: (days: number) => (days <= 1 ? 'back tomorrow' : `back in ${days} days`),
   newDay: 'Open the next day →',
   replayDay: 'Play this day again',
-  titleTagline: 'A coffee truck in the park. Customers ask, you answer with SQL.',
+  titleTagline: 'A neon food truck in a rainy megacity. Customers ask, you answer with SQL.',
   titleStart: (day: number) => `▶ Start day ${day}`,
   titleContinue: (day: number, clock: string) => `▶ Continue day ${day} (${clock})`,
   loadingWorld: 'Parking the truck…',
@@ -180,6 +185,11 @@ const id: UiText = {
   hideLesson: 'Sembunyikan materi',
   correct: 'Benar!',
   language: 'Bahasa',
+  soundLabel: 'Suara',
+  soundOn: 'Suara nyala',
+  soundOff: 'Suara mati',
+  volume: 'Volume',
+  raining: 'Hujan',
   hintButton: (used, total) => (used === 0 ? 'Butuh petunjuk?' : `Petunjuk lagi (${used}/${total})`),
   hintTitle: (n) => `Petunjuk ${n}`,
   levels: 'Level',
@@ -233,7 +243,7 @@ const id: UiText = {
   summaryBackIn: (days: number) => (days <= 1 ? 'kembali besok' : `kembali ${days} hari lagi`),
   newDay: 'Buka hari berikutnya →',
   replayDay: 'Ulangi hari ini',
-  titleTagline: 'Truck kopi di taman. Pelanggan bertanya, kamu menjawab dengan SQL.',
+  titleTagline: 'Food truck neon di kota raksasa yang sering hujan. Pelanggan bertanya, kamu menjawab dengan SQL.',
   titleStart: (day: number) => `▶ Mulai hari ${day}`,
   titleContinue: (day: number, clock: string) => `▶ Lanjutkan hari ${day} (${clock})`,
   loadingWorld: 'Memarkir truck…',
@@ -323,6 +333,7 @@ const id: UiText = {
 
 export const ui: Record<Lang, UiText> = { en, id };
 
+// Saved under the game's first name, so players keep their choice.
 const STORAGE_KEY = 'sql-valley.lang';
 
 /** The player's language, remembered in this browser. */

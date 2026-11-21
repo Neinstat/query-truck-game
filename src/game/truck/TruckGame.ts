@@ -17,7 +17,10 @@ import type { CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
 import type { LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
-import { buildCustomer, buildManager, buildPark, buildTruck, type CustomerModel } from './build';
+import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
+import { buildStreet } from './city';
+import { Rain } from './rain';
+import { hashString, planShowers, rainAt, type Shower } from './weather';
 import { LookPass } from './lookPass';
 import { skyAt } from './sky';
 import {
@@ -75,9 +78,25 @@ export class TruckGame {
   private readonly look = new LookPass();
   private readonly ambient = new THREE.AmbientLight(0xffffff, 0.8 * Math.PI);
   private readonly sun = new THREE.DirectionalLight(0xffffff, 0.4 * Math.PI);
-  /** A warm light inside the truck that comes on as it gets dark. */
-  private readonly inside = new THREE.PointLight(0xffd9a0, 0, 7, 1.2);
+  /** A cool light inside the truck (always on: the city is never bright), stronger at night. */
+  private readonly inside = new THREE.PointLight(0xdfe8ff, 0, 7, 1.2);
+  /** Light spilling out of the serving window onto the customer in front of it. */
+  private readonly windowLight = new THREE.PointLight(0x9ff4ff, 0, 5, 1.4);
+  /** Neon from the street: a pink and a violet glow that tint customers and the ground. */
+  private readonly streetPink = new THREE.PointLight(0xff2e88, 0, 14, 1.3);
+  private readonly streetViolet = new THREE.PointLight(0x7a5cff, 0, 16, 1.3);
   private setSky: (sky: ReturnType<typeof skyAt>) => void = () => {};
+  private updateStreet: (time: number, rain: number) => void = () => {};
+  private readonly rain = new Rain();
+  private showers: Shower[] = [];
+  private rainAmount = 0;
+  private lastWeather = -1;
+  /** Seconds of real time since the game started (animations that run even while paused). */
+  private time = 0;
+  private flash = 0;
+  private flashLight = 0;
+  private nextThunder = 20;
+  private lastStep = 0;
   private lastSkyMinute = -1;
   private readonly observer: ResizeObserver;
   private readonly offs: (() => void)[] = [];
@@ -133,12 +152,21 @@ export class TruckGame {
     private readonly parent: HTMLElement,
     private readonly bridge: TruckBridge,
     /** Today's customers, and where the day stands on load: orders already handled, and the clock. */
-    start: { orders: readonly DayCustomer[]; handled: readonly string[]; clock: number; managerDone?: boolean },
+    start: {
+      orders: readonly DayCustomer[];
+      handled: readonly string[];
+      clock: number;
+      managerDone?: boolean;
+      /** Make it rain today whatever the day's weather (`?rain` in the address, for testing). */
+      forceRain?: boolean;
+    },
   ) {
     this.managerDone = start.managerDone ?? false;
     this.allOrders = start.orders;
     this.orders = start.orders.filter((o) => !start.handled.includes(o.id));
     this.clock = Math.max(OPENING, start.clock);
+    // The day's weather comes from its orders, so a reload brings the same showers.
+    this.showers = planShowers(hashString(start.orders.map((o) => o.id).join('|')), start.forceRain);
     // Colours are used exactly as written (colour.ts); no conversion on output either.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -147,7 +175,7 @@ export class TruckGame {
     parent.appendChild(this.renderer.domElement);
 
     this.scene.background = inkColour('peach');
-    this.scene.fog = new THREE.Fog(inkColour('lilac'), 18, 80);
+    this.scene.fog = new THREE.Fog(inkColour('lilac'), 14, 95);
     // Neutral light so every colour stays itself at full light; the sky (sky.ts) changes the
     // light's colour and strength over the day. (Three.js lights are physical: × π gives a
     // surface its own colour at full light.)
@@ -156,7 +184,10 @@ export class TruckGame {
     fill.position.set(3, 4, 8);
     this.scene.add(fill);
     this.inside.position.set(0, TRUCK.height - 0.15, 0);
-    this.scene.add(this.inside);
+    this.windowLight.position.set(0.3, 1.9, -TRUCK.depth / 2 - 0.6);
+    this.streetPink.position.set(-6, 3.5, -10);
+    this.streetViolet.position.set(7, 4.5, -12);
+    this.scene.add(this.inside, this.windowLight, this.streetPink, this.streetViolet);
     const truck = buildTruck();
     this.setWallClock = truck.userData.setClock as (minutes: number) => void;
     this.setWallClock(this.clock);
@@ -166,9 +197,10 @@ export class TruckGame {
     this.manager.position.set(TRUCK.length / 2 + 0.42, 0, 0.05);
     this.manager.rotation.y = Math.PI / 2;
     this.manager.visible = false;
-    const park = buildPark();
-    this.setSky = park.userData.setSky as typeof this.setSky;
-    this.scene.add(truck, park, this.manager);
+    const street = buildStreet();
+    this.setSky = street.userData.setSky as typeof this.setSky;
+    this.updateStreet = street.userData.update as typeof this.updateStreet;
+    this.scene.add(truck, street, this.manager, this.rain.group);
     this.applySky();
 
     this.observer = new ResizeObserver(() => this.resize());
@@ -333,13 +365,57 @@ export class TruckGame {
     const sky = skyAt(this.clock);
     (this.scene.background as THREE.Color).set(sky.sky);
     this.scene.fog?.color.set(sky.sky);
-    this.ambient.intensity = sky.ambient * Math.PI;
+    // Rain darkens the sky and the light, and pulls the haze in closer.
+    const wet = this.rainAmount;
+    (this.scene.background as THREE.Color).lerp(new THREE.Color(0.03, 0.04, 0.08), wet * 0.45);
+    this.scene.fog?.color.copy(this.scene.background as THREE.Color);
+    const fog = this.scene.fog as THREE.Fog;
+    fog.near = 14 - wet * 8;
+    fog.far = 95 - wet * 50;
+    this.ambient.intensity = (sky.ambient * (1 - wet * 0.25) + this.flashLight * 1.4) * Math.PI;
     this.sun.color.set(sky.sunColour);
-    this.sun.intensity = sky.sunLight * Math.PI;
+    this.sun.intensity = sky.sunLight * (1 - wet * 0.5) * Math.PI;
     const up = (Math.max(sky.elevation, 5) * Math.PI) / 180;
     this.sun.position.set(sky.across * 10, Math.sin(up) * 10, -Math.cos(up) * 10);
-    this.inside.intensity = sky.lamps * 1.6 * Math.PI;
+    this.inside.intensity = (0.55 + sky.lamps * 0.35) * Math.PI;
+    this.windowLight.intensity = (0.6 + sky.lamps * 0.8) * Math.PI;
+    this.streetPink.intensity = sky.lamps * 2.2 * Math.PI;
+    this.streetViolet.intensity = sky.lamps * 2.2 * Math.PI;
     this.setSky(sky);
+  }
+
+  /**
+   * The weather for the clock's time: how hard it rains, the rain itself, and now and then (in
+   * heavy rain) a flash of lightning. Runs every frame; the rain keeps falling while paused.
+   */
+  private updateWeather(seconds: number): void {
+    this.time += seconds;
+    const target = rainAt(this.showers, this.clock);
+    // Follow the plan smoothly (a reload mid-shower fades the rain in).
+    this.rainAmount += (target - this.rainAmount) * Math.min(1, seconds * 0.8);
+    if (Math.abs(this.rainAmount - this.lastWeather) > 0.02 || (target === 0 && this.rainAmount < 0.005 && this.lastWeather !== 0)) {
+      if (target === 0 && this.rainAmount < 0.005) this.rainAmount = 0;
+      this.lastWeather = this.rainAmount;
+      this.lastSkyMinute = -1; // the sky's light depends on the rain
+      this.bridge.emit('weather', this.rainAmount);
+    }
+    this.rain.update(this.time, this.rainAmount, this.renderer.getPixelRatio());
+    this.updateStreet(this.time, this.rainAmount);
+    // Lightning: only in heavy rain, and not while the game is paused.
+    if (!this.paused && this.rainAmount > 0.65) {
+      this.nextThunder -= seconds;
+      if (this.nextThunder <= 0) {
+        this.flash = 1;
+        this.nextThunder = 18 + Math.random() * 30;
+        this.bridge.emit('thunder', true);
+      }
+    }
+    if (this.flash > 0) {
+      this.flash = Math.max(0, this.flash - seconds * 2.5);
+      // A double flicker as it fades.
+      this.flashLight = this.flash * (Math.sin(this.flash * 30) > -0.3 ? 1 : 0.3);
+      this.lastSkyMinute = -1;
+    }
   }
 
   // ── The truck tour and the guide's pictures ──────────────────────────────────────────
@@ -439,6 +515,10 @@ export class TruckGame {
     const moving = Object.values(this.keys).some(Boolean) && dt > 0;
     this.walkClock += dt;
     const bob = moving ? Math.sin(this.walkClock * 9) * 0.025 : 0;
+    // A footstep at the bottom of each bob.
+    const stepPhase = Math.floor((this.walkClock * 9) / Math.PI);
+    if (moving && stepPhase !== this.lastStep) this.bridge.emit('step', true);
+    this.lastStep = stepPhase;
     this.updateTour(seconds);
     // Zoom in a little while touring, smoothly.
     const fovTarget = this.tourView && !this.tourReturning ? TOUR_FOV : FOV;
@@ -470,6 +550,7 @@ export class TruckGame {
     this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget ? 1 : -1) * seconds * 2.2));
     this.setDoor(this.doorAmount, this.knocking && this.doorAmount === 0 ? this.walkClock : undefined);
     this.manager.visible = this.knocking && this.doorAmount > 0.02;
+    this.updateWeather(seconds);
     this.applySky();
     this.look.render(this.renderer, this.scene, this.camera);
     this.emitAnchor();
@@ -502,6 +583,7 @@ export class TruckGame {
       const order = this.orders[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {
+        this.bridge.emit('arrive', true);
         const model = buildCustomer(order.look);
         this.scene.add(model.root);
         this.customers.set(customer, model);
@@ -617,6 +699,7 @@ export class TruckGame {
     this.offs.forEach((off) => off());
     if (document.pointerLockElement) document.exitPointerLock();
     this.look.dispose();
+    this.rain.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

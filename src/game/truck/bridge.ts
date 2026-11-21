@@ -27,6 +27,10 @@
  *   app → game   'lens'    turn the Data Lens on or off
  *   game → app   'lensCards' where each table's card is on screen while the lens is on (empty
  *                          when it is off): 0–1 from the top left, and how far away it is (m)
+ *   game → app   'arrive'  a customer stepped into the queue (for a sound)
+ *   game → app   'step'    the player took a step inside the truck (for a footstep sound)
+ *   game → app   'weather' how hard it rains now (0–1; sent when it changes noticeably)
+ *   game → app   'thunder' lightning flashed over the city (heavy rain only)
  */
 import type { InteractableId } from './world';
 
@@ -61,6 +65,10 @@ type TruckEvents = {
   tour: InteractableId | null;
   snapshotRequest: true;
   snapshots: Record<string, string>;
+  arrive: true;
+  step: true;
+  weather: number;
+  thunder: true;
 };
 
 type Listener<T> = (payload: T) => void;
