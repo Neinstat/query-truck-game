@@ -8,6 +8,7 @@
  *   waves and gulls at the harbour, a murmuring market and the fountain on the square); rain (a
  *   hiss, drops pattering on the truck's roof, and thunder in heavy rain), louder the harder it
  *   rains.
+ * - The radio in the truck (radio.ts): music made on the fly — lo-fi, bossa nova, chiptune, or off.
  * - Effects: a customer arriving, a sale (the till), a right or wrong answer, a lesson card, the
  *   Manager's knock, the back door, footsteps, and soft clicks for menus.
  *
@@ -16,6 +17,7 @@
  */
 
 import type { PlaceId } from '../sql-core/truck/places';
+import { Radio, STATIONS, type Station, type StationId } from './radio';
 
 export type SoundEffect =
   | 'arrive'
@@ -36,19 +38,23 @@ export type SoundEffect =
 
 const SETTINGS_KEY = 'query-truck.sound';
 
-type Settings = { volume: number; muted: boolean };
+type Settings = { volume: number; muted: boolean; station: StationId };
 
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const s = JSON.parse(raw) as Partial<Settings>;
-      return { volume: typeof s.volume === 'number' ? Math.min(1, Math.max(0, s.volume)) : 0.7, muted: s.muted === true };
+      return {
+        volume: typeof s.volume === 'number' ? Math.min(1, Math.max(0, s.volume)) : 0.7,
+        muted: s.muted === true,
+        station: STATIONS.some((st) => st.id === s.station) ? (s.station as StationId) : 'lofi',
+      };
     }
   } catch {
     // Storage can be blocked (private windows): use the defaults.
   }
-  return { volume: 0.7, muted: false };
+  return { volume: 0.7, muted: false, station: 'lofi' };
 }
 
 class SoundEngine {
@@ -58,8 +64,8 @@ class SoundEngine {
   private ambience!: GainNode;
   private noise!: AudioBuffer;
   private brown!: AudioBuffer;
-  private rainHiss!: GainNode;
   private rainLow!: GainNode;
+  private radio: Radio | null = null;
   private cityHum!: GainNode;
   private settings: Settings = loadSettings();
   private rain = 0;
@@ -119,6 +125,23 @@ class SoundEngine {
     this.noise = this.makeNoise(2, false);
     this.brown = this.makeNoise(4, true);
     this.startAmbience();
+    // The radio plays inside the truck: never muffled by menus.
+    this.radio = new Radio(ctx, limiter, this.noise);
+    this.radio.tune(this.settings.station);
+  }
+
+  /** The radio's station (the saved one until the audio has started). */
+  get station(): Station {
+    return this.radio?.current ?? STATIONS.find((s) => s.id === this.settings.station)!;
+  }
+
+  /** Turn the radio to the next station (the last one is off). */
+  nextStation(): Station {
+    this.start();
+    const station = this.radio ? this.radio.next() : this.station;
+    this.settings = { ...this.settings, station: station.id };
+    this.saveAndApply();
+    return station;
   }
 
   setVolume(volume: number): void {
@@ -159,10 +182,9 @@ class SoundEngine {
     this.rain = Math.min(1, Math.max(0, amount));
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    this.rainHiss.gain.setTargetAtTime(this.rain * 0.32, t, 0.8);
-    this.rainLow.gain.setTargetAtTime(this.rain * 0.38, t, 0.8);
-    // Rain covers part of the city's hum.
-    this.cityHum.gain.setTargetAtTime(0.22 * (1 - this.rain * 0.4), t, 1);
+    this.rainLow.gain.setTargetAtTime(this.rain * 0.16, t, 1.2);
+    // Rain covers part of the city's rumble.
+    this.cityHum.gain.setTargetAtTime(0.1 * (1 - this.rain * 0.5), t, 1);
   }
 
   /** Menus and consoles muffle the street (and stop footsteps). */
@@ -260,7 +282,7 @@ class SoundEngine {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running') return;
     const t = ctx.currentTime + 0.3 + Math.random() * 0.8;
-    this.noiseBurst(t, 0.4, 0.35, 'lowpass', 1800, 0.7, false, this.ambience);
+    this.noiseBurst(t, 0.4, 0.15, 'lowpass', 900, 0.7, false, this.ambience);
     const src = ctx.createBufferSource();
     src.buffer = this.brown;
     const filter = ctx.createBiquadFilter();
@@ -269,7 +291,7 @@ class SoundEngine {
     filter.frequency.exponentialRampToValueAtTime(90, t + 4);
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.9, t + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.45, t + 0.25);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 4.5);
     src.connect(filter).connect(gain).connect(this.ambience);
     src.start(t);
@@ -280,47 +302,26 @@ class SoundEngine {
 
   private startAmbience(): void {
     const ctx = this.ctx!;
-    // The city: low brown noise and a faint electrical hum.
+    // The city: a very low, quiet rumble far away.
     this.cityHum = ctx.createGain();
-    this.cityHum.gain.value = 0.22;
+    this.cityHum.gain.value = 0.1;
     this.cityHum.connect(this.ambience);
     const city = this.loop(this.brown);
     const cityFilter = ctx.createBiquadFilter();
     cityFilter.type = 'lowpass';
-    cityFilter.frequency.value = 320;
+    cityFilter.frequency.value = 260;
     city.connect(cityFilter).connect(this.cityHum);
-    const hum = ctx.createOscillator();
-    hum.type = 'sawtooth';
-    hum.frequency.value = 60;
-    const humFilter = ctx.createBiquadFilter();
-    humFilter.type = 'lowpass';
-    humFilter.frequency.value = 180;
-    const humGain = ctx.createGain();
-    humGain.gain.value = 0.035;
-    hum.connect(humFilter).connect(humGain).connect(this.ambience);
-    hum.start();
 
-    // Rain: a bright hiss and a duller roar, both silent until it rains.
-    this.rainHiss = ctx.createGain();
-    this.rainHiss.gain.value = 0;
-    this.rainHiss.connect(this.ambience);
-    const hiss = this.loop(this.noise);
-    const hissFilter = ctx.createBiquadFilter();
-    hissFilter.type = 'highpass';
-    hissFilter.frequency.value = 2500;
-    const hissShelf = ctx.createBiquadFilter();
-    hissShelf.type = 'lowpass';
-    hissShelf.frequency.value = 9000;
-    hiss.connect(hissFilter).connect(hissShelf).connect(this.rainHiss);
+    // Rain: a soft, muffled patter heard through the truck's roof (no bright hiss), silent
+    // until it rains; single drops on top come from roofDrops().
     this.rainLow = ctx.createGain();
     this.rainLow.gain.value = 0;
     this.rainLow.connect(this.ambience);
-    const roar = this.loop(this.noise);
-    const roarFilter = ctx.createBiquadFilter();
-    roarFilter.type = 'bandpass';
-    roarFilter.frequency.value = 900;
-    roarFilter.Q.value = 0.6;
-    roar.connect(roarFilter).connect(this.rainLow);
+    const patter = this.loop(this.brown);
+    const patterFilter = ctx.createBiquadFilter();
+    patterFilter.type = 'lowpass';
+    patterFilter.frequency.value = 750;
+    patter.connect(patterFilter).connect(this.rainLow);
 
     // The place's steady bed of sound, with a slow swell (waves, a crowd breathing).
     this.bed = ctx.createGain();
@@ -339,18 +340,19 @@ class SoundEngine {
     this.applyBed();
 
     // Drops on the roof, the place's own sounds, a passing car or siren: scheduled at random.
-    this.every(() => 40 + Math.random() * 60, () => this.roofDrops());
-    this.every(() => 1800 + Math.random() * 4000, () => this.placeSound());
-    this.every(() => 30000 + Math.random() * 40000, () => this.siren());
+    this.every(() => 70 + Math.random() * 120, () => this.roofDrops());
+    this.every(() => 3000 + Math.random() * 6000, () => this.placeSound());
   }
 
   /** A few raindrops tapping the truck's roof (more the harder it rains). */
   private roofDrops(): void {
     if (this.rain <= 0.02 || !this.ctx) return;
-    const count = Math.random() < this.rain ? 1 + Math.floor(this.rain * 3) : 0;
+    // Soft "plips": a tiny falling tone per drop, quiet and scattered left and right.
+    const count = Math.random() < this.rain ? 1 + Math.floor(this.rain * 2) : 0;
     for (let i = 0; i < count; i++) {
-      const t = this.ctx.currentTime + Math.random() * 0.05;
-      this.noiseBurst(t, 0.025, 0.05 + Math.random() * 0.07, 'bandpass', 1800 + Math.random() * 3500, 4, false, this.ambience);
+      const t = this.ctx.currentTime + Math.random() * 0.08;
+      const f = 1100 + Math.random() * 1300;
+      this.slide(f, f * 0.55, t, 0.05, 0.008 + Math.random() * 0.012, 'sine', undefined, Math.random() * 1.4 - 0.7, this.ambience);
     }
   }
 
@@ -469,26 +471,6 @@ class SoundEngine {
     src.stop(t + length);
     engine.start(t);
     engine.stop(t + length);
-  }
-
-  /** A far-away two-tone siren. */
-  private siren(): void {
-    const ctx = this.ctx;
-    if (!ctx || ctx.state !== 'running') return;
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    osc.type = 'triangle';
-    for (let i = 0; i < 8; i++) osc.frequency.setValueAtTime(i % 2 ? 620 : 760, t + i * 0.45);
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.025, t + 1);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.6);
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1200;
-    osc.connect(filter).connect(gain).connect(this.ambience);
-    osc.start(t);
-    osc.stop(t + 3.7);
   }
 
   // ── Building blocks ─────────────────────────────────────────────────────────────────

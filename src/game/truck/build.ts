@@ -225,6 +225,31 @@ export function buildTruck(): THREE.Group {
   g.add(book);
   g.add(guideSign(bx, gb.max.y - 0.06, gb.max.z - 0.02));
 
+  // A little retro radio: a teal body, a speaker grille, a tuning dial, a handle and an aerial.
+  const rd = LAYOUT.radio;
+  const radio = new THREE.Group();
+  radio.position.set((rd.min.x + rd.max.x) / 2, rd.min.y, (rd.min.z + rd.max.z) / 2);
+  radio.rotation.y = 0.12;
+  block(radio, 'teal', [-0.19, 0, -0.08, 0.19, 0.2, 0.08]);
+  block(radio, 'tealDark', [-0.2, 0, -0.09, 0.2, 0.025, 0.09]);
+  const grille = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.01, 10), mat('inkSoft'));
+  grille.rotation.x = Math.PI / 2;
+  grille.position.set(-0.08, 0.1, -0.082);
+  radio.add(grille);
+  for (let k = -2; k <= 2; k++) block(radio, 'ink', [-0.13, 0.1 + k * 0.02 - 0.004, -0.09, -0.03, 0.1 + k * 0.02 + 0.004, -0.086]);
+  block(radio, 'paper', [0.02, 0.11, -0.085, 0.16, 0.16, -0.08]);
+  block(radio, 'red', [0.07, 0.11, -0.087, 0.08, 0.16, -0.084]);
+  const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 8), mat('mustard'));
+  knob.rotation.x = Math.PI / 2;
+  knob.position.set(0.09, 0.06, -0.085);
+  radio.add(knob);
+  for (const x of [-0.14, 0.14]) block(radio, 'ink', [x - 0.01, 0.2, -0.01, x + 0.01, 0.26, 0.01]);
+  block(radio, 'ink', [-0.14, 0.25, -0.01, 0.14, 0.27, 0.01]);
+  const aerial = block(radio, 'inkSoft', [-0.004, 0, -0.004, 0.004, 0.32, 0.004]);
+  aerial.position.set(0.16, 0.2, 0.04);
+  aerial.rotation.z = -0.5;
+  g.add(radio);
+
   // A spare apron on a hook near the door.
   block(g, 'teal', [HX - 0.02, 0.9, -0.95, HX - 0.01, 1.6, -0.65]);
   return g;

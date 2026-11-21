@@ -10,6 +10,7 @@ import { managerCaseFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
+import { sound } from '../audio/sound';
 import { dayOrders, inputStage, orderLevel, type TruckOrder } from '../sql-core/truck/orders';
 import { masteryFrom, nextDay, parsePastDays } from '../sql-core/truck/repetition';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
@@ -198,6 +199,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
         if (order && id === orderObject) setOrderOpen(true);
         else if (id === 'guide-book') {
           // The app opens the guide (TruckApp listens too).
+        } else if (id === 'radio') {
+          setToast(t.radioNow(sound.nextStation().name));
         } else if (OBJECT_STATION[id]) {
           setExploreTable(undefined);
           setExploring(id);

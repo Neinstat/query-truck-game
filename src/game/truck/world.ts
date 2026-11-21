@@ -49,6 +49,8 @@ export const LAYOUT = {
   door: box(HX - 0.05, 0, -0.5, HX, 2.1, 0.5),
   /** The how-to-play book, open on the back counter, with a little "GUIDE" sign. */
   guideBook: box(0.2, 0.95, HZ - 0.4, 0.62, 1.22, HZ - 0.06),
+  /** The radio on the back counter, between the coffee machine and the guide book. */
+  radio: box(-0.5, 0.95, HZ - 0.3, -0.1, 1.2, HZ - 0.08),
 } as const;
 
 /** Clock on the back wall, above the coffee machine. */
@@ -67,6 +69,7 @@ export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = 
   { id: 'recipe-shelf', box: LAYOUT.recipeShelf },
   { id: 'back-door', box: LAYOUT.door },
   { id: 'guide-book', box: LAYOUT.guideBook },
+  { id: 'radio', box: LAYOUT.radio },
 ];
 
 /**
@@ -176,6 +179,7 @@ export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: V
   { object: 'menu-board', eye: { x: 0.45, y: EYE_Y, z: -0.35 }, target: centre(LAYOUT.menuBoard) },
   { object: 'back-door', eye: { x: 0.4, y: EYE_Y, z: 0 }, target: centre(LAYOUT.door) },
   { object: 'guide-book', eye: { x: 0.4, y: EYE_Y, z: -0.05 }, target: centre(LAYOUT.guideBook) },
+  { object: 'radio', eye: { x: -0.25, y: EYE_Y, z: -0.1 }, target: centre(LAYOUT.radio) },
 ];
 
 // ── The queue in the park ───────────────────────────────────────────────────────────

@@ -106,6 +106,13 @@ export const GUIDE: readonly GuidePage[] = [
         where: 'Back counter, under the menu board',
         text: 'Aim at it and press E whenever you want to read how to play again.',
       },
+      {
+        icon: '📻',
+        object: 'radio',
+        name: 'Radio — music while you work',
+        where: 'Back counter, next to the coffee machine',
+        text: 'Aim at it and press E to change the station: Lo-fi, Café Bossa, Pixel Pop, or off. It remembers your choice.',
+      },
     ],
   },
   {

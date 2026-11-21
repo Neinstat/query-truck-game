@@ -86,6 +86,13 @@ export const GUIDE_ID: readonly GuidePage[] = [
         where: 'Meja belakang, di bawah papan menu',
         text: 'Bidik lalu tekan E kapan saja kamu ingin membaca cara bermain lagi.',
       },
+      {
+        icon: '📻',
+        object: 'radio',
+        name: 'Radio — musik sambil bekerja',
+        where: 'Meja belakang, di sebelah mesin kopi',
+        text: 'Bidik lalu tekan E untuk ganti stasiun: Lo-fi, Café Bossa, Pixel Pop, atau mati. Pilihanmu diingat.',
+      },
     ],
   },
   {
