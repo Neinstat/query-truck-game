@@ -1,188 +1,687 @@
 /**
- * Low-poly people (GAME_DESIGN.md §7): a big, round, faceted head with no mouth or nose (just
- * eyes, glasses or sunglasses), hair or a cap, an open jacket over a shirt, tapered sleeves and
- * trouser legs, chunky hands and shoes. Everything is flat-shaded in the palette, so the facets
- * catch the light. Our own design. ⚠ Placeholder characters (docs/ASSETS.md).
+ * Customers and the Manager (GAME_DESIGN.md §7). Three kinds of figure, all our own designs:
  *
- * People face −z (towards the truck once they turn round). Arms swing from the shoulders and
- * legs from the hips while walking (TruckGame).
+ * - **Low-poly people** (most customers): a big, round, faceted head with no mouth or nose, eyes
+ *   or glasses, many hair styles and hats, a jacket, hoodie, tee or sweater, trousers, shorts or a
+ *   skirt, chunky hands and shoes, and extras (backpack, scarf, headphones, beard…). Each one is
+ *   put together at random from their order (looks.ts), so no two look the same.
+ * - **2D cartoons** (now and then): a flat, hand-drawn-style figure with thick outlines on a card
+ *   that always turns to face the player, with two walking frames.
+ * - **Brick toys** (now and then): a plastic toy figure — a round head with a stud, a printed face,
+ *   a tapered torso, block legs and C-shaped hands — in costumes (astronaut, knight, chef,
+ *   pirate, a masked hero of our own, a robot).
+ *
+ * Figures face −z (towards the truck once they turn round). Arms swing from the shoulders and
+ * legs from the hips while walking (TruckGame). ⚠ Placeholder characters (docs/ASSETS.md).
  */
 import * as THREE from 'three';
 import type { Ink } from '../art/riso';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { block, mat } from './build';
-import { LOOKS, type Look } from './looks';
+import { hexColour } from './colour';
+import { kindFor, lookFor, type Look } from './looks';
+import { seededRandom } from './weather';
 import { GROUND_Y } from './world';
 
 export type CustomerModel = {
   root: THREE.Group;
   legs: [THREE.Object3D, THREE.Object3D];
   arms: [THREE.Object3D, THREE.Object3D];
+  /** A flat cartoon: the card that turns to face the player, and its two walking frames. */
+  card?: { mesh: THREE.Mesh; frames: [THREE.Texture, THREE.Texture] };
 };
 
 /** A mesh at (x, y, z) in a parent. */
-function part(parent: THREE.Object3D, geometry: THREE.BufferGeometry, ink: Ink, x: number, y: number, z: number): THREE.Mesh {
-  const mesh = new THREE.Mesh(geometry, mat(ink));
+function part(parent: THREE.Object3D, geometry: THREE.BufferGeometry, ink: Ink | THREE.Material, x: number, y: number, z: number): THREE.Mesh {
+  const mesh = new THREE.Mesh(geometry, typeof ink === 'string' ? mat(ink) : ink);
   mesh.position.set(x, y, z);
   parent.add(mesh);
   return mesh;
 }
 
 /** A tapered, six-sided tube hanging down from its top (sleeves, trouser legs). */
-function tube(top: number, bottom: number, length: number): THREE.BufferGeometry {
-  return new THREE.CylinderGeometry(top, bottom, length, 6).translate(0, -length / 2, 0);
+function tube(top: number, bottom: number, length: number, sides = 6): THREE.BufferGeometry {
+  return new THREE.CylinderGeometry(top, bottom, length, sides).translate(0, -length / 2, 0);
 }
+
+const pair = (a: THREE.Object3D[]) => a as unknown as [THREE.Object3D, THREE.Object3D];
+
+// ── Low-poly people ─────────────────────────────────────────────────────────────────
 
 const HEAD_Y = 1.6;
 const HEAD_R = 0.21;
 
-/** The head: a faceted ball with eyes or glasses, and hair or a cap. */
-function head(root: THREE.Group, look: Pick<Look, 'skin' | 'hair' | 'hairStyle' | 'hat' | 'eyes'>): void {
+function head(root: THREE.Group, look: Pick<Look, 'skin' | 'hair' | 'hairStyle' | 'hat' | 'eyes' | 'extras'>): void {
   part(root, new THREE.CylinderGeometry(0.06, 0.07, 0.1, 6), look.skin, 0, 1.4, 0);
   part(root, new THREE.SphereGeometry(HEAD_R, 9, 7), look.skin, 0, HEAD_Y, 0).scale.set(1, 1.07, 0.98);
   const front = -HEAD_R * 0.92;
   const eyeY = HEAD_Y + 0.02;
+  const has = (e: Look['extras'][number]) => look.extras.includes(e);
+
+  // Eyes.
   if (look.eyes === 'sunglasses') {
-    // Two dark, eight-sided lenses and a bridge, wrapping a little round the head.
     for (const side of [-1, 1]) {
       const lens = part(root, new THREE.CylinderGeometry(0.068, 0.068, 0.02, 8), 'ink', side * 0.075, eyeY, front - 0.02);
       lens.rotation.x = Math.PI / 2;
       lens.rotation.y = side * 0.25;
       lens.scale.set(1.15, 1, 0.8);
-      // The arm of the glasses, back towards the ear.
       block(root, 'ink', [side * 0.13, eyeY + 0.02, front + 0.02, side * 0.2, eyeY + 0.035, front + 0.1]);
     }
     block(root, 'ink', [-0.02, eyeY + 0.015, front - 0.035, 0.02, eyeY + 0.03, front - 0.02]);
   } else {
     for (const side of [-1, 1]) {
-      const eye = part(root, new THREE.SphereGeometry(0.022, 5, 4), 'ink', side * 0.075, eyeY, front - 0.005);
-      eye.scale.set(1, 1.4, 0.6);
+      if (look.eyes === 'sleepy') {
+        block(root, 'ink', [side * 0.075 - 0.03, eyeY - 0.006, front - 0.012, side * 0.075 + 0.03, eyeY + 0.006, front]);
+      } else {
+        const size = look.eyes === 'wide' ? 0.03 : 0.022;
+        const eye = part(root, new THREE.SphereGeometry(size, 5, 4), 'ink', side * 0.075, eyeY, front - 0.005);
+        eye.scale.set(1, 1.4, 0.6);
+        if (look.eyes === 'wide') part(root, new THREE.SphereGeometry(0.009, 4, 3), 'white', side * 0.075 + 0.008, eyeY + 0.014, front - 0.02);
+      }
       if (look.eyes === 'glasses') {
         const frame = part(root, new THREE.TorusGeometry(0.05, 0.008, 3, 8), 'ink', side * 0.075, eyeY, front - 0.025);
         frame.rotation.y = side * 0.2;
       }
+      if (has('brows')) {
+        const brow = block(root, look.hair === 'white' ? 'paperShade' : look.hair, [-0.035, -0.008, -0.008, 0.035, 0.008, 0.008]);
+        brow.position.set(side * 0.075, eyeY + 0.06, front - 0.005);
+        brow.rotation.z = side * -0.15;
+      }
+      if (has('blush')) block(root, 'pink', [side * 0.11 - 0.025, eyeY - 0.06, front + 0.01, side * 0.11 + 0.025, eyeY - 0.04, front + 0.02]);
     }
     if (look.eyes === 'glasses') block(root, 'ink', [-0.025, eyeY - 0.004, front - 0.03, 0.025, eyeY + 0.004, front - 0.02]);
   }
-  // Hair: a faceted cap of hair over the top and back of the head.
-  const dome = (ink: Ink, scale = 1.06) => {
-    const d = part(root, new THREE.SphereGeometry(HEAD_R, 9, 4, 0, Math.PI * 2, 0, Math.PI / 2), ink, 0, HEAD_Y + 0.025, 0.012);
+  if (has('moustache')) block(root, look.hair, [-0.06, HEAD_Y - 0.07, front + 0.005, 0.06, HEAD_Y - 0.04, front + 0.03]);
+  if (has('beard')) part(root, new THREE.IcosahedronGeometry(0.13, 0), look.hair, 0, HEAD_Y - 0.12, -0.08).scale.set(1.2, 0.8, 0.9);
+
+  // Hair and hats.
+  const dome = (ink: Ink, scale = 1.06, lift = 0.025) => {
+    const d = part(root, new THREE.SphereGeometry(HEAD_R, 9, 4, 0, Math.PI * 2, 0, Math.PI / 2), ink, 0, HEAD_Y + lift, 0.012);
     d.scale.set(scale, scale * 1.05, scale);
     return d;
   };
-  if (look.hairStyle === 'cap') {
-    dome(look.hat ?? 'red', 1.1);
-    // The brim, sticking out at the front.
-    const brim = block(root, look.hat ?? 'red', [-0.14, -0.012, -0.16, 0.14, 0.012, 0]);
-    brim.position.set(0, HEAD_Y + 0.07, -HEAD_R - 0.05);
-    brim.rotation.x = -0.12;
-    part(root, new THREE.SphereGeometry(0.02, 4, 3), look.hat ?? 'red', 0, HEAD_Y + HEAD_R * 1.15, 0.01);
-  } else if (look.hairStyle === 'sides') {
-    // Bald on top, a ring of hair round the sides and back.
-    for (const side of [-1, 1]) {
-      part(root, new THREE.IcosahedronGeometry(0.075, 0), look.hair, side * 0.19, HEAD_Y + 0.01, 0.03).scale.set(0.6, 1, 1.3);
+  const fringe = () => part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0.04, HEAD_Y + 0.14, -0.13).scale.set(1.7, 0.6, 0.9);
+  switch (look.hairStyle) {
+    case 'cap': {
+      dome(look.hat, 1.1);
+      const brim = block(root, look.hat, [-0.14, -0.012, -0.16, 0.14, 0.012, 0]);
+      brim.position.set(0, HEAD_Y + 0.07, -HEAD_R - 0.05);
+      brim.rotation.x = -0.12;
+      part(root, new THREE.SphereGeometry(0.02, 4, 3), look.hat, 0, HEAD_Y + HEAD_R * 1.15, 0.01);
+      break;
     }
-    part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0, HEAD_Y, 0.17).scale.set(1.8, 0.8, 0.6);
-  } else {
-    dome(look.hair);
-    // A fringe and the back of the head.
-    part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0.04, HEAD_Y + 0.14, -0.13).scale.set(1.7, 0.6, 0.9);
-    if (look.hairStyle === 'long') part(root, new THREE.BoxGeometry(0.36, 0.4, 0.12), look.hair, 0, HEAD_Y - 0.12, 0.15);
-    if (look.hairStyle === 'bun') part(root, new THREE.IcosahedronGeometry(0.08, 0), look.hair, 0, HEAD_Y + 0.17, 0.15);
+    case 'beanie':
+      dome(look.hat, 1.12, 0.04).scale.y = 1.35;
+      part(root, new THREE.CylinderGeometry(0.235, 0.235, 0.07, 9), look.hat, 0, HEAD_Y + 0.07, 0.01);
+      part(root, new THREE.IcosahedronGeometry(0.05, 0), 'white', 0, HEAD_Y + 0.33, 0.01);
+      break;
+    case 'sides':
+      for (const side of [-1, 1]) part(root, new THREE.IcosahedronGeometry(0.075, 0), look.hair, side * 0.19, HEAD_Y + 0.01, 0.03).scale.set(0.6, 1, 1.3);
+      part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0, HEAD_Y, 0.17).scale.set(1.8, 0.8, 0.6);
+      break;
+    case 'bald':
+      break;
+    case 'spiky':
+      dome(look.hair, 1.04);
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * Math.PI * 2;
+        const spike = part(root, new THREE.ConeGeometry(0.05, 0.14, 4), look.hair, Math.sin(a) * 0.1, HEAD_Y + 0.2, Math.cos(a) * 0.1 + 0.02);
+        spike.rotation.set(Math.cos(a) * 0.5, 0, -Math.sin(a) * 0.5);
+      }
+      break;
+    case 'curly':
+      for (let i = 0; i < 11; i++) {
+        const a = (i / 11) * Math.PI * 2;
+        part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, Math.sin(a) * 0.17, HEAD_Y + 0.1 + (i % 2) * 0.06, Math.cos(a) * 0.15 + 0.03);
+      }
+      part(root, new THREE.IcosahedronGeometry(0.15, 0), look.hair, 0, HEAD_Y + 0.18, 0.02);
+      break;
+    case 'ponytail':
+      dome(look.hair);
+      fringe();
+      part(root, new THREE.ConeGeometry(0.07, 0.35, 5), look.hair, 0, HEAD_Y - 0.02, 0.26).rotation.x = -0.5;
+      break;
+    case 'long':
+      dome(look.hair);
+      fringe();
+      part(root, new THREE.BoxGeometry(0.36, 0.42, 0.12), look.hair, 0, HEAD_Y - 0.12, 0.15);
+      break;
+    case 'bun':
+      dome(look.hair);
+      fringe();
+      part(root, new THREE.IcosahedronGeometry(0.08, 0), look.hair, 0, HEAD_Y + 0.17, 0.15);
+      break;
+    default:
+      dome(look.hair);
+      fringe();
+  }
+  if (has('headphones')) {
+    const band = part(root, new THREE.TorusGeometry(0.22, 0.015, 4, 10, Math.PI), 'ink', 0, HEAD_Y + 0.02, 0.01);
+    band.rotation.y = Math.PI / 2;
+    for (const side of [-1, 1]) part(root, new THREE.CylinderGeometry(0.06, 0.06, 0.05, 8), 'red', side * 0.22, HEAD_Y, 0.01).rotation.z = Math.PI / 2;
   }
 }
 
-/**
- * A body: legs and shoes, a torso in an open jacket over a shirt, and arms with hands.
- * Returns the hip and shoulder pivots for walking.
- */
-function body(root: THREE.Group, look: Pick<Look, 'skin' | 'jacket' | 'shirt' | 'legs' | 'shoes'>) {
-  const legs = [-0.1, 0.1].map((x) => {
-    const hip = new THREE.Group();
-    hip.position.set(x, 0.86, 0);
-    root.add(hip);
-    part(hip, tube(0.085, 0.07, 0.78), look.legs, 0, 0, 0);
-    block(hip, look.shoes, [-0.07, -0.86, -0.17, 0.07, -0.76, 0.07]);
-    return hip;
-  }) as unknown as [THREE.Object3D, THREE.Object3D];
+/** Legs, a torso and arms for a look; returns the hip and shoulder pivots. */
+function body(root: THREE.Group, look: Look) {
+  const bare = look.lower !== 'trousers';
+  const legs = pair(
+    [-0.1, 0.1].map((x) => {
+      const hip = new THREE.Group();
+      hip.position.set(x, 0.86, 0);
+      root.add(hip);
+      if (look.lower === 'shorts') {
+        part(hip, tube(0.095, 0.085, 0.3), look.legs, 0, 0, 0);
+        part(hip, tube(0.06, 0.055, 0.5), look.skin, 0, -0.29, 0);
+      } else if (bare) part(hip, tube(0.06, 0.055, 0.78), look.skin, 0, 0, 0);
+      else part(hip, tube(0.085, 0.07, 0.78), look.legs, 0, 0, 0);
+      block(hip, look.shoes, [-0.07, -0.86, -0.17, 0.07, -0.76, 0.07]);
+      return hip;
+    }),
+  );
+  if (look.lower === 'skirt') part(root, new THREE.CylinderGeometry(0.18, 0.3, 0.42, 7), look.legs, 0, 0.7, 0).scale.set(1, 1, 0.8);
 
-  // Torso: a tapered, seven-sided jacket, wider at the shoulders, with the shirt showing down
-  // the front, lapels, and a hem.
-  const torso = part(root, new THREE.CylinderGeometry(0.26, 0.21, 0.56, 7), look.jacket, 0, 1.1, 0);
-  torso.scale.set(1, 1, 0.68);
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.21, 0.56, 7), mat(look.outer));
+  torso.position.set(0, 1.1, 0);
+  torso.scale.set(look.width, 1, 0.68);
   torso.rotation.y = Math.PI / 7;
-  block(root, look.shirt, [-0.075, 0.86, -0.155, 0.075, 1.36, -0.13]);
-  for (const side of [-1, 1]) {
-    const lapel = block(root, look.jacket, [-0.035, -0.17, -0.012, 0.035, 0.17, 0.012]);
-    lapel.position.set(side * 0.1, 1.2, -0.155);
-    lapel.rotation.z = side * 0.25;
+  root.add(torso);
+  const w = look.width;
+  if (look.top === 'jacket') {
+    // An open jacket: the shirt shows down the front, with lapels and a collar.
+    block(root, look.inner, [-0.075, 0.86, -0.155, 0.075, 1.36, -0.13]);
+    for (const side of [-1, 1]) {
+      const lapel = block(root, look.outer, [-0.035, -0.17, -0.012, 0.035, 0.17, 0.012]);
+      lapel.position.set(side * 0.1, 1.2, -0.155);
+      lapel.rotation.z = side * 0.25;
+    }
+  } else if (look.top === 'hoodie') {
+    // A hood bunched up behind the neck, a pocket and two strings.
+    part(root, new THREE.TorusGeometry(0.13, 0.06, 5, 8), look.outer, 0, 1.38, 0.04).rotation.x = Math.PI / 2 - 0.3;
+    block(root, look.outer, [-0.13, 0.92, -0.165, 0.13, 1.06, -0.15]);
+    for (const side of [-1, 1]) block(root, look.inner, [side * 0.05 - 0.008, 1.16, -0.168, side * 0.05 + 0.008, 1.34, -0.16]);
+  } else if (look.top === 'sweater') {
+    // A knitted look: a band at the hem and a stripe across the chest.
+    part(root, new THREE.CylinderGeometry(0.215 * w, 0.215 * w, 0.07, 7), look.inner, 0, 0.86, 0).scale.set(1, 1, 0.72);
+    block(root, look.inner, [-0.22 * w, 1.16, -0.16, 0.22 * w, 1.21, -0.14]);
+  } else {
+    // A tee: a print on the front.
+    part(root, new THREE.CircleGeometry(0.07, 6), look.inner, 0, 1.15, -0.15).rotation.y = Math.PI;
   }
-  // A collar standing up at the back of the neck.
-  part(root, new THREE.CylinderGeometry(0.11, 0.13, 0.08, 7, 1, true, Math.PI * 0.6, Math.PI * 1.8), look.jacket, 0, 1.38, 0.01).material = (() => {
-    const m = mat(look.jacket).clone();
-    m.side = THREE.DoubleSide;
-    return m;
-  })();
-  part(root, new THREE.CylinderGeometry(0.2, 0.21, 0.06, 7), look.legs, 0, 0.86, 0).scale.set(1, 1, 0.7);
+  part(root, new THREE.CylinderGeometry(0.2 * w, 0.21 * w, 0.06, 7), look.legs, 0, 0.86, 0).scale.set(1, 1, 0.7);
 
-  const arms = [-1, 1].map((side) => {
-    const shoulder = new THREE.Group();
-    shoulder.position.set(side * 0.3, 1.32, 0);
-    root.add(shoulder);
-    part(shoulder, new THREE.IcosahedronGeometry(0.1, 0), look.jacket, 0, 0, 0);
-    const sleeve = part(shoulder, tube(0.092, 0.075, 0.5), look.jacket, 0, 0, 0);
-    sleeve.rotation.z = side * 0.06;
-    // A chunky, faceted hand.
-    part(shoulder, new THREE.DodecahedronGeometry(0.062, 0), look.skin, side * 0.03, -0.56, 0).scale.set(0.9, 1.1, 0.9);
-    return shoulder;
-  }) as unknown as [THREE.Object3D, THREE.Object3D];
+  const short = look.top === 'tee';
+  const arms = pair(
+    [-1, 1].map((side) => {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(side * (0.27 * w + 0.03), 1.32, 0);
+      root.add(shoulder);
+      part(shoulder, new THREE.IcosahedronGeometry(0.1, 0), look.outer, 0, 0, 0);
+      if (short) {
+        part(shoulder, tube(0.095, 0.09, 0.2), look.outer, 0, 0, 0);
+        part(shoulder, tube(0.06, 0.055, 0.34), look.skin, 0, -0.18, 0);
+      } else part(shoulder, tube(0.092, 0.075, 0.5), look.outer, 0, 0, 0).rotation.z = side * 0.06;
+      part(shoulder, new THREE.DodecahedronGeometry(0.062, 0), look.skin, side * 0.03, -0.56, 0).scale.set(0.9, 1.1, 0.9);
+      return shoulder;
+    }),
+  );
   return { legs, arms };
 }
 
-/** A customer, 1.8 m tall, facing −z. */
-export function buildCustomer(lookId: CustomerLook): CustomerModel {
-  const look = LOOKS[lookId];
+function extras(root: THREE.Group, look: Look, arms: [THREE.Object3D, THREE.Object3D]): void {
+  for (const extra of look.extras) {
+    if (extra === 'lanyard') {
+      block(root, 'red', [-0.07, 1.0, -0.17, 0.07, 1.1, -0.16]);
+      block(root, 'white', [-0.05, 0.96, -0.175, 0.05, 1.04, -0.17]);
+    } else if (extra === 'necklace') {
+      for (const side of [-1, 1]) {
+        const chain = block(root, 'white', [-0.006, -0.08, -0.004, 0.006, 0.08, 0.004]);
+        chain.position.set(side * 0.035, 1.28, -0.16);
+        chain.rotation.z = side * 0.35;
+      }
+      part(root, new THREE.OctahedronGeometry(0.02, 0), 'mustard', 0, 1.2, -0.17);
+    } else if (extra === 'backpack') {
+      const colour: Ink = look.outer === 'red' ? 'teal' : 'red';
+      block(root, colour, [-0.17, 0.9, 0.13, 0.17, 1.32, 0.32]);
+      block(root, colour === 'red' ? 'redDark' : 'tealDark', [-0.12, 0.95, 0.32, 0.12, 1.12, 0.36]);
+      for (const side of [-1, 1]) block(root, colour, [side * 0.13 - 0.025, 0.95, -0.17, side * 0.13 + 0.025, 1.34, -0.15]);
+    } else if (extra === 'scarf') {
+      part(root, new THREE.TorusGeometry(0.11, 0.05, 5, 8), 'red', 0, 1.37, 0).rotation.x = Math.PI / 2;
+      block(root, 'red', [0.04, 1.05, -0.2, 0.12, 1.36, -0.15]);
+    } else if (extra === 'bag') {
+      block(arms[1], 'woodDark', [-0.09, -0.85, -0.12, 0.09, -0.6, 0.12]);
+      block(arms[1], 'ink', [-0.01, -0.6, -0.06, 0.01, -0.52, 0.06]);
+    } else if (extra === 'paint') {
+      for (const [x, y, ink] of [
+        [0.12, 1.1, 'red'],
+        [-0.14, 0.95, 'mustard'],
+        [0.05, 0.9, 'teal'],
+      ] as const) {
+        block(root, ink, [x, y, -0.175, x + 0.05, y + 0.04, -0.17]);
+      }
+    }
+  }
+}
+
+function buildPerson(look: Look): CustomerModel {
   const root = new THREE.Group();
   const { legs, arms } = body(root, look);
   head(root, look);
-  if (look.extra === 'lanyard') {
-    block(root, 'red', [-0.07, 1.0, -0.16, 0.07, 1.1, -0.15]);
-    block(root, 'white', [-0.05, 0.96, -0.165, 0.05, 1.04, -0.16]);
-  }
-  if (look.extra === 'necklace') {
-    for (const side of [-1, 1]) {
-      const chain = block(root, 'white', [-0.006, -0.08, -0.004, 0.006, 0.08, 0.004]);
-      chain.position.set(side * 0.035, 1.28, -0.16);
-      chain.rotation.z = side * 0.35;
-    }
-    part(root, new THREE.OctahedronGeometry(0.02, 0), 'ink', 0, 1.2, -0.165);
-  }
-  if (look.extra === 'backpack') {
-    block(root, 'red', [-0.17, 0.9, 0.13, 0.17, 1.32, 0.3]);
-    for (const side of [-1, 1]) block(root, 'red', [side * 0.13 - 0.025, 0.95, -0.16, side * 0.13 + 0.025, 1.34, -0.14]);
-  }
-  if (look.extra === 'paint') {
-    for (const [x, y, ink] of [
-      [0.12, 1.1, 'red'],
-      [-0.14, 0.95, 'mustard'],
-      [0.05, 0.9, 'teal'],
-    ] as const) {
-      block(root, ink, [x, y, -0.165, x + 0.05, y + 0.04, -0.16]);
-    }
-  }
+  extras(root, look, arms);
+  root.scale.setScalar(look.height);
   root.position.y = GROUND_Y;
   return { root, legs, arms };
 }
 
+// ── 2D cartoons ─────────────────────────────────────────────────────────────────────
+
+const OUTLINE = '#1b1f33';
+
+type Cartoon = { draw: (ctx: CanvasRenderingContext2D, step: number) => void; colours: string[] };
+
+/** Round blob with stubby legs, a sprout on top. */
+function drawBlob(ctx: CanvasRenderingContext2D, step: number, c: string[]): void {
+  const legY = step ? [440, 430] : [430, 440];
+  ctx.fillStyle = OUTLINE;
+  ctx.fillRect(98, 360, 22, legY[0] - 360);
+  ctx.fillRect(140, 360, 22, legY[1] - 360);
+  ctx.beginPath();
+  ctx.ellipse(130, 270, 95, 110, 0, 0, Math.PI * 2);
+  ctx.fillStyle = c[0];
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(130, 162);
+  ctx.quadraticCurveTo(150, 110, 185, 115);
+  ctx.quadraticCurveTo(160, 150, 130, 162);
+  ctx.fillStyle = c[1];
+  ctx.fill();
+  ctx.stroke();
+  face(ctx, 130, 250, 1.1);
+}
+
+/** A tall noodle-limbed kid with a big round hat. */
+function drawNoodle(ctx: CanvasRenderingContext2D, step: number, c: string[]): void {
+  const swing = step ? 18 : -18;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 14;
+  ctx.strokeStyle = OUTLINE;
+  for (const [x, dir] of [
+    [112, 1],
+    [148, -1],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(x, 330);
+    ctx.quadraticCurveTo(x + swing * dir, 390, x - swing * dir * 0.5, 450);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 12;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(130 + side * 55, 230);
+    ctx.quadraticCurveTo(130 + side * 95, 270 + swing * side, 130 + side * 80, 320);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 6;
+  roundRect(ctx, 70, 210, 120, 130, 30, c[0]);
+  ctx.beginPath();
+  ctx.arc(130, 150, 62, 0, Math.PI * 2);
+  ctx.fillStyle = c[2];
+  ctx.fill();
+  ctx.stroke();
+  face(ctx, 130, 155, 1);
+  // The hat: a wide brim and a round top.
+  ctx.beginPath();
+  ctx.ellipse(130, 100, 90, 18, 0, 0, Math.PI * 2);
+  ctx.fillStyle = c[1];
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(130, 98, 48, Math.PI, 0);
+  ctx.fill();
+  ctx.stroke();
+}
+
+/** A friendly ghost under a sheet, in sneakers. */
+function drawGhost(ctx: CanvasRenderingContext2D, step: number, c: string[]): void {
+  ctx.beginPath();
+  ctx.moveTo(45, 400);
+  ctx.lineTo(45, 200);
+  ctx.bezierCurveTo(45, 60, 215, 60, 215, 200);
+  ctx.lineTo(215, 400);
+  for (let i = 0; i < 5; i++) ctx.quadraticCurveTo(215 - i * 34 - 17, 380 + (i % 2 ? 0 : 30), 215 - (i + 1) * 34, 400);
+  ctx.closePath();
+  ctx.fillStyle = c[2];
+  ctx.fill();
+  ctx.stroke();
+  for (const [x, up] of [
+    [90, step],
+    [170, 1 - step],
+  ] as const) {
+    roundRect(ctx, x - 30, 410 - up * 10, 60, 32, 14, c[0]);
+  }
+  face(ctx, 130, 200, 1.2);
+}
+
+/** A boxy cartoon robot with an antenna. */
+function drawRobot(ctx: CanvasRenderingContext2D, step: number, c: string[]): void {
+  ctx.fillStyle = OUTLINE;
+  ctx.fillRect(95, 360, 24, step ? 85 : 75);
+  ctx.fillRect(141, 360, 24, step ? 75 : 85);
+  roundRect(ctx, 60, 220, 140, 150, 14, c[0]);
+  roundRect(ctx, 90, 260, 80, 50, 8, c[1]);
+  roundRect(ctx, 70, 100, 120, 110, 20, c[2]);
+  ctx.beginPath();
+  ctx.moveTo(130, 100);
+  ctx.lineTo(130, 60);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(130, 55, 12, 0, Math.PI * 2);
+  ctx.fillStyle = c[1];
+  ctx.fill();
+  ctx.stroke();
+  face(ctx, 130, 155, 1);
+}
+
+/** A cat in a hoodie, standing on two legs. */
+function drawCat(ctx: CanvasRenderingContext2D, step: number, c: string[]): void {
+  ctx.fillStyle = OUTLINE;
+  ctx.fillRect(100, 350, 22, step ? 95 : 85);
+  ctx.fillRect(138, 350, 22, step ? 85 : 95);
+  roundRect(ctx, 65, 210, 130, 150, 40, c[0]);
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(130 + side * 30, 110);
+    ctx.lineTo(130 + side * 62, 55);
+    ctx.lineTo(130 + side * 70, 125);
+    ctx.closePath();
+    ctx.fillStyle = c[2];
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.ellipse(130, 160, 75, 65, 0, 0, Math.PI * 2);
+  ctx.fillStyle = c[2];
+  ctx.fill();
+  ctx.stroke();
+  face(ctx, 130, 160, 1);
+  ctx.lineWidth = 3;
+  for (const side of [-1, 1]) {
+    for (const dy of [-6, 6]) {
+      ctx.beginPath();
+      ctx.moveTo(130 + side * 30, 180 + dy);
+      ctx.lineTo(130 + side * 70, 176 + dy * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.lineWidth = 6;
+}
+
+/** Two dot eyes with a shine and a wide, happy mouth. */
+function face(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.ellipse(x + side * 24 * s, y - 8 * s, 9 * s, 12 * s, 0, 0, Math.PI * 2);
+    ctx.fillStyle = OUTLINE;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + side * 24 * s + 3 * s, y - 12 * s, 3 * s, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y + 12 * s, 16 * s, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string): void {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.stroke();
+}
+
+const CARTOONS: ((random: () => number) => Cartoon)[] = [
+  (r) => ({ draw: (ctx, s) => drawBlob(ctx, s, cartoonColours(r)), colours: [] }),
+  (r) => ({ draw: (ctx, s) => drawNoodle(ctx, s, cartoonColours(r)), colours: [] }),
+  (r) => ({ draw: (ctx, s) => drawGhost(ctx, s, cartoonColours(r)), colours: [] }),
+  (r) => ({ draw: (ctx, s) => drawRobot(ctx, s, cartoonColours(r)), colours: [] }),
+  (r) => ({ draw: (ctx, s) => drawCat(ctx, s, cartoonColours(r)), colours: [] }),
+];
+
+/** Three bright colours for a cartoon (fixed per customer: drawn once per frame texture). */
+function cartoonColours(random: () => number): string[] {
+  const pool = ['#ff8a5b', '#7ed6c4', '#ffd25a', '#f59ac1', '#9fb7ff', '#b4e07a', '#c7a6ff', '#ffffff', '#fbe2c8'];
+  const state = random();
+  const at = (k: number) => pool[Math.floor(((state * 997 + k * 131) % 1) * pool.length) % pool.length];
+  return [at(1), at(2), at(3)];
+}
+
+function buildCartoon(seed: number): CustomerModel {
+  const random = seededRandom(seed);
+  const which = CARTOONS[Math.floor(random() * CARTOONS.length)];
+  const colourSeed = random();
+  const frames = [0, 1].map((step) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 260;
+    canvas.height = 460;
+    const ctx = canvas.getContext('2d')!;
+    ctx.lineWidth = 6;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = OUTLINE;
+    // The same colours on both frames.
+    which(() => colourSeed).draw(ctx, step);
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  }) as unknown as [THREE.Texture, THREE.Texture];
+  const material = new THREE.MeshBasicMaterial({ map: frames[0], transparent: true, alphaTest: 0.5, side: THREE.DoubleSide });
+  const height = 1.75;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry((height * 260) / 460, height), material);
+  mesh.position.y = height / 2 - 0.02;
+  const root = new THREE.Group();
+  root.add(mesh);
+  root.position.y = GROUND_Y;
+  const dummy = () => new THREE.Object3D();
+  return { root, legs: [dummy(), dummy()], arms: [dummy(), dummy()], card: { mesh, frames } };
+}
+
+// ── Brick toys ──────────────────────────────────────────────────────────────────────
+
+const toyMaterials = new Map<string, THREE.MeshPhongMaterial>();
+/** Shiny plastic. */
+function plastic(colour: string): THREE.MeshPhongMaterial {
+  let m = toyMaterials.get(colour);
+  if (!m) toyMaterials.set(colour, (m = new THREE.MeshPhongMaterial({ color: hexColour(colour), shininess: 70, specular: 0x333333, flatShading: false })));
+  return m;
+}
+
+type Costume = { torso: string; legs: string; arms: string; hands?: string; head?: string; mask?: string; hat?: 'helmet' | 'knight' | 'chef' | 'pirate' | 'antenna'; cape?: string; emblem?: string };
+
+const COSTUMES: Costume[] = [
+  { torso: '#f2f2f2', legs: '#f2f2f2', arms: '#f2f2f2', hands: '#dddddd', hat: 'helmet', emblem: '#e4573d' },
+  { torso: '#9aa3ad', legs: '#5b6470', arms: '#9aa3ad', hat: 'knight', emblem: '#f2b234' },
+  { torso: '#ffffff', legs: '#30364a', arms: '#ffffff', hat: 'chef' },
+  { torso: '#7a3b2e', legs: '#2b2f45', arms: '#f4ead5', hat: 'pirate', emblem: '#f2b234' },
+  // A masked hero of our own: teal and mustard, with a cape and a { } badge.
+  { torso: '#2b9c8e', legs: '#1c6b63', arms: '#2b9c8e', hands: '#f2b234', mask: '#f2b234', cape: '#e4573d', emblem: '#f2b234' },
+  { torso: '#b9c2cf', legs: '#7b8594', arms: '#b9c2cf', head: '#b9c2cf', hat: 'antenna', emblem: '#2b9c8e' },
+  { torso: '#e4573d', legs: '#25304f', arms: '#e4573d' },
+  { torso: '#4f8a49', legs: '#c27b4b', arms: '#4f8a49' },
+];
+
+function toyFace(mask?: string): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#ffd23f';
+  ctx.fillRect(0, 0, 256, 128);
+  if (mask) {
+    ctx.fillStyle = mask;
+    ctx.fillRect(0, 30, 256, 34);
+  }
+  // The face on the front quarter of the head (the texture wraps round the cylinder).
+  ctx.fillStyle = '#1b1f33';
+  for (const x of [110, 146]) {
+    ctx.beginPath();
+    ctx.ellipse(x, 50, 5, 7, 0, 0, Math.PI * 2);
+    ctx.fillStyle = mask ? '#ffffff' : '#1b1f33';
+    ctx.fill();
+  }
+  ctx.strokeStyle = '#1b1f33';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(128, 70, 16, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  return new THREE.CanvasTexture(canvas);
+}
+
+function buildBrick(seed: number): CustomerModel {
+  const random = seededRandom(seed);
+  const c = COSTUMES[Math.floor(random() * COSTUMES.length)];
+  const root = new THREE.Group();
+  const S = 1.7; // scaled up from a toy to a person's height
+  const box = (parent: THREE.Object3D, colour: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), plastic(colour));
+    m.position.set(x, y, z);
+    parent.add(m);
+    return m;
+  };
+  // Legs: two blocks hanging from the hip, with feet.
+  const legs = pair(
+    [-0.11, 0.11].map((x) => {
+      const hip = new THREE.Group();
+      hip.position.set(x, 0.62, 0);
+      root.add(hip);
+      box(hip, c.legs, 0.2, 0.56, 0.24, 0, -0.3, 0);
+      box(hip, c.legs, 0.2, 0.06, 0.3, 0, -0.59, -0.03);
+      return hip;
+    }),
+  );
+  box(root, c.legs, 0.46, 0.1, 0.24, 0, 0.66, 0);
+  // Torso: a tapered block (narrow at the top).
+  const torsoGeometry = new THREE.CylinderGeometry(0.17, 0.25, 0.6, 4, 1).rotateY(Math.PI / 4);
+  torsoGeometry.scale(1, 1, 0.62);
+  const torso = new THREE.Mesh(torsoGeometry, plastic(c.torso));
+  torso.position.y = 1.01;
+  root.add(torso);
+  if (c.emblem) {
+    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.07, 12), plastic(c.emblem));
+    badge.position.set(0, 1.07, -0.135);
+    badge.rotation.y = Math.PI;
+    root.add(badge);
+  }
+  if (c.cape) {
+    const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.9), plastic(c.cape));
+    (cape.material as THREE.Material).side = THREE.DoubleSide;
+    cape.position.set(0, 0.85, 0.17);
+    cape.rotation.x = 0.12;
+    root.add(cape);
+  }
+  // Arms: angled tubes from the shoulders with C-shaped hands.
+  const arms = pair(
+    [-1, 1].map((side) => {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(side * 0.25, 1.24, 0);
+      root.add(shoulder);
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.42, 10).translate(0, -0.21, 0), plastic(c.arms));
+      arm.rotation.z = side * 0.2;
+      shoulder.add(arm);
+      const hand = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.03, 8, 12, Math.PI * 1.5), plastic(c.hands ?? '#ffd23f'));
+      hand.position.set(side * 0.09, -0.46, -0.04);
+      hand.rotation.set(Math.PI / 2, 0, Math.PI / 4);
+      shoulder.add(hand);
+      return shoulder;
+    }),
+  );
+  // Head: a short cylinder with a printed face and a stud on top.
+  box(root, '#ffd23f', 0.12, 0.06, 0.12, 0, 1.34, 0);
+  const faceTexture = toyFace(c.mask);
+  faceTexture.offset.x = 0.25;
+  const headMaterials = [
+    new THREE.MeshPhongMaterial({ map: faceTexture, shininess: 70, specular: 0x333333 }),
+    plastic(c.head ?? '#ffd23f'),
+    plastic(c.head ?? '#ffd23f'),
+  ];
+  const headMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.27, 20), headMaterials);
+  headMesh.position.y = 1.51;
+  headMesh.rotation.y = Math.PI;
+  root.add(headMesh);
+  const stud = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.07, 14), plastic(c.head ?? '#ffd23f'));
+  stud.position.y = 1.68;
+  root.add(stud);
+  // Headgear.
+  if (c.hat === 'helmet') {
+    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), new THREE.MeshPhongMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, shininess: 120 }));
+    helmet.position.y = 1.53;
+    root.add(helmet);
+    box(root, '#f2f2f2', 0.34, 0.06, 0.34, 0, 1.33, 0);
+  } else if (c.hat === 'knight') {
+    const helm = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.3, 16, 1, true, Math.PI * 0.8, Math.PI * 1.4), plastic('#9aa3ad'));
+    (helm.material as THREE.Material).side = THREE.DoubleSide;
+    helm.position.y = 1.53;
+    root.add(helm);
+    box(root, '#9aa3ad', 0.36, 0.04, 0.36, 0, 1.68, 0);
+    box(root, '#e4573d', 0.03, 0.14, 0.2, 0, 1.76, 0.02);
+  } else if (c.hat === 'chef') {
+    box(root, '#ffffff', 0.3, 0.06, 0.3, 0, 1.67, 0);
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 8), plastic('#ffffff'));
+    puff.position.y = 1.82;
+    puff.scale.y = 0.8;
+    root.add(puff);
+  } else if (c.hat === 'pirate') {
+    const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 0.14, 3), plastic('#25304f'));
+    hat.position.y = 1.72;
+    hat.rotation.y = Math.PI / 2;
+    root.add(hat);
+  } else if (c.hat === 'antenna') {
+    box(root, '#7b8594', 0.02, 0.2, 0.02, 0.08, 1.8, 0);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), plastic('#e4573d'));
+    tip.position.set(0.08, 1.91, 0);
+    root.add(tip);
+  }
+  root.scale.setScalar(S / 1.7 * 1.05);
+  root.position.y = GROUND_Y;
+  return { root, legs, arms };
+}
+
+// ── Customers ───────────────────────────────────────────────────────────────────────
+
 /**
- * The Manager (GAME_DESIGN.md §3): the same build in a dark suit with a white shirt and a red tie,
- * glasses and neat hair, holding a report tablet. Faces −z like the customers.
+ * A customer for an order: the seed (from the order id) decides whether they are a low-poly
+ * person, a 2D cartoon or a brick toy, and how they look. The same seed always gives the same one.
+ */
+export function buildCustomer(kind: CustomerLook, seed = 1): CustomerModel {
+  const figure = kindFor(seed);
+  if (figure === 'cartoon' && typeof document !== 'undefined') return buildCartoon(seed);
+  if (figure === 'brick') return buildBrick(seed);
+  return buildPerson(lookFor(kind, seed));
+}
+
+/**
+ * The Manager (GAME_DESIGN.md §3): a low-poly person in a dark suit with a white shirt and a red
+ * tie, glasses and neat hair, holding a report tablet. Faces −z like the customers.
  */
 export function buildManager(): THREE.Group {
-  const root = new THREE.Group();
-  const look = { skin: 'skin2', hair: 'inkSoft', hairStyle: 'short', jacket: 'ink', shirt: 'white', legs: 'ink', shoes: 'inkSoft', eyes: 'glasses' } as const;
-  const { arms } = body(root, look);
-  head(root, look);
+  const look: Look = {
+    height: 1.02,
+    width: 1.05,
+    skin: 'skin2',
+    hair: 'inkSoft',
+    hairStyle: 'short',
+    hat: 'ink',
+    eyes: 'glasses',
+    top: 'jacket',
+    outer: 'ink',
+    inner: 'white',
+    lower: 'trousers',
+    legs: 'ink',
+    shoes: 'inkSoft',
+    extras: ['brows'],
+  };
+  const { root, arms } = buildPerson(look);
+  root.position.y = 0;
   // The tie.
   block(root, 'red', [-0.025, 0.98, -0.165, 0.025, 1.34, -0.158]);
   block(root, 'redDark', [-0.035, 1.3, -0.168, 0.035, 1.36, -0.16]);

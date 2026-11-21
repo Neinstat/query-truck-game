@@ -579,7 +579,8 @@ export class TruckGame {
       const customer = this.queue.join(order.id);
       if (customer) {
         this.bridge.emit('arrive', true);
-        const model = buildCustomer(order.look);
+        // The order decides who comes: a low-poly person, a 2D cartoon or a brick toy.
+        const model = buildCustomer(order.look, hashString(order.id));
         this.scene.add(model.root);
         this.customers.set(customer, model);
       }
@@ -610,6 +611,18 @@ export class TruckGame {
       model.legs[1].rotation.x = -swing;
       model.arms[0].rotation.x = -swing * 0.8;
       model.arms[1].rotation.x = swing * 0.8;
+      // A flat cartoon always turns its card to the player, and steps between two frames.
+      if (model.card) {
+        const toCamera = Math.atan2(this.camera.position.x - p.x, this.camera.position.z - p.z);
+        model.card.mesh.rotation.y = toCamera - model.root.rotation.y;
+        const frame = walking && Math.sin(this.walkClock * 8 + p.x) > 0 ? 1 : 0;
+        const material = model.card.mesh.material as THREE.MeshBasicMaterial;
+        if (material.map !== model.card.frames[frame]) {
+          material.map = model.card.frames[frame];
+          material.needsUpdate = true;
+        }
+        model.card.mesh.position.y = 0.855 + (walking ? Math.abs(Math.sin(this.walkClock * 8 + p.x)) * 0.05 : 0);
+      }
     }
 
     const front = this.queue.front();
