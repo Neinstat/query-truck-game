@@ -8,8 +8,7 @@ import type { Ink } from '../art/riso';
 import { inkColour } from './colour';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { LOOKS } from './looks';
-import type { Sky } from './sky';
-import { CLOCK3D, GROUND_Y, LAYOUT, PARK, QUEUE_PATH_3D, TRUCK, type Box3 } from './world';
+import { CLOCK3D, GROUND_Y, LAYOUT, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
 export function mat(ink: Ink): THREE.MeshLambertMaterial {
@@ -19,7 +18,7 @@ export function mat(ink: Ink): THREE.MeshLambertMaterial {
 }
 
 /** A box from min/max corners. */
-function block(parent: THREE.Object3D, ink: Ink, b: Box3 | [number, number, number, number, number, number]): THREE.Mesh {
+export function block(parent: THREE.Object3D, ink: Ink, b: Box3 | [number, number, number, number, number, number]): THREE.Mesh {
   const [x1, y1, z1, x2, y2, z2] = Array.isArray(b) ? b : [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z];
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(z2 - z1)), mat(ink));
   mesh.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
@@ -257,152 +256,6 @@ function guideSign(x: number, y: number, z: number): THREE.Group {
   sign.add(face);
   block(sign, 'woodDark', [-0.01, -0.12, 0.01, 0.01, -0.04, 0.03]);
   return sign;
-}
-
-// ── The park outside ──────────────────────────────────────────────────────────────────
-
-function tree(g: THREE.Group, x: number, z: number, size: number): void {
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * size, 0.16 * size, 1.4 * size, 6), mat('woodDark'));
-  trunk.position.set(x, GROUND_Y + 0.7 * size, z);
-  g.add(trunk);
-  const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1 * size, 0), mat(size > 1 ? 'tealDark' : 'teal'));
-  crown.position.set(x, GROUND_Y + 2.0 * size, z);
-  g.add(crown);
-}
-
-function bench(g: THREE.Group, x: number, z: number, yaw: number): void {
-  const b = new THREE.Group();
-  block(b, 'wood', [-0.8, 0.42, -0.22, 0.8, 0.48, 0.22]);
-  block(b, 'wood', [-0.8, 0.55, 0.18, 0.8, 0.85, 0.24]);
-  block(b, 'ink', [-0.7, 0, -0.2, -0.64, 0.42, 0.2]);
-  block(b, 'ink', [0.64, 0, -0.2, 0.7, 0.42, 0.2]);
-  b.position.set(x, GROUND_Y, z);
-  b.rotation.y = yaw;
-  g.add(b);
-}
-
-function picnicTable(g: THREE.Group, x: number, z: number): void {
-  const p = new THREE.Group();
-  block(p, 'wood', [-0.9, 0.72, -0.4, 0.9, 0.78, 0.4]);
-  block(p, 'woodDark', [-0.9, 0.42, -0.85, 0.9, 0.46, -0.6]);
-  block(p, 'woodDark', [-0.9, 0.42, 0.6, 0.9, 0.46, 0.85]);
-  // Table legs, and a leg under each end of both seats, tied together low down like a real
-  // picnic table (so the seats never float).
-  block(p, 'ink', [-0.7, 0, -0.06, -0.62, 0.72, 0.06]);
-  block(p, 'ink', [0.62, 0, -0.06, 0.7, 0.72, 0.06]);
-  for (const x of [-0.7, 0.62]) {
-    for (const z of [-0.77, 0.69]) block(p, 'ink', [x, 0, z, x + 0.08, 0.42, z + 0.08]);
-    block(p, 'inkSoft', [x, 0.16, -0.77, x + 0.08, 0.22, 0.77]);
-  }
-  block(p, 'ink', [-0.02, 0.78, -0.02, 0.02, 2.1, 0.02]);
-  const umbrella = new THREE.Mesh(new THREE.ConeGeometry(1.2, 0.5, 8), mat('red'));
-  umbrella.position.set(0, 2.1, 0);
-  p.add(umbrella);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.22, 8), mat('white'));
-  tip.position.set(0, 2.28, 0);
-  p.add(tip);
-  p.position.set(x, GROUND_Y, z);
-  g.add(p);
-}
-
-/**
- * Lamp bulbs share these materials so the whole park lights up together at dusk (`setSky`).
- * Their "on" colours; off, they are a pale glass colour.
- */
-const LAMP_ON = { mustard: inkColour('mustard'), red: inkColour('red') };
-const LAMP_OFF = new THREE.Color('#e9e2cf');
-const lampMaterials = {
-  mustard: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
-  red: new THREE.MeshBasicMaterial({ color: LAMP_OFF.clone() }),
-};
-
-function lampPost(g: THREE.Group, x: number, z: number): THREE.Vector3 {
-  block(g, 'ink', [x - 0.05, GROUND_Y, z - 0.05, x + 0.05, GROUND_Y + 3.2, z + 0.05]);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), lampMaterials.mustard);
-  bulb.position.set(x, GROUND_Y + 3.3, z);
-  g.add(bulb);
-  return bulb.position.clone();
-}
-
-export function buildPark(): THREE.Group {
-  const g = new THREE.Group();
-  // Lawn and the winding path where customers queue.
-  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), mat('grass'));
-  lawn.rotation.x = -Math.PI / 2;
-  lawn.position.set(0, GROUND_Y, -40);
-  g.add(lawn);
-  for (let i = 1; i < QUEUE_PATH_3D.length - 1; i++) {
-    const a = QUEUE_PATH_3D[i - 1];
-    const b = QUEUE_PATH_3D[i];
-    const length = Math.hypot(b.x - a.x, b.z - a.z) + 1.2;
-    const piece = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, length), mat('paperShade'));
-    piece.position.set((a.x + b.x) / 2, GROUND_Y + 0.01, (a.z + b.z) / 2);
-    piece.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
-    g.add(piece);
-  }
-  // Mowing stripes.
-  for (let z = -6; z > -40; z -= 4) {
-    const stripe = new THREE.Mesh(new THREE.PlaneGeometry(140, 2), mat('grassDark'));
-    stripe.rotation.x = -Math.PI / 2;
-    stripe.position.set(0, GROUND_Y + 0.005, z);
-    g.add(stripe);
-  }
-
-  // Seats that will fill with visitors when business is good (Phase 7).
-  for (const b of PARK.benches) bench(g, b.x, b.z, b.yaw);
-  for (const p of PARK.picnicTables) picnicTable(g, p.x, p.z);
-
-  // Lamp posts with string lights between them.
-  const lamps = PARK.lamps.map((l) => lampPost(g, l.x, l.z));
-  for (let i = 1; i < lamps.length; i++) {
-    const a = lamps[i - 1];
-    const b = lamps[i];
-    for (let k = 1; k < 12; k++) {
-      const t = k / 12;
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), k % 2 ? lampMaterials.mustard : lampMaterials.red);
-      bulb.position.lerpVectors(a, b, t);
-      bulb.position.y -= Math.sin(t * Math.PI) * 0.6;
-      g.add(bulb);
-    }
-  }
-
-  // Trees: a few near, a row further back.
-  for (const t of PARK.trees) tree(g, t.x, t.z, t.size);
-  for (let x = -40; x <= 40; x += 5) tree(g, x + ((x * 7) % 3), -24 - ((x * 13) % 4), 1.5);
-
-  // The far-away city skyline and the sun, which crosses the sky over the day (`setSky`).
-  for (let i = 0, x = -70; x < 70; i++) {
-    const w = 3 + ((i * 7) % 5);
-    const h = 6 + ((i * 11) % 14);
-    block(g, i % 2 ? 'lilac' : 'inkSoft', [x, GROUND_Y, -58 - (i % 3) * 3, x + w, GROUND_Y + h, -55 - (i % 3) * 3]);
-    x += w + 0.6;
-  }
-  const sunMaterial = new THREE.MeshBasicMaterial({ color: inkColour('mustard'), fog: false });
-  const sun = new THREE.Mesh(new THREE.CircleGeometry(6, 24), sunMaterial);
-  g.add(sun);
-  /** Moves the sun (or moon) and lights the lamps for the time of day (sky.ts). */
-  g.userData.setSky = (sky: Sky) => {
-    const distance = 90;
-    const up = (sky.elevation * Math.PI) / 180;
-    sun.position.set(sky.across * 70, GROUND_Y + Math.sin(up) * distance, -distance * Math.cos(up));
-    sun.lookAt(0, GROUND_Y + 1, 0);
-    sun.visible = sky.elevation > -6 || sky.lamps > 0.95;
-    if (sky.lamps > 0.95) sun.position.set(-30, GROUND_Y + 35, -80); // the moon
-    sunMaterial.color.set(sky.disc);
-    lampMaterials.mustard.color.copy(LAMP_OFF).lerp(LAMP_ON.mustard, sky.lamps);
-    lampMaterials.red.color.copy(LAMP_OFF).lerp(LAMP_ON.red, sky.lamps);
-  };
-
-  // The truck's own awning over the window, seen from inside.
-  const w = LAYOUT.window;
-  for (let i = 0; i < 8; i++) {
-    const x = w.min.x - 0.2 + i * ((w.max.x - w.min.x + 0.4) / 8);
-    const stripe = block(g, i % 2 ? 'white' : 'red', [x, 0, 0, x + (w.max.x - w.min.x + 0.4) / 8, 0.04, 0.9]);
-    stripe.position.y = w.max.y + 0.25;
-    stripe.position.z = -HZ - 0.5;
-    stripe.rotation.x = -0.35;
-  }
-  return g;
 }
 
 // ── Customers ─────────────────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import { ResultTable } from './ResultTable';
 import { WithCode } from './WithCode';
 import { SchemaPanel, type Table } from './SchemaPanel';
 import { SqlEditor } from './SqlEditor';
+import { sound } from '../audio/sound';
 
 type Props = {
   db: CafeDatabase;
@@ -86,6 +87,7 @@ export function CaseConsole({ db, schema, level, lang, t, onSolved, solvedPanel 
       setVerdicts(nextVerdicts);
       const wrong = !verdict.correct && verdict.feedback.kind === 'answer-wrong' ? wrongAnswers + 1 : wrongAnswers;
       setWrongAnswers(wrong);
+      sound.play(verdict.correct ? 'correct' : 'wrong');
       if (nextVerdicts.every((v) => v?.correct)) onSolved(wrong);
     } finally {
       setChecking(null);

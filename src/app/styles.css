@@ -1958,3 +1958,63 @@ body {
   font-size: 0.78rem;
   text-align: left;
 }
+
+/* Where the truck parks today (title screen and clock card). */
+.title-place {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px dashed #25304f;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fffaf0;
+}
+
+.title-place-blurb {
+  font-size: 0.8rem;
+  color: #4a5878;
+}
+
+.hud-clock-place {
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a5878;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-clock-rain {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1c6b63;
+  background: #9ad6c8;
+}
+
+.sound-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sound-toggle {
+  flex: none;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #25304f;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #25304f;
+  background: #fffaf0;
+  cursor: pointer;
+}
+
+.sound-control input[type='range'] {
+  flex: 1;
+  accent-color: #e4573d;
+}

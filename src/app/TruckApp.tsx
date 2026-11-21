@@ -9,12 +9,21 @@ import { restartDay, SKIP_TITLE_KEY, startNextDay, useTruckShift } from './useTr
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
+import { useSound } from './useSound';
+import { PLACES, placeForDay } from '../sql-core/truck/places';
+import { sound } from '../audio/sound';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
 
 /** After "next day" or "play again" the page reloads straight into the truck (no title). */
+/** Where the truck parks today; `?place=harbour` in the address picks a place (for testing). */
+function todaysPlace(dayNumber: number) {
+  const asked = new URLSearchParams(window.location.search).get('place');
+  return PLACES.find((p) => p.id === asked) ?? placeForDay(dayNumber);
+}
+
 function skipTitleOnce(): boolean {
   try {
     const skip = sessionStorage.getItem(SKIP_TITLE_KEY) === '1';
@@ -27,7 +36,7 @@ function skipTitleOnce(): boolean {
 
 type Screen = 'title' | 'playing' | 'paused';
 
-/** SQL Valley: the food truck, first person in 3D (GAME_DESIGN.md §7). */
+/** Query Truck: the food truck, first person in 3D (GAME_DESIGN.md §7). */
 export function TruckApp() {
   const [lang, setLang] = useLang();
   const t = ui[lang];
@@ -68,9 +77,19 @@ export function TruckApp() {
     handled: [...day.served.map((s) => s.orderId), ...day.missed],
     clock: day.clock,
     managerDone: day.manager !== null,
+    // A different place each day (sql-core/truck/places.ts).
+    place: todaysPlace(past.length + 1).id,
+    // `?rain` in the address: rain today whatever the weather (for testing).
+    forceRain: new URLSearchParams(window.location.search).has('rain'),
   });
+  const place = todaysPlace(past.length + 1);
+  useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
+  /** How hard it rains (0–1), for the clock card's icon. */
+  const [rain, setRain] = useState(0);
+  useEffect(() => bridge.on('weather', setRain), [bridge]);
+  useSound(bridge, { knocking, consoleOpen, dayDone, lens, paused: menuOpen });
   const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
 
   useEffect(() => {
@@ -180,6 +199,8 @@ export function TruckApp() {
               served={day.served.length}
               total={day.orders.length}
               lens={lens}
+              raining={rain > 0.15}
+              place={`${place.icon} ${place.name[lang]}`}
               t={t}
             />
             <button
@@ -245,6 +266,7 @@ export function TruckApp() {
         {screen === 'title' && tourStep === null && (
           <TitleScreen
             dayNumber={past.length + 1}
+            place={place}
             clock={day.clock}
             worldReady={ready}
             dataReady={dataReady}
@@ -326,19 +348,23 @@ function ClockWidget(props: {
   served: number;
   total: number;
   lens: boolean;
+  raining: boolean;
+  /** Where the truck parks today. */
+  place: string;
   t: UiText;
 }) {
-  const { clock, shut, dayNumber, date, served, total, lens, t } = props;
+  const { clock, shut, dayNumber, date, served, total, lens, raining, place, t } = props;
   const progress = Math.min(1, Math.max(0, (clock - OPENING) / (CLOSING - OPENING)));
   return (
     <div className={shut ? 'hud-clock hud-clock-shut' : 'hud-clock'} title={t.clockTitle}>
       <div className="hud-clock-top">
         <span className="hud-clock-icon" aria-hidden="true">
-          {skyIcon(clock)}
+          {raining ? '🌧' : skyIcon(clock)}
         </span>
         <span className="hud-clock-time">{formatClock(clock)}</span>
         {shut && <span className="hud-clock-closed">{t.closedLabel}</span>}
         {lens && <span className="hud-clock-lens">🔍 {t.dataLens}</span>}
+        {raining && !lens && !shut && <span className="hud-clock-rain">{t.raining}</span>}
       </div>
       <div className="hud-clock-bar" aria-hidden="true">
         <span style={{ width: `${progress * 100}%` }} />
@@ -349,6 +375,7 @@ function ClockWidget(props: {
           ☕ {served}/{total}
         </span>
       </div>
+      <div className="hud-clock-place">{place}</div>
     </div>
   );
 }

@@ -8,6 +8,7 @@
  */
 import type { TruckObjectId } from '../../sql-core/truck/objects';
 import { QUEUE } from './queue';
+import type { PlaceId } from '../../sql-core/truck/places';
 
 /** Things in the truck the player can use (which tables each one sees: sql-core/truck/objects.ts). */
 export type InteractableId = TruckObjectId;
@@ -209,38 +210,136 @@ export function queuePosition(progress: number): { x: number; z: number; yaw: nu
 /** Customers waiting face the truck (towards +z, i.e. yaw π). */
 export const FACING_TRUCK = Math.PI;
 
-// ── The park around the truck ─────────────────────────────────────────────────────────
+// ── The place around the truck ────────────────────────────────────────────────────────
+
+/** The kinds of things that stand around the truck (scenery.ts draws each one). */
+export type PropKind =
+  | 'bench'
+  | 'picnicTable'
+  | 'lamp'
+  | 'tree'
+  | 'bush'
+  | 'bin'
+  | 'quarterPipe'
+  | 'funBox'
+  | 'rail'
+  | 'pillar'
+  | 'hoop'
+  | 'bikeRack'
+  | 'flagPole'
+  | 'bollard'
+  | 'crates'
+  | 'barrel'
+  | 'stall'
+  | 'fountain'
+  | 'planter';
+
+/** A thing near the truck: where it stands, which way it faces (yaw), and how big it is. */
+export type Prop = { kind: PropKind; x: number; z: number; yaw?: number; size?: number };
+
+/** Room each kind of thing needs around its centre (m), at size 1. */
+export const PROP_RADIUS: Record<PropKind, number> = {
+  bench: 1.0,
+  picnicTable: 1.3,
+  lamp: 0.3,
+  tree: 1.3,
+  bush: 0.7,
+  bin: 0.35,
+  quarterPipe: 2.0,
+  funBox: 1.7,
+  rail: 1.5,
+  pillar: 0.8,
+  hoop: 0.8,
+  bikeRack: 1.1,
+  flagPole: 0.3,
+  bollard: 0.3,
+  crates: 1.0,
+  barrel: 0.45,
+  stall: 1.7,
+  fountain: 2.4,
+  planter: 0.7,
+};
 
 /**
- * Where the park's furniture stands (build.ts draws it), with how much room each piece takes
- * (radius, m). Nothing may stand on the path customers walk: tested against QUEUE_PATH_3D.
- * The seats fill with visitors when business is good (Phase 7).
+ * Where things stand at each place the truck parks (sql-core/truck/places.ts), near the truck.
+ * Nothing may stand on the path customers walk, and nothing overlaps: tested against
+ * QUEUE_PATH_3D. Seats will fill with visitors when business is good (Phase 7). The far
+ * backdrop of each place (buildings, the overpass, the sea) is drawn in scenery.ts.
  */
-export const PARK = {
-  benches: [
-    { x: -5.2, z: -3.2, yaw: 0.4 },
-    { x: 5.6, z: -8.8, yaw: -0.5 },
-    { x: 8.5, z: -14, yaw: -0.2 },
+export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
+  park: [
+    { kind: 'bench', x: -5.2, z: -3.2, yaw: 0.4 },
+    { kind: 'bench', x: 5.6, z: -8.8, yaw: -0.5 },
+    { kind: 'bench', x: 8.5, z: -14, yaw: -0.2 },
+    { kind: 'picnicTable', x: 3.9, z: -6.2 },
+    { kind: 'picnicTable', x: -5.5, z: -12 },
+    { kind: 'picnicTable', x: 7, z: -11 },
+    { kind: 'lamp', x: -3.6, z: -3.6 },
+    { kind: 'lamp', x: 2.4, z: -4.4 },
+    { kind: 'lamp', x: 6.5, z: -7 },
+    { kind: 'tree', x: -7, z: -6, size: 1.2 },
+    { kind: 'tree', x: 9, z: -4.5, size: 1.1 },
+    { kind: 'tree', x: -2, z: -16, size: 1.3 },
   ],
-  picnicTables: [
-    { x: 3.9, z: -6.2 },
-    { x: -5.5, z: -12 },
-    { x: 7, z: -11 },
+  skatepark: [
+    { kind: 'quarterPipe', x: 1.5, z: -12, yaw: 0 },
+    { kind: 'quarterPipe', x: -6, z: -16, yaw: 0.3 },
+    { kind: 'funBox', x: 6.5, z: -10 },
+    { kind: 'rail', x: 3.2, z: -7.2, yaw: 0.2 },
+    { kind: 'pillar', x: -11, z: -13 },
+    { kind: 'pillar', x: 11, z: -13 },
+    { kind: 'pillar', x: -4, z: -21 },
+    { kind: 'pillar', x: 5, z: -21 },
+    { kind: 'bench', x: -5.4, z: -3.0, yaw: 0.4 },
+    { kind: 'bin', x: -3.6, z: -2.4 },
+    { kind: 'lamp', x: 2.6, z: -4.4 },
+    { kind: 'lamp', x: -9.5, z: -7.5 },
   ],
-  lamps: [
-    { x: -3.6, z: -3.6 },
-    { x: 2.4, z: -4.4 },
-    { x: 6.5, z: -7 },
+  school: [
+    { kind: 'hoop', x: 4, z: -14, yaw: 0 },
+    { kind: 'hoop', x: 4, z: -8.4, yaw: Math.PI },
+    { kind: 'bikeRack', x: -5.6, z: -3.4, yaw: 0.5 },
+    { kind: 'bikeRack', x: 9.5, z: -5.5, yaw: -1.2 },
+    { kind: 'flagPole', x: -3, z: -17 },
+    { kind: 'bench', x: 8.8, z: -9.5, yaw: -1.3 },
+    { kind: 'tree', x: -7.5, z: -6.5, size: 1.1 },
+    { kind: 'tree', x: -9, z: -14, size: 1.3 },
+    { kind: 'tree', x: 11, z: -15, size: 1.2 },
+    { kind: 'bin', x: 2.6, z: -4.4 },
   ],
-  trees: [
-    { x: -7, z: -6, size: 1.2 },
-    { x: 9, z: -4.5, size: 1.1 },
-    { x: -2, z: -16, size: 1.3 },
+  harbour: [
+    { kind: 'bollard', x: -6, z: -14 },
+    { kind: 'bollard', x: -1, z: -14 },
+    { kind: 'bollard', x: 4, z: -14 },
+    { kind: 'bollard', x: 9, z: -14 },
+    { kind: 'crates', x: 5, z: -8.5, yaw: 0.3 },
+    { kind: 'crates', x: -5.8, z: -3.6, yaw: -0.4 },
+    { kind: 'barrel', x: 6.8, z: -9.8 },
+    { kind: 'barrel', x: 3.3, z: -10.4 },
+    { kind: 'bench', x: 0.5, z: -9.5, yaw: 0 },
+    { kind: 'lamp', x: 2.4, z: -4.4 },
+    { kind: 'lamp', x: -3.6, z: -11 },
+    { kind: 'lamp', x: 8, z: -6.5 },
   ],
-} as const;
+  square: [
+    { kind: 'fountain', x: 4.5, z: -11 },
+    { kind: 'stall', x: -6, z: -15, yaw: 0.2 },
+    { kind: 'stall', x: 9.5, z: -7.5, yaw: -0.9 },
+    { kind: 'stall', x: -0.5, z: -17, yaw: 0 },
+    { kind: 'planter', x: -5.4, z: -3.2 },
+    { kind: 'planter', x: 2.6, z: -5.4 },
+    { kind: 'bench', x: 8.5, z: -14, yaw: -0.4 },
+    { kind: 'lamp', x: -3.6, z: -3.6 },
+    { kind: 'lamp', x: 6.5, z: -6.5 },
+    { kind: 'tree', x: -10, z: -8, size: 1.1 },
+  ],
+};
 
-/** Room each kind of furniture needs around its centre (m). */
-export const PARK_RADIUS = { bench: 1.0, picnicTable: 1.3, lamp: 0.3, tree: 1.3 } as const;
+/** Room a prop needs around its centre (m). */
+export function propRadius(p: Prop): number {
+  return PROP_RADIUS[p.kind] * (p.size ?? 1);
+}
+
 /** Half the path's width, plus a little room for customers' shoulders (m). */
 export const PATH_CLEARANCE = 0.9;
 

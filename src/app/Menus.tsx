@@ -3,6 +3,37 @@ import type { UiText } from '../i18n';
 import { LANGS, type Lang } from '../sql-core/feedback';
 import { formatClock, OPENING } from '../sql-core/truck/day';
 import { guideFor, type GuideItem } from './guide';
+import { sound } from '../audio/sound';
+import type { Place } from '../sql-core/truck/places';
+
+/** Sound on/off and the volume (saved in the browser; see src/audio/sound.ts). */
+function SoundControl({ t }: { t: UiText }) {
+  const [, redraw] = useState(0);
+  useEffect(() => sound.subscribe(() => redraw((n) => n + 1)), []);
+  return (
+    <div className="sound-control" role="group" aria-label={t.soundLabel}>
+      <button
+        className="sound-toggle"
+        aria-pressed={!sound.muted}
+        onClick={() => {
+          sound.start();
+          sound.setMuted(!sound.muted);
+        }}
+      >
+        {sound.muted ? '🔇' : '🔊'} {sound.muted ? t.soundOff : t.soundOn}
+      </button>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={Math.round(sound.volume * 100)}
+        aria-label={t.volume}
+        disabled={sound.muted}
+        onChange={(e) => sound.setVolume(Number(e.target.value) / 100)}
+      />
+    </div>
+  );
+}
 
 /**
  * The game's menus (GAME_DESIGN.md §7): the title screen (which is also the loading screen), the
@@ -29,6 +60,8 @@ function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => vo
 /** The first screen: the title, what is still loading, and the button into the day. */
 export function TitleScreen(props: {
   dayNumber: number;
+  /** Where the truck parks today. */
+  place: Place;
   clock: number;
   /** The 3D truck and the database are ready. */
   worldReady: boolean;
@@ -41,15 +74,19 @@ export function TitleScreen(props: {
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
+  const { dayNumber, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   const started = clock > OPENING;
   return (
     <div className="menu-screen title-screen">
       <div className="title-card">
-        <p className="title-kicker">🚚 Rolling Roast</p>
-        <h1 className="title-name">SQL Valley</h1>
+        <p className="title-kicker">🚚 {t.titleKicker}</p>
+        <h1 className="title-name">Query Truck</h1>
         <p className="title-tagline">{t.titleTagline}</p>
+        <p className="title-place">
+          <span aria-hidden="true">{place.icon}</span> {t.todayAt} <strong>{place.name[lang]}</strong>
+          <span className="title-place-blurb">{place.blurb[lang]}</span>
+        </p>
         {ready ? (
           <button className="menu-button menu-button-main" onClick={onStart} autoFocus>
             {started ? t.titleContinue(dayNumber, formatClock(clock)) : t.titleStart(dayNumber)}
@@ -66,6 +103,7 @@ export function TitleScreen(props: {
         <button className="menu-button" onClick={onTour} disabled={!worldReady}>
           🎥 {t.tourStart}
         </button>
+        <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
       </div>
     </div>
@@ -77,7 +115,7 @@ export function LoadingScreen({ t }: { t: UiText }) {
   return (
     <div className="menu-screen" role="status">
       <div className="title-card">
-        <h1 className="title-name">SQL Valley</h1>
+        <h1 className="title-name">Query Truck</h1>
         <div className="title-loading">
           <div className="loading-bar" aria-hidden="true" />
           <p>{t.loadingWorld}</p>
@@ -145,6 +183,7 @@ export function PauseMenu(props: {
             </li>
           ))}
         </ul>
+        <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
       </div>
     </div>

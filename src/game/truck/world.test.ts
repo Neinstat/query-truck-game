@@ -3,6 +3,7 @@ import { OBJECT_STATION } from '../../sql-core/truck/objects';
 import { STATIONS, tablesInQuery } from '../../sql-core/stations';
 import { objectForStation } from '../../sql-core/truck/objects';
 import { TEMPLATES } from '../../sql-core/truck/templates';
+import { PLACES } from '../../sql-core/truck/places';
 import { QUEUE, spotX } from './queue';
 import {
   aimedInteractable,
@@ -13,8 +14,9 @@ import {
   LENS_SPOTS,
   lensPoint,
   distanceToQueuePath,
-  PARK,
-  PARK_RADIUS,
+  PLACE_PROPS,
+  PROP_RADIUS,
+  propRadius,
   PATH_CLEARANCE,
   LAYOUT,
   lookAtAngles,
@@ -153,32 +155,31 @@ describe('the Data Lens', () => {
   });
 });
 
-describe('the park', () => {
-  const pieces = [
-    ...PARK.benches.map((p) => ({ name: `bench ${p.x},${p.z}`, ...p, r: PARK_RADIUS.bench })),
-    ...PARK.picnicTables.map((p) => ({ name: `picnic table ${p.x},${p.z}`, ...p, r: PARK_RADIUS.picnicTable })),
-    ...PARK.lamps.map((p) => ({ name: `lamp ${p.x},${p.z}`, ...p, r: PARK_RADIUS.lamp })),
-    ...PARK.trees.map((p) => ({ name: `tree ${p.x},${p.z}`, ...p, r: PARK_RADIUS.tree })),
-  ];
-
-  it('keeps every bench, table, lamp and tree off the path customers walk', () => {
-    for (const p of pieces) {
-      expect(distanceToQueuePath(p.x, p.z), p.name).toBeGreaterThanOrEqual(p.r + PATH_CLEARANCE);
-    }
+describe('the places around the truck', () => {
+  it('has things set out for every place', () => {
+    for (const place of PLACES) expect(PLACE_PROPS[place.id].length, place.id).toBeGreaterThan(5);
   });
+
+  for (const place of PLACES) {
+    const pieces = PLACE_PROPS[place.id].map((p) => ({ name: `${place.id}: ${p.kind} ${p.x},${p.z}`, ...p, r: propRadius(p) }));
+
+    it(`keeps everything off the path customers walk (${place.id})`, () => {
+      for (const p of pieces) expect(distanceToQueuePath(p.x, p.z), p.name).toBeGreaterThanOrEqual(p.r + PATH_CLEARANCE);
+    });
+
+    it(`keeps the pieces apart from each other (${place.id})`, () => {
+      for (const a of pieces) {
+        for (const b of pieces) {
+          if (a === b) continue;
+          expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.name} / ${b.name}`).toBeGreaterThanOrEqual(a.r + b.r);
+        }
+      }
+    });
+  }
 
   it('would catch a bench standing on the path (the bug this test was written for)', () => {
-    // The old bench at (−4.5, −7) stood right on the path.
-    expect(distanceToQueuePath(-4.5, -7)).toBeLessThan(PARK_RADIUS.bench + PATH_CLEARANCE);
-  });
-
-  it('keeps the pieces apart from each other', () => {
-    for (const a of pieces) {
-      for (const b of pieces) {
-        if (a === b) continue;
-        expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.name} / ${b.name}`).toBeGreaterThanOrEqual(a.r + b.r);
-      }
-    }
+    // The old park bench at (−4.5, −7) stood right on the path.
+    expect(distanceToQueuePath(-4.5, -7)).toBeLessThan(PROP_RADIUS.bench + PATH_CLEARANCE);
   });
 });
 
