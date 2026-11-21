@@ -38,7 +38,12 @@ export type SoundEffect =
 
 const SETTINGS_KEY = 'query-truck.sound';
 
-type Settings = { volume: number; muted: boolean; station: StationId };
+/** The sound groups with their own volume in the menu. */
+export type Channel = 'music' | 'ambience' | 'effects';
+
+type Settings = { volume: number; muted: boolean; station: StationId } & Record<Channel, number>;
+
+const level = (v: unknown, fallback: number) => (typeof v === 'number' ? Math.min(1, Math.max(0, v)) : fallback);
 
 function loadSettings(): Settings {
   try {
@@ -46,7 +51,10 @@ function loadSettings(): Settings {
     if (raw) {
       const s = JSON.parse(raw) as Partial<Settings>;
       return {
-        volume: typeof s.volume === 'number' ? Math.min(1, Math.max(0, s.volume)) : 0.7,
+        volume: level(s.volume, 0.7),
+        music: level(s.music, 0.7),
+        ambience: level(s.ambience, 0.6),
+        effects: level(s.effects, 0.8),
         muted: s.muted === true,
         station: STATIONS.some((st) => st.id === s.station) ? (s.station as StationId) : 'lofi',
       };
@@ -54,7 +62,7 @@ function loadSettings(): Settings {
   } catch {
     // Storage can be blocked (private windows): use the defaults.
   }
-  return { volume: 0.7, muted: false, station: 'lofi' };
+  return { volume: 0.7, muted: false, station: 'lofi', music: 0.7, ambience: 0.6, effects: 0.8 };
 }
 
 class SoundEngine {
@@ -66,6 +74,7 @@ class SoundEngine {
   private brown!: AudioBuffer;
   private rainLow!: GainNode;
   private radio: Radio | null = null;
+  private musicBus!: GainNode;
   private cityHum!: GainNode;
   private settings: Settings = loadSettings();
   private rain = 0;
@@ -113,20 +122,23 @@ class SoundEngine {
     limiter.ratio.value = 6;
     limiter.connect(this.master);
     this.sfx = ctx.createGain();
-    this.sfx.gain.value = 0.9;
+    this.sfx.gain.value = 0.9 * this.settings.effects;
     this.sfx.connect(limiter);
     this.muffle = ctx.createBiquadFilter();
     this.muffle.type = 'lowpass';
     this.muffle.frequency.value = 18000;
     this.muffle.connect(limiter);
     this.ambience = ctx.createGain();
-    this.ambience.gain.value = 0.8;
+    this.ambience.gain.value = 0.8 * this.settings.ambience;
     this.ambience.connect(this.muffle);
     this.noise = this.makeNoise(2, false);
     this.brown = this.makeNoise(4, true);
     this.startAmbience();
     // The radio plays inside the truck: never muffled by menus.
-    this.radio = new Radio(ctx, limiter, this.noise);
+    this.musicBus = ctx.createGain();
+    this.musicBus.gain.value = this.settings.music;
+    this.musicBus.connect(limiter);
+    this.radio = new Radio(ctx, this.musicBus, this.noise);
     this.radio.tune(this.settings.station);
   }
 
@@ -142,6 +154,22 @@ class SoundEngine {
     this.settings = { ...this.settings, station: station.id };
     this.saveAndApply();
     return station;
+  }
+
+  /** The volume of one group of sounds (0–1). */
+  mix(channel: Channel): number {
+    return this.settings[channel];
+  }
+
+  setMix(channel: Channel, value: number): void {
+    this.settings = { ...this.settings, [channel]: level(value, 0.7) };
+    if (this.ctx) {
+      const t = this.ctx.currentTime;
+      if (channel === 'music') this.musicBus.gain.setTargetAtTime(this.settings.music, t, 0.05);
+      if (channel === 'effects') this.sfx.gain.setTargetAtTime(0.9 * this.settings.effects, t, 0.05);
+      if (channel === 'ambience') this.ambience.gain.setTargetAtTime((this.muffled ? 0.5 : 0.8) * this.settings.ambience, t, 0.05);
+    }
+    this.saveAndApply();
   }
 
   setVolume(volume: number): void {
@@ -193,7 +221,7 @@ class SoundEngine {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.muffle.frequency.setTargetAtTime(muffled ? 700 : 18000, t, 0.15);
-    this.ambience.gain.setTargetAtTime(muffled ? 0.5 : 0.8, t, 0.2);
+    this.ambience.gain.setTargetAtTime((muffled ? 0.5 : 0.8) * this.settings.ambience, t, 0.2);
   }
 
   play(effect: SoundEffect): void {

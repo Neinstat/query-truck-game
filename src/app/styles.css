@@ -1998,8 +1998,79 @@ body {
 
 .sound-control {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sound-main {
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.sound-main input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #e4573d;
+}
+
+.sound-more {
+  flex: none;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #25304f;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #25304f;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sound-mix {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px dashed #25304f;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.sound-row {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.sound-row input {
+  accent-color: #2b9c8e;
+}
+
+/* After Esc closes something, the browser needs one click before the mouse can look around. */
+.click-to-look {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  z-index: 30;
+  transform: translateX(-50%);
+  padding: 0.45rem 0.9rem;
+  border: 2px solid #25304f;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #25304f;
+  background: rgba(244, 234, 213, 0.95);
+  box-shadow: 3px 3px 0 #25304f;
+  pointer-events: none;
+}
+
+.click-to-look small {
+  margin-left: 0.5rem;
+  font-weight: 600;
+  color: #4a5878;
 }
 
 .sound-toggle {
@@ -2014,7 +2085,3 @@ body {
   cursor: pointer;
 }
 
-.sound-control input[type='range'] {
-  flex: 1;
-  accent-color: #e4573d;
-}

@@ -6,31 +6,50 @@ import { guideFor, type GuideItem } from './guide';
 import { sound } from '../audio/sound';
 import type { Place } from '../sql-core/truck/places';
 
-/** Sound on/off and the volume (saved in the browser; see src/audio/sound.ts). */
+/** Sound on/off, the main volume, and music, ambience and effects on their own (saved). */
 function SoundControl({ t }: { t: UiText }) {
   const [, redraw] = useState(0);
+  const [open, setOpen] = useState(false);
   useEffect(() => sound.subscribe(() => redraw((n) => n + 1)), []);
+  const slider = (label: string, value: number, set: (v: number) => void) => (
+    <label className="sound-row">
+      <span>{label}</span>
+      <input type="range" min={0} max={100} value={Math.round(value * 100)} disabled={sound.muted} onChange={(e) => set(Number(e.target.value) / 100)} />
+    </label>
+  );
   return (
     <div className="sound-control" role="group" aria-label={t.soundLabel}>
-      <button
-        className="sound-toggle"
-        aria-pressed={!sound.muted}
-        onClick={() => {
-          sound.start();
-          sound.setMuted(!sound.muted);
-        }}
-      >
-        {sound.muted ? '🔇' : '🔊'} {sound.muted ? t.soundOff : t.soundOn}
-      </button>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={Math.round(sound.volume * 100)}
-        aria-label={t.volume}
-        disabled={sound.muted}
-        onChange={(e) => sound.setVolume(Number(e.target.value) / 100)}
-      />
+      <div className="sound-main">
+        <button
+          className="sound-toggle"
+          aria-pressed={!sound.muted}
+          onClick={() => {
+            sound.start();
+            sound.setMuted(!sound.muted);
+          }}
+        >
+          {sound.muted ? '🔇' : '🔊'} {sound.muted ? t.soundOff : t.soundOn}
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(sound.volume * 100)}
+          aria-label={t.volume}
+          disabled={sound.muted}
+          onChange={(e) => sound.setVolume(Number(e.target.value) / 100)}
+        />
+        <button className="sound-more" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          {open ? '▴' : '▾'} {t.soundMix}
+        </button>
+      </div>
+      {open && (
+        <div className="sound-mix">
+          {slider(`📻 ${t.soundMusic}`, sound.mix('music'), (v) => sound.setMix('music', v))}
+          {slider(`🌧 ${t.soundAmbience}`, sound.mix('ambience'), (v) => sound.setMix('ambience', v))}
+          {slider(`🖱 ${t.soundEffects}`, sound.mix('effects'), (v) => sound.setMix('effects', v))}
+        </div>
+      )}
     </div>
   );
 }

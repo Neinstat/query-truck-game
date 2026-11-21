@@ -289,12 +289,16 @@ export class TruckGame {
         this.use();
         return;
       }
-      // The mouse is free (the browser refused to capture it): a click uses what is aimed at and
-      // tries to capture the mouse again.
-      this.dragging = true;
-      this.lockMouse();
-      this.use();
+      // The mouse is free (e.g. Esc closed a menu): the click captures the mouse again, and does
+      // not use anything. Only where the mouse can't be captured at all does a click drag-look
+      // and use what is aimed at.
       e.preventDefault();
+      if (!this.lockUnavailable) {
+        this.lockMouse();
+        return;
+      }
+      this.dragging = true;
+      this.use();
     };
     const onUp = () => (this.dragging = false);
     const onLockChange = () => this.bridge.emit('locked', document.pointerLockElement === canvas);

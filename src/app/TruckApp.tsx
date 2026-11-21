@@ -129,15 +129,20 @@ export function TruckApp() {
   useEffect(() => {
     if (guideOpen && ready) bridge.emit('snapshotRequest', true);
   }, [bridge, guideOpen, ready]);
-  // The browser refused to capture the mouse (e.g. Esc closed a console: Esc is not a "click"):
-  // show the pause menu rather than a loose cursor; Enter or a click carries on.
+  // The browser refused to capture the mouse (e.g. Esc closed a menu or a console: browsers
+  // never count Esc as a "click"). Play carries on — WASD works — and a chip asks for one click
+  // to look around again; the mouse never moves the camera until then (no loose cursor).
+  const [needClick, setNeedClick] = useState(false);
   useEffect(
     () =>
       bridge.on('lockFailed', () => {
-        if (screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone) setScreen('paused');
+        if (screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone) setNeedClick(true);
       }),
     [bridge, screen, consoleOpen, guideOpen, tourStep, dayDone],
   );
+  useEffect(() => {
+    if (locked) setNeedClick(false);
+  }, [locked]);
   // The guide book on the back counter opens the guide.
   useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
   // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
@@ -151,9 +156,9 @@ export function TruckApp() {
   }, [locked, screen, consoleOpen, lens, guideOpen, dayDone]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // In the pause menu, Enter carries on (a key the browser accepts for capturing the mouse;
-      // Esc is not one, so Esc does not leave the menu).
-      if (e.key === 'Enter' && screen === 'paused' && !guideOpen && tourStep === null) {
+      // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
+      // the mouse looks around again: the "click to look around" chip says so).
+      if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && tourStep === null) {
         e.preventDefault();
         play();
         return;
@@ -163,7 +168,7 @@ export function TruckApp() {
       else if (guideOpen) {
         setGuideOpen(false);
         if (screen === 'playing') bridge.emit('lock', true);
-      } else if (screen === 'paused') return;
+      }
       else if (screen === 'playing' && lens && !consoleOpen) setLens(false);
       else if (screen === 'playing' && !consoleOpen && !dayDone) setScreen('paused');
     };
@@ -212,6 +217,13 @@ export function TruckApp() {
               <kbd>Esc</kbd> {t.menuLabel}
             </button>
           </>
+        )}
+
+        {ready && needClick && !locked && screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone && (
+          <p className="click-to-look" role="status">
+            🖱 {t.clickToLook}
+            <small>{t.escForMenu}</small>
+          </p>
         )}
 
         {ready && knocking && !consoleOpen && !dayDone && !menuOpen && (
