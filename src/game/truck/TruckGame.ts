@@ -135,6 +135,12 @@ export class TruckGame {
    * mouse over the view looks around instead. Never used in a normal browser tab.
    */
   private lockUnavailable = typeof document !== 'undefined' && !('requestPointerLock' in HTMLElement.prototype);
+  /**
+   * The browser refused to capture the mouse (it does after Esc, which never counts as a click):
+   * until the next click or key captures it, moving the mouse looks around anyway, with the
+   * cursor hidden, so play feels the same.
+   */
+  private freeLook = false;
   private lensAmount = 0;
   private lastCards = '';
   /** The truck tour: where the camera is and where it is flying to (null: the player's own view). */
@@ -258,6 +264,8 @@ export class TruckGame {
     };
     const onKey = (down: boolean) => (e: KeyboardEvent) => {
       if (this.paused) return;
+      // Any key but Esc counts as the player's action: capture the mouse again if it is free.
+      if (down && e.code !== 'Escape' && !this.lockUnavailable && document.pointerLockElement !== canvas) this.lockMouse();
       const key = keyMap[e.code];
       if (key) {
         this.keys[key] = down;
@@ -277,7 +285,7 @@ export class TruckGame {
       if (this.paused) return;
       // Captured mouse, dragging, or — only where the mouse can't be captured at all — simply
       // moving the mouse over the view.
-      const free = this.lockUnavailable && e.target === canvas;
+      const free = (this.lockUnavailable && e.target === canvas) || this.freeLook;
       if (document.pointerLockElement === canvas || this.dragging || free) {
         this.yaw -= e.movementX * MOUSE_SENSITIVITY;
         this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * MOUSE_SENSITIVITY));
@@ -301,10 +309,14 @@ export class TruckGame {
       this.use();
     };
     const onUp = () => (this.dragging = false);
-    const onLockChange = () => this.bridge.emit('locked', document.pointerLockElement === canvas);
+    const onLockChange = () => {
+      const locked = document.pointerLockElement === canvas;
+      if (locked) this.setFreeLook(false);
+      this.bridge.emit('locked', locked);
+    };
     // Older browsers report a refused capture with an event instead of a rejected promise.
     const onLockError = () => {
-      if (!this.lockUnavailable) this.bridge.emit('lockFailed', true);
+      if (!this.lockUnavailable) this.lockRefused();
     };
     document.addEventListener('pointerlockerror', onLockError);
     canvas.addEventListener('mousedown', onDown);
@@ -332,9 +344,8 @@ export class TruckGame {
       const name = error instanceof Error || error instanceof DOMException ? error.name : '';
       // Not possible here at all (embedded page): fall back to looking with the free mouse.
       if (name === 'WrongDocumentError' || name === 'NotSupportedError') this.lockUnavailable = true;
-      // Refused this time (e.g. no click or key just before, or right after Esc): the app shows
-      // the pause menu, so there is never a loose cursor moving the camera.
-      else this.bridge.emit('lockFailed', true);
+      // Refused this time (e.g. right after Esc): look around with the free mouse meanwhile.
+      else this.lockRefused();
     };
     try {
       const result = this.renderer.domElement.requestPointerLock?.() as unknown;
@@ -342,6 +353,17 @@ export class TruckGame {
     } catch (error) {
       failed(error);
     }
+  }
+
+  /** The mouse could not be captured: look around with it anyway (cursor hidden) until it can. */
+  private lockRefused(): void {
+    if (!this.paused && !this.destroyed) this.setFreeLook(true);
+    this.bridge.emit('lockFailed', true);
+  }
+
+  private setFreeLook(on: boolean): void {
+    this.freeLook = on;
+    this.renderer.domElement.classList.toggle('truck-canvas-free-look', on);
   }
 
   private setPaused(paused: boolean): void {
@@ -352,6 +374,7 @@ export class TruckGame {
     if (resuming) this.lockMouse();
     this.keys = { forward: false, back: false, left: false, right: false };
     this.dragging = false;
+    if (paused) this.setFreeLook(false);
     if (paused && document.pointerLockElement) document.exitPointerLock();
   }
 

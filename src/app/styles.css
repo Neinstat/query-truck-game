@@ -2049,28 +2049,9 @@ body {
   accent-color: #2b9c8e;
 }
 
-/* After Esc closes something, the browser needs one click before the mouse can look around. */
-.click-to-look {
-  position: absolute;
-  left: 50%;
-  top: 58%;
-  z-index: 30;
-  transform: translateX(-50%);
-  padding: 0.45rem 0.9rem;
-  border: 2px solid #25304f;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #25304f;
-  background: rgba(244, 234, 213, 0.95);
-  box-shadow: 3px 3px 0 #25304f;
-  pointer-events: none;
-}
-
-.click-to-look small {
-  margin-left: 0.5rem;
-  font-weight: 600;
-  color: #4a5878;
+/* Looking around with the free mouse (the browser refused to capture it): no cursor. */
+.truck-canvas-free-look {
+  cursor: none;
 }
 
 .sound-toggle {

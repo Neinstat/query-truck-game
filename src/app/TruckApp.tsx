@@ -129,20 +129,9 @@ export function TruckApp() {
   useEffect(() => {
     if (guideOpen && ready) bridge.emit('snapshotRequest', true);
   }, [bridge, guideOpen, ready]);
-  // The browser refused to capture the mouse (e.g. Esc closed a menu or a console: browsers
-  // never count Esc as a "click"). Play carries on — WASD works — and a chip asks for one click
-  // to look around again; the mouse never moves the camera until then (no loose cursor).
-  const [needClick, setNeedClick] = useState(false);
-  useEffect(
-    () =>
-      bridge.on('lockFailed', () => {
-        if (screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone) setNeedClick(true);
-      }),
-    [bridge, screen, consoleOpen, guideOpen, tourStep, dayDone],
-  );
-  useEffect(() => {
-    if (locked) setNeedClick(false);
-  }, [locked]);
+  // When the browser refuses to capture the mouse (after Esc, which never counts as a click),
+  // the game keeps looking around with the free mouse, cursor hidden, and captures it again on
+  // the next key or click (TruckGame), so closing anything goes straight back to first person.
   // The guide book on the back counter opens the guide.
   useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
   // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
@@ -219,12 +208,6 @@ export function TruckApp() {
           </>
         )}
 
-        {ready && needClick && !locked && screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone && (
-          <p className="click-to-look" role="status">
-            🖱 {t.clickToLook}
-            <small>{t.escForMenu}</small>
-          </p>
-        )}
 
         {ready && knocking && !consoleOpen && !dayDone && !menuOpen && (
           <p className="knock-alert" role="status">
