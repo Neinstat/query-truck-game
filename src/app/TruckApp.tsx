@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ui, useLang } from '../i18n';
-import { LANGS } from '../sql-core/feedback';
+import { ui, useLang, type UiText } from '../i18n';
 import { orderLine } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
@@ -10,7 +9,7 @@ import { restartDay, SKIP_TITLE_KEY, startNextDay, useTruckShift } from './useTr
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
-import { CLOSING, formatClock } from '../sql-core/truck/day';
+import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -58,7 +57,7 @@ export function TruckApp() {
   // Time stops in the truck while a menu is open, and until the records are open.
   const [dataReady, setDataReady] = useState(false);
   const menuOpen = screen !== 'playing' || guideOpen || tourStep !== null || !ready || !dataReady;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, openTable, overlays } =
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays } =
     useTruckShift(bridge, lang, t, menuOpen);
   useEffect(() => setDataReady(db !== null), [db]);
   // The orders served before this page load: the game skips those customers.
@@ -111,6 +110,15 @@ export function TruckApp() {
   useEffect(() => {
     if (guideOpen && ready) bridge.emit('snapshotRequest', true);
   }, [bridge, guideOpen, ready]);
+  // The browser refused to capture the mouse (e.g. Esc closed a console: Esc is not a "click"):
+  // show the pause menu rather than a loose cursor; Enter or a click carries on.
+  useEffect(
+    () =>
+      bridge.on('lockFailed', () => {
+        if (screen === 'playing' && !consoleOpen && !guideOpen && tourStep === null && !dayDone) setScreen('paused');
+      }),
+    [bridge, screen, consoleOpen, guideOpen, tourStep, dayDone],
+  );
   // The guide book on the back counter opens the guide.
   useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
   // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
@@ -124,12 +132,19 @@ export function TruckApp() {
   }, [locked, screen, consoleOpen, lens, guideOpen, dayDone]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // In the pause menu, Enter carries on (a key the browser accepts for capturing the mouse;
+      // Esc is not one, so Esc does not leave the menu).
+      if (e.key === 'Enter' && screen === 'paused' && !guideOpen && tourStep === null) {
+        e.preventDefault();
+        play();
+        return;
+      }
       if (e.key !== 'Escape' || e.defaultPrevented) return;
       if (tourStep !== null) endTour();
       else if (guideOpen) {
         setGuideOpen(false);
         if (screen === 'playing') bridge.emit('lock', true);
-      } else if (screen === 'paused') play();
+      } else if (screen === 'paused') return;
       else if (screen === 'playing' && lens && !consoleOpen) setLens(false);
       else if (screen === 'playing' && !consoleOpen && !dayDone) setScreen('paused');
     };
@@ -154,47 +169,29 @@ export function TruckApp() {
 
   return (
     <div className="truck-app">
-      <header className="truck-hud">
-        <span className="truck-title">🚚 Rolling Roast</span>
-        <span className={shut ? 'truck-clock truck-clock-closed' : 'truck-clock'} title={t.clockTitle}>
-          🕙 {formatClock(day.clock)}
-          {shut && ` · ${t.closedLabel}`}
-        </span>
-        <span className="truck-day" title={t.dayTitle}>
-          📅 {t.dayLabel(past.length + 1, day.date, day.served.length, day.orders.length)}
-        </span>
-        <span className="truck-controls">{t.truckControls}</span>
-        <button
-          className="lens-button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setScreen('paused')}
-          title={t.pausedTitle}
-        >
-          ☰ Menu <kbd>Esc</kbd>
-        </button>
-        <button
-          className={lens ? 'lens-button lens-button-on' : 'lens-button'}
-          aria-pressed={lens}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setLens((on) => !on)}
-          title={t.lensHint}
-        >
-          🔍 {t.dataLens} <kbd>L</kbd>
-        </button>
-        <div className="lang-switch" role="group" aria-label={t.language}>
-          {LANGS.map((code) => (
-            <button
-              key={code}
-              className={code === lang ? 'lang-button active' : 'lang-button'}
-              aria-pressed={code === lang}
-              onClick={() => setLang(code)}
-            >
-              {code.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </header>
       <div className="truck-view" ref={parentRef}>
+        {ready && screen !== 'title' && tourStep === null && (
+          <>
+            <ClockWidget
+              clock={day.clock}
+              shut={shut}
+              dayNumber={past.length + 1}
+              date={day.date}
+              served={day.served.length}
+              total={day.orders.length}
+              lens={lens}
+              t={t}
+            />
+            <button
+              className="hud-menu"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setScreen('paused')}
+              title={t.pausedTitle}
+            >
+              <kbd>Esc</kbd> {t.menuLabel}
+            </button>
+          </>
+        )}
 
         {ready && knocking && !consoleOpen && !dayDone && !menuOpen && (
           <p className="knock-alert" role="status">
@@ -215,7 +212,7 @@ export function TruckApp() {
         )}
         {ready && !consoleOpen && !menuOpen && lens && (
           <>
-            <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} onOpen={openTable} t={t} />
+            <DataLens cards={lensCards} summaries={summaries} needed={orderTables} view={view} aimed={aimed as LensCard['object'] | null} t={t} />
             <p className="lens-hint">🔍 {t.lensClickHint}</p>
           </>
         )}
@@ -266,6 +263,11 @@ export function TruckApp() {
             onResume={play}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
+            lens={lens}
+            onLens={() => {
+              setLens((on) => !on);
+              play();
+            }}
             onRestart={() => restartDay(day)}
             onTitle={() => setScreen('title')}
             lang={lang}
@@ -304,5 +306,50 @@ function bubbleStyle(anchor: { x: number; y: number }, viewWidth: number, viewHe
     bottom: viewHeight * (1 - anchor.y),
     ['--tail' as string]: `${tail}px`,
   };
+}
+
+
+/** The time of day as a little picture, from the clock (morning → night, like the sky). */
+function skyIcon(clock: number): string {
+  if (clock >= CLOSING - 20) return '🌙';
+  if (clock >= CLOSING - 75) return '🌇';
+  if (clock >= 12 * 60 && clock < 14 * 60 + 30) return '☀️';
+  return '🌤';
+}
+
+/** Top left: the clock, how far through the day it is, the day, and the orders served. */
+function ClockWidget(props: {
+  clock: number;
+  shut: boolean;
+  dayNumber: number;
+  date: string;
+  served: number;
+  total: number;
+  lens: boolean;
+  t: UiText;
+}) {
+  const { clock, shut, dayNumber, date, served, total, lens, t } = props;
+  const progress = Math.min(1, Math.max(0, (clock - OPENING) / (CLOSING - OPENING)));
+  return (
+    <div className={shut ? 'hud-clock hud-clock-shut' : 'hud-clock'} title={t.clockTitle}>
+      <div className="hud-clock-top">
+        <span className="hud-clock-icon" aria-hidden="true">
+          {skyIcon(clock)}
+        </span>
+        <span className="hud-clock-time">{formatClock(clock)}</span>
+        {shut && <span className="hud-clock-closed">{t.closedLabel}</span>}
+        {lens && <span className="hud-clock-lens">🔍 {t.dataLens}</span>}
+      </div>
+      <div className="hud-clock-bar" aria-hidden="true">
+        <span style={{ width: `${progress * 100}%` }} />
+      </div>
+      <div className="hud-clock-bottom" title={t.dayTitle}>
+        <span>{t.dayShort(dayNumber, date)}</span>
+        <span className="hud-clock-served">
+          ☕ {served}/{total}
+        </span>
+      </div>
+    </div>
+  );
 }
 

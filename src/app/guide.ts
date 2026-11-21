@@ -44,7 +44,7 @@ export const GUIDE: readonly GuidePage[] = [
       { icon: '🖱', name: 'Mouse', text: 'Look around. Aim the dot in the middle at something.' },
       { icon: '👆', name: 'E or click', text: 'Use what the dot points at: the tablet, the fridge, a door…' },
       { icon: '🔍', name: 'L', text: 'Turn the Data Lens on or off.' },
-      { icon: '⏸', name: 'Esc', text: 'Pause the game and open this menu. Esc again to carry on.' },
+      { icon: '⏸', name: 'Esc', text: 'Pause the game and open the menu (Data Lens, language, this guide…). Enter carries on.' },
     ],
   },
   {
@@ -115,7 +115,7 @@ export const GUIDE: readonly GuidePage[] = [
     paragraphs: [
       'Press L (or the 🔍 button) and the truck turns into a blueprint: every object shows a card with its tables, how many rows they have, and a few sample rows.',
       'Tables the current order needs are starred ★, so the lens also shows you where to look.',
-      'Click a table name on a card to open it and look inside. Press L again to go back.',
+      'Aim at an object: its card lights up. Press E to open its tables and look inside. Press L again to go back.',
     ],
   },
   {

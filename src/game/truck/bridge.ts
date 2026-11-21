@@ -17,6 +17,7 @@
  *   app → game   'tour'    the truck tour: fly the camera to this object (null: back to the player)
  *   app → game   'snapshotRequest'  draw a picture of every object (for the guide) → 'snapshots'
  *   game → app   'snapshots'  object id → a small JPEG data URL of that object, seen from its tour stop
+ *   game → app   'lockFailed'  the browser refused to capture the mouse (no click or key just before)
  *   app → game   'lock'    back to playing from a menu (called from a click): capture the mouse again
  *   app → game   'door'    open (true) or close the back door: the Manager stands outside
  *   app → game   'managerDone' the Manager got their answers and leaves
@@ -56,6 +57,7 @@ type TruckEvents = {
   lens: boolean;
   lensCards: LensCard[];
   lock: true;
+  lockFailed: true;
   tour: InteractableId | null;
   snapshotRequest: true;
   snapshots: Record<string, string>;

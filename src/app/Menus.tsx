@@ -92,13 +92,16 @@ export function PauseMenu(props: {
   onResume: () => void;
   onGuide: () => void;
   onTour: () => void;
+  /** The Data Lens is on; toggling it also carries on playing. */
+  lens: boolean;
+  onLens: () => void;
   onRestart: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onRestart, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, lens, onLens, onRestart, onTitle, lang, setLang, t } = props;
   const [confirmRestart, setConfirmRestart] = useState(false);
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
@@ -110,6 +113,9 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onGuide}>
           📖 {t.howToPlay}
+        </button>
+        <button className="menu-button" onClick={onLens}>
+          🔍 {lens ? t.lensOff : t.lensOn} <kbd>L</kbd>
         </button>
         <button className="menu-button" onClick={onTour}>
           🎥 {t.tourStart}
@@ -132,6 +138,13 @@ export function PauseMenu(props: {
         <button className="menu-button" onClick={onTitle}>
           🏠 {t.toTitle}
         </button>
+        <ul className="pause-controls" aria-label={t.controlsTitle}>
+          {t.controlsList.map(([key, what]) => (
+            <li key={key}>
+              <kbd>{key}</kbd> {what}
+            </li>
+          ))}
+        </ul>
         <LangSwitch lang={lang} setLang={setLang} t={t} />
       </div>
     </div>

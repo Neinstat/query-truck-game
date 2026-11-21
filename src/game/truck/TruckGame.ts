@@ -112,6 +112,11 @@ export class TruckGame {
   private lastAnchor = '';
   private walkClock = 0;
   private lensOn = false;
+  /**
+   * The browser cannot capture the mouse at all here (e.g. an embedded preview): then moving the
+   * mouse over the view looks around instead. Never used in a normal browser tab.
+   */
+  private lockUnavailable = typeof document !== 'undefined' && !('requestPointerLock' in HTMLElement.prototype);
   private lensAmount = 0;
   private lastCards = '';
   /** The truck tour: where the camera is and where it is flying to (null: the player's own view). */
@@ -175,19 +180,15 @@ export class TruckGame {
       bridge.on('serve', () => this.queue.serveFront()),
       bridge.on('pause', (paused) => this.setPaused(paused)),
       bridge.on('lens', (on) => {
+        // The mouse stays captured with the lens on (no cursor): aim at an object and press E to
+        // open its tables, as always.
         this.lensOn = on;
-        // The lens frees the mouse so its cards can be clicked; dragging still looks around.
-        // Turning it off captures the mouse again (no click needed).
-        if (on && document.pointerLockElement) document.exitPointerLock();
-        if (!on && !this.paused) this.lockMouse();
       }),
       bridge.on('door', (open) => (this.doorTarget = open ? 1 : 0)),
       bridge.on('tour', (object) => this.setTour(object)),
       bridge.on('snapshotRequest', () => this.bridge.emit('snapshots', this.snapshots())),
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
-      bridge.on('lock', () => {
-        if (!this.lensOn) this.lockMouse();
-      }),
+      bridge.on('lock', () => this.lockMouse()),
       bridge.on('managerDone', () => {
         this.managerDone = true;
         this.knocking = false;
@@ -244,9 +245,9 @@ export class TruckGame {
 
     const onMove = (e: MouseEvent) => {
       if (this.paused) return;
-      // Captured mouse, dragging, or — when the browser would not capture it — simply moving the
-      // mouse over the view: no click is ever needed to look around (Esc frees the mouse).
-      const free = !this.lensOn && e.target === canvas;
+      // Captured mouse, dragging, or — only where the mouse can't be captured at all — simply
+      // moving the mouse over the view.
+      const free = this.lockUnavailable && e.target === canvas;
       if (document.pointerLockElement === canvas || this.dragging || free) {
         this.yaw -= e.movementX * MOUSE_SENSITIVITY;
         this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * MOUSE_SENSITIVITY));
@@ -258,18 +259,20 @@ export class TruckGame {
         this.use();
         return;
       }
-      // The mouse is free (the browser refused to capture it, or the Data Lens is on): a click
-      // uses what is aimed at and tries to capture the mouse again. With the Data Lens on, the
-      // mouse stays free (to click its cards) and dragging is how you look around.
+      // The mouse is free (the browser refused to capture it): a click uses what is aimed at and
+      // tries to capture the mouse again.
       this.dragging = true;
-      if (!this.lensOn) {
-        this.lockMouse();
-        this.use();
-      }
+      this.lockMouse();
+      this.use();
       e.preventDefault();
     };
     const onUp = () => (this.dragging = false);
     const onLockChange = () => this.bridge.emit('locked', document.pointerLockElement === canvas);
+    // Older browsers report a refused capture with an event instead of a rejected promise.
+    const onLockError = () => {
+      if (!this.lockUnavailable) this.bridge.emit('lockFailed', true);
+    };
+    document.addEventListener('pointerlockerror', onLockError);
     canvas.addEventListener('mousedown', onDown);
     window.addEventListener('mouseup', onUp);
     window.addEventListener('mousemove', onMove);
@@ -281,6 +284,7 @@ export class TruckGame {
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('mousemove', onMove);
       document.removeEventListener('pointerlockchange', onLockChange);
+      document.removeEventListener('pointerlockerror', onLockError);
     });
   }
 
@@ -289,11 +293,20 @@ export class TruckGame {
    * embedded preview); then dragging still looks around and "click to look around" shows.
    */
   private lockMouse(): void {
+    if (this.lockUnavailable || document.pointerLockElement === this.renderer.domElement) return;
+    const failed = (error?: unknown) => {
+      const name = error instanceof Error || error instanceof DOMException ? error.name : '';
+      // Not possible here at all (embedded page): fall back to looking with the free mouse.
+      if (name === 'WrongDocumentError' || name === 'NotSupportedError') this.lockUnavailable = true;
+      // Refused this time (e.g. no click or key just before, or right after Esc): the app shows
+      // the pause menu, so there is never a loose cursor moving the camera.
+      else this.bridge.emit('lockFailed', true);
+    };
     try {
       const result = this.renderer.domElement.requestPointerLock?.() as unknown;
-      if (result instanceof Promise) result.catch(() => {});
-    } catch {
-      // Refused: see above.
+      if (result instanceof Promise) result.catch(failed);
+    } catch (error) {
+      failed(error);
     }
   }
 
@@ -302,7 +315,7 @@ export class TruckGame {
     this.paused = paused;
     // Back from a console or a menu (just after the player's click or key): capture the mouse
     // again straight away, so nobody has to click into the game first.
-    if (resuming && !this.lensOn) this.lockMouse();
+    if (resuming) this.lockMouse();
     this.keys = { forward: false, back: false, left: false, right: false };
     this.dragging = false;
     if (paused && document.pointerLockElement) document.exitPointerLock();

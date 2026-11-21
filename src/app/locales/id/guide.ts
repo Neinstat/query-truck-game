@@ -24,7 +24,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
       { icon: '🖱', name: 'Mouse', text: 'Melihat sekeliling. Arahkan titik di tengah layar ke sebuah benda.' },
       { icon: '👆', name: 'E atau klik', text: 'Memakai benda yang ditunjuk titik itu: tablet, kulkas, pintu…' },
       { icon: '🔍', name: 'L', text: 'Menyalakan atau mematikan Data Lens.' },
-      { icon: '⏸', name: 'Esc', text: 'Menjeda permainan dan membuka menu ini. Esc lagi untuk lanjut.' },
+      { icon: '⏸', name: 'Esc', text: 'Menjeda permainan dan membuka menu (Data Lens, bahasa, panduan ini…). Enter untuk lanjut.' },
     ],
   },
   {
@@ -95,7 +95,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
     paragraphs: [
       'Tekan L (atau tombol 🔍) dan truck berubah menjadi cetak biru: setiap benda menampilkan kartu berisi tabelnya, berapa barisnya, dan beberapa contoh baris.',
       'Tabel yang dibutuhkan pesanan saat ini diberi bintang ★, jadi lensa ini juga menunjukkan ke mana harus mencari.',
-      'Klik nama tabel di kartu untuk membukanya dan melihat isinya. Tekan L lagi untuk kembali.',
+      'Bidik sebuah benda: kartunya menyala. Tekan E untuk membuka tabelnya dan melihat isinya. Tekan L lagi untuk kembali.',
     ],
   },
   {

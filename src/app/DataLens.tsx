@@ -64,7 +64,7 @@ export function DataLens({
   summaries,
   needed,
   view,
-  onOpen,
+  aimed,
   t,
 }: {
   cards: LensCard[];
@@ -73,8 +73,8 @@ export function DataLens({
   needed: string[];
   /** The 3D view's size in pixels. */
   view: { width: number; height: number };
-  /** A table name was clicked: open it with the object that holds it. */
-  onOpen: (object: LensCard['object'], table: string) => void;
+  /** The object under the crosshair: its cards light up, and E opens its tables (no cursor). */
+  aimed: LensCard['object'] | null;
   t: UiText;
 }) {
   const laid = cards.map((card) => {
@@ -99,11 +99,12 @@ export function DataLens({
         const box = stacked[i];
         const bottom = Math.max(box.bottom, box.height + 8);
         const columns = summary?.columns ?? [];
+        const isAimed = aimed !== null && card.object === aimed;
         const shown = columns.slice(0, MAX_COLUMNS);
         return (
           <div
             key={card.id}
-            className={anyNeeded ? 'lens-card lens-card-needed' : 'lens-card'}
+            className={['lens-card', anyNeeded && 'lens-card-needed', isAimed && 'lens-card-aimed'].filter(Boolean).join(' ')}
             style={{
               left: box.centre,
               top: bottom,
@@ -112,23 +113,15 @@ export function DataLens({
             }}
           >
             {card.tables.map((table) => (
-              <button
-                key={table}
-                type="button"
-                className={needed.includes(table) ? 'lens-card-head lens-card-head-needed' : 'lens-card-head'}
-                onClick={() => onOpen(card.object, table)}
-                title={t.lensOpen(table)}
-              >
+              <div key={table} className={needed.includes(table) ? 'lens-card-head lens-card-head-needed' : 'lens-card-head'}>
                 <code className="lens-card-table">
                   {needed.includes(table) ? '★ ' : ''}
                   {table}
                 </code>
                 {summaries[table] && <span className="lens-card-count">{t.lensRows(summaries[table].count)}</span>}
-                <span className="lens-card-open" aria-hidden="true">
-                  ↗
-                </span>
-              </button>
+              </div>
             ))}
+            {isAimed && <p className="lens-card-use">E · {t.lensOpenAimed}</p>}
             {anyNeeded && <p className="lens-card-needed-label">{t.lensNeeded}</p>}
             {summary && (
               <table className="lens-card-rows">

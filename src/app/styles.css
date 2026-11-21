@@ -838,19 +838,7 @@ body {
   flex-direction: column;
 }
 
-.truck-hud {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.4rem 0.75rem;
-  background: #1f1512;
-  color: #f6e7c8;
-}
 
-.truck-title {
-  font-weight: 700;
-}
 
 /* The front customer's order, above their head; the tail points down at them. */
 /* A fixed width (set inline), so it never squeezes into a column near the edge of the screen. */
@@ -902,11 +890,6 @@ body {
   color: #93603d;
 }
 
-.truck-controls {
-  flex: 1;
-  font-size: 0.8rem;
-  color: #d7a571;
-}
 
 .truck-toast {
   position: absolute;
@@ -987,36 +970,9 @@ body {
 
 /* Data Lens (4.8): blueprint cards in the shader's lens inks — paper #f4ead5, teal #1c6b63,
    light teal #9ad6c8, mustard #f2b234 for the tables the order needs. */
-.lens-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.65rem;
-  border: 2px solid #9ad6c8;
-  border-radius: 6px;
-  background: transparent;
-  color: #f4ead5;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-.lens-button:hover {
-  background: rgba(154, 214, 200, 0.18);
-}
 
-.lens-button-on {
-  background: #9ad6c8;
-  color: #1c6b63;
-}
 
-.lens-button kbd {
-  padding: 0 0.3rem;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  font-size: 0.75rem;
-}
 
 /* The layer lets clicks through to the 3D view (dragging to look); the cards themselves catch them. */
 .lens-layer {
@@ -1067,19 +1023,25 @@ body {
   cursor: pointer;
 }
 
-.lens-card-head:hover,
-.lens-card-head:focus-visible {
-  background: #9ad6c8;
-  outline: none;
-}
 
 .lens-card-count {
   margin-left: auto;
 }
 
-.lens-card-open {
-  font-size: 0.75rem;
-  opacity: 0.6;
+/* The card of the object under the crosshair: E opens its tables. */
+.lens-card-aimed {
+  outline: 3px solid #f2b234;
+  outline-offset: 2px;
+}
+
+.lens-card-use {
+  margin: 0.25rem 0 0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  background: #f2b234;
+  color: #25304f;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .lens-hint {
@@ -1159,33 +1121,10 @@ body {
   color: #a8740f;
 }
 
-/* The day (4.9): the date and orders served in the HUD. */
-.truck-day {
-  padding: 0.15rem 0.55rem;
-  border: 1px solid rgba(244, 234, 213, 0.4);
-  border-radius: 999px;
-  color: #f4ead5;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
 
 
 /* The clock (4.10) in the HUD, the customer's mood in the speech bubble, and the summary. */
-.truck-clock {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: #f4ead5;
-  color: #25304f;
-  font-size: 0.85rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
 
-.truck-clock-closed {
-  background: #e4573d;
-  color: #fffaf0;
-}
 
 .order-mood {
   display: flex;
@@ -1376,9 +1315,11 @@ body {
 
 .knock-alert {
   position: absolute;
-  top: 0.7rem;
-  right: 0.8rem;
-  margin: 0;
+  top: 0.9rem;
+  left: 0;
+  right: 0;
+  width: max-content;
+  margin: 0 auto;
   padding: 0.45rem 0.8rem;
   border: 2px solid #25304f;
   border-radius: 6px;
@@ -1884,4 +1825,136 @@ body {
 
 .tour-dot-on {
   background: #f2b234;
+}
+
+/* The HUD (21 Nov 2026): only what matters while playing. Top left: the clock card. */
+.hud-clock {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 20;
+  min-width: 11rem;
+  padding: 0.55rem 0.75rem 0.5rem;
+  border: 2px solid #25304f;
+  border-radius: 12px;
+  background: rgba(244, 234, 213, 0.94);
+  color: #25304f;
+  box-shadow: 4px 4px 0 #25304f;
+  pointer-events: none;
+}
+
+.hud-clock-top {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hud-clock-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.hud-clock-time {
+  font-size: 1.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.hud-clock-closed,
+.hud-clock-lens {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.hud-clock-closed {
+  background: #e4573d;
+  color: #fffaf0;
+  text-transform: uppercase;
+}
+
+.hud-clock-lens {
+  background: #2b9c8e;
+  color: #fffaf0;
+}
+
+/* How far through the working day: morning yellow → evening red. */
+.hud-clock-bar {
+  height: 6px;
+  margin: 0.45rem 0 0.4rem;
+  overflow: hidden;
+  border: 1.5px solid #25304f;
+  border-radius: 999px;
+  background: #fffaf0;
+}
+
+.hud-clock-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f2b234, #e4573d 70%, #7b5f8f);
+  background-size: 11rem 100%;
+}
+
+.hud-clock-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.hud-clock-served {
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-clock-shut .hud-clock-time {
+  color: #a83b2a;
+}
+
+/* Top right: the way into the menu. */
+.hud-menu {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 10px;
+  background: rgba(244, 234, 213, 0.94);
+  color: #25304f;
+  font: inherit;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 #25304f;
+  cursor: pointer;
+}
+
+.hud-menu kbd,
+.pause-controls kbd,
+.pause-card .menu-button kbd {
+  padding: 0 0.3rem;
+  border: 1.5px solid #25304f;
+  border-radius: 4px;
+  background: #fffaf0;
+  font-family: var(--code);
+  font-size: 0.75rem;
+}
+
+/* The controls, in the pause menu. */
+.pause-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.6rem;
+  margin: 0.3rem 0 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px dashed #25304f;
+  border-radius: 8px;
+  list-style: none;
+  font-size: 0.78rem;
+  text-align: left;
 }
