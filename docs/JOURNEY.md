@@ -111,6 +111,14 @@ The signature look is the **risograph shader**: the scene is rendered with big p
 
 ---
 
+## 5.2c · ORDER BY 2077: a neon city in the rain
+
+On 21 Nov 2026 the owner renamed the game from *SQL Valley* to **ORDER BY 2077** and moved the truck from the city park to a cyberpunk megacity, after a reference picture of a neon street at night: *a bit dark, but with futuristic neon, and sometimes rain*, plus sound for the rain and for sales. The same low-poly models were recoloured in a palette of dark metals and neon, the park became a wet street with signs that make SQL puns, the look pass got a glow, and the day got weather and a synthesized soundscape.
+
+![Rain on the neon street, seen from the truck's window](journey/v2-5-2c-neon-rain.jpg)
+
+---
+
 ## What carried over into the final version
 
 | From | Used in the 3D version |

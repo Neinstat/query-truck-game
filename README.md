@@ -1,19 +1,19 @@
-# SQL Valley
+# ORDER BY 2077
 
-A first-person 3D game for learning SQL: you run a food truck in a city park, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.
+A first-person 3D game for learning SQL: you run a food truck on a neon street in a rainy cyberpunk megacity, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a low-poly neon look with rain and synthesized sound. (Called *SQL Valley* until 21 Nov 2026.)
 
-![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
+![Looking out of the truck's serving window onto a rainy neon street](docs/journey/v2-5-2c-neon-rain.jpg)
 
 ## Why this project exists
 
 - **SQLBolt** has a great, easy-to-follow learning curve, but it isn't very interactive or fun.
 - **LeetCode** is interactive, but many of its case-study problems jump too far in difficulty for beginners.
 
-SQL Valley sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
+ORDER BY 2077 sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
 
 ## The concept
 
-You are the new hire at **Rolling Roast**, a coffee food truck parked in a city park. Customers walk up the park path and queue at your window. Each one asks for something ("what can I get for under $3?", "which coffees can I actually order today?"), and you answer by writing SQL on the truck's tablet. Later, **The Manager** in a suit knocks on the back door with harder questions: sales this month, what keeps selling out, why revenue dropped.
+You are the new hire at **Rolling Roast**, a coffee food truck parked on a neon street in **Neo Valley**, the year 2077. Customers walk up the wet sidewalk and queue at your window, sometimes in the rain. Each one asks for something ("what can I get for under $3?", "which coffees can I actually order today?"), and you answer by writing SQL on the truck's tablet. Later, **The Manager** in a suit knocks on the back door with harder questions: sales this month, what keeps selling out, why revenue dropped.
 
 - Runs entirely in the browser: real **PostgreSQL** via PGlite, no backend
 - From `SELECT` to `JOIN`s, aggregation and real analysis cases
