@@ -6,9 +6,7 @@
 import * as THREE from 'three';
 import type { Ink } from '../art/riso';
 import { inkColour } from './colour';
-import type { CustomerLook } from '../../sql-core/truck/orders';
-import { LOOKS } from './looks';
-import { CLOCK3D, GROUND_Y, LAYOUT, TRUCK, type Box3 } from './world';
+import { CLOCK3D, LAYOUT, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
 export function mat(ink: Ink): THREE.MeshLambertMaterial {
@@ -258,89 +256,6 @@ function guideSign(x: number, y: number, z: number): THREE.Group {
   return sign;
 }
 
-// ── Customers ─────────────────────────────────────────────────────────────────────────
-
-export type CustomerModel = {
-  root: THREE.Group;
-  legs: [THREE.Object3D, THREE.Object3D];
-  arms: [THREE.Object3D, THREE.Object3D];
-};
-
-/** A blocky low-poly person, 1.75 m tall, facing −z. Colours from the 2D looks. */
-export function buildCustomer(look: CustomerLook): CustomerModel {
-  const l = LOOKS[look];
-  const root = new THREE.Group();
-  const limb = (ink: Ink, x: number, top: number, length: number, width: number): THREE.Object3D => {
-    const pivot = new THREE.Group();
-    pivot.position.set(x, top, 0);
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, length, width), mat(ink));
-    mesh.position.y = -length / 2;
-    pivot.add(mesh);
-    root.add(pivot);
-    return pivot;
-  };
-  const legs: [THREE.Object3D, THREE.Object3D] = [limb(l.legs, -0.1, 0.82, 0.82, 0.15), limb(l.legs, 0.1, 0.82, 0.82, 0.15)];
-  block(root, l.top, [-0.24, 0.8, -0.14, 0.24, 1.4, 0.14]);
-  block(root, l.topShade, [-0.24, 0.8, -0.141, 0.24, 0.9, 0.141]);
-  const arms: [THREE.Object3D, THREE.Object3D] = [limb(l.topShade, -0.31, 1.38, 0.58, 0.12), limb(l.topShade, 0.31, 1.38, 0.58, 0.12)];
-  // Head with a face on the front (−z).
-  block(root, l.skin, [-0.06, 1.4, -0.06, 0.06, 1.46, 0.06]);
-  block(root, l.skin, [-0.16, 1.45, -0.16, 0.16, 1.75, 0.16]);
-  block(root, 'ink', [-0.1, 1.6, -0.165, -0.06, 1.65, -0.16]);
-  block(root, 'ink', [0.06, 1.6, -0.165, 0.1, 1.65, -0.16]);
-  block(root, 'pink', [-0.13, 1.53, -0.165, -0.09, 1.56, -0.16]);
-  block(root, 'pink', [0.09, 1.53, -0.165, 0.13, 1.56, -0.16]);
-  block(root, 'ink', [-0.04, 1.51, -0.165, 0.04, 1.525, -0.16]);
-  const hair = l.hairStyle === 'cap' ? (l.hat ?? 'red') : l.hair;
-  if (l.hairStyle === 'sides') {
-    block(root, hair, [-0.17, 1.55, -0.12, -0.15, 1.7, 0.16]);
-    block(root, hair, [0.15, 1.55, -0.12, 0.17, 1.7, 0.16]);
-  } else {
-    block(root, hair, [-0.17, 1.7, -0.17, 0.17, 1.8, 0.17]);
-    block(root, hair, [-0.17, 1.5, 0.1, 0.17, 1.75, 0.17]);
-    if (l.hairStyle === 'cap') block(root, hair, [-0.15, 1.7, -0.3, 0.15, 1.72, -0.15]);
-    if (l.hairStyle === 'long') block(root, hair, [-0.18, 1.2, 0.08, 0.18, 1.75, 0.2]);
-  }
-  if (l.extra === 'glasses') block(root, 'ink', [-0.13, 1.61, -0.17, 0.13, 1.63, -0.165]);
-  if (l.extra === 'lanyard') block(root, 'white', [-0.07, 1.0, -0.15, 0.07, 1.12, -0.14]);
-  if (l.extra === 'straps') {
-    block(root, 'red', [-0.18, 0.85, -0.15, -0.12, 1.4, -0.14]);
-    block(root, 'red', [0.12, 0.85, -0.15, 0.18, 1.4, -0.14]);
-  }
-  root.position.y = GROUND_Y;
-  return { root, legs, arms };
-}
-
-/**
- * The Manager (GAME_DESIGN.md §3): a blocky figure in a dark suit, white shirt and red tie, with
- * glasses and a report tablet, facing −z like the customers. ⚠ Placeholder model.
- */
-export function buildManager(): THREE.Group {
-  const root = new THREE.Group();
-  // Trousers and shoes.
-  block(root, 'ink', [-0.18, 0, -0.08, -0.03, 0.85, 0.08]);
-  block(root, 'ink', [0.03, 0, -0.08, 0.18, 0.85, 0.08]);
-  block(root, 'inkSoft', [-0.2, 0, -0.13, -0.02, 0.06, 0.06]);
-  block(root, 'inkSoft', [0.02, 0, -0.13, 0.2, 0.06, 0.06]);
-  // Jacket with a shirt, lapels and a tie.
-  block(root, 'ink', [-0.25, 0.82, -0.15, 0.25, 1.45, 0.15]);
-  block(root, 'white', [-0.07, 1.12, -0.152, 0.07, 1.45, -0.15]);
-  block(root, 'red', [-0.025, 1.0, -0.156, 0.025, 1.42, -0.152]);
-  block(root, 'inkSoft', [-0.12, 1.15, -0.155, -0.07, 1.45, -0.151]);
-  block(root, 'inkSoft', [0.07, 1.15, -0.155, 0.12, 1.45, -0.151]);
-  // Arms; the right hand holds a report tablet.
-  block(root, 'ink', [-0.37, 0.88, -0.07, -0.25, 1.43, 0.07]);
-  block(root, 'ink', [0.25, 1.05, -0.3, 0.37, 1.43, 0.0]);
-  block(root, 'tealDark', [0.13, 1.0, -0.42, 0.4, 1.2, -0.38]);
-  // Head: neat short hair, glasses, a flat mouth.
-  block(root, 'skin2', [-0.06, 1.44, -0.06, 0.06, 1.5, 0.06]);
-  block(root, 'skin2', [-0.16, 1.49, -0.16, 0.16, 1.79, 0.16]);
-  block(root, 'inkSoft', [-0.17, 1.74, -0.17, 0.17, 1.83, 0.17]);
-  block(root, 'inkSoft', [-0.17, 1.55, 0.08, 0.17, 1.8, 0.17]);
-  block(root, 'ink', [-0.13, 1.64, -0.168, 0.13, 1.66, -0.163]);
-  block(root, 'ink', [-0.11, 1.6, -0.17, -0.03, 1.68, -0.165]);
-  block(root, 'ink', [0.03, 1.6, -0.17, 0.11, 1.68, -0.165]);
-  block(root, 'ink', [-0.05, 1.54, -0.168, 0.05, 1.555, -0.163]);
-  return root;
-}
-
+// ── People ────────────────────────────────────────────────────────────────────────────
+// Customers and the Manager are built in character.ts.
+export { buildCustomer, buildManager, type CustomerModel } from './character';
