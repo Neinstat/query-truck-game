@@ -932,11 +932,67 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
 
 function square(g: THREE.Group, animations: Animate[], rand: () => number): void {
   void animations;
-  ground(g, 'paperShade');
-  // Paving lines.
-  // Paving lines, stopping short of the buildings round the square.
-  for (let x = -30; x <= 30; x += 3) patch(g, 'concrete', x + 0.013, -23.9, x + 0.073, 6, 0.008);
-  for (let z = -23; z <= 6; z += 3) patch(g, 'concrete', -30, z, 30, z + 0.06, 0.008);
+  // Grass beyond the square; the road the truck parks on (asphalt with a kerb and white edge);
+  // the square itself in grey paving stones with lighter bands; and lawns with hedges, trees
+  // and flower beds (owner's feedback: the cream tiles were dull, a town square needs green).
+  ground(g, 'grass');
+  patch(g, 'inkSoft', -45, -2.1, 45, 9, 0.004);
+  patch(g, 'white', -45, -2.0, 45, -1.92, 0.007);
+  for (let x = -44; x < 44; x += 4) patch(g, 'white', x, 4.1, x + 2, 4.22, 0.007);
+  patch(g, 'paperShade', -45, -2.35, 45, -2.1, 0.03);
+  patch(g, 'concrete', -26, -23.9, 26, -2.35, 0.006);
+  for (let i = 0; i <= 17; i++) patch(g, 'paperShade', -25.5 + i * 3, -23.9, -25.38 + i * 3, -2.35, 0.009);
+  for (let j = 0; j <= 7; j++) patch(g, 'paperShade', -26, -23.4 + j * 3, 26, -23.28 + j * 3, 0.009);
+  // Lawns, each with a low kerb.
+  const lawn = (x1: number, z1: number, x2: number, z2: number) => {
+    patch(g, 'paperShade', x1 - 0.15, z1 - 0.15, x2 + 0.15, z2 + 0.15, 0.06);
+    patch(g, 'grass', x1, z1, x2, z2, 0.075);
+  };
+  lawn(-22, -22, -8.5, -9.5);
+  lawn(8.5, -22, 22, -13.5);
+  lawn(-2.5, -22, 2.5, -19);
+  // A ring of grass round the fountain.
+  const ring = new THREE.Mesh(new THREE.RingGeometry(2.3, 3.4, 28), mat('grass'));
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(4.5, GROUND_Y + 0.05, -11);
+  g.add(ring);
+  // Hedges along the lawns, trees on them, and flower beds.
+  const greenery = seeded(55);
+  for (const [x1, x2, z] of [
+    [-21.5, -9, -9.9],
+    [9, 21.5, -13.9],
+  ] as const) {
+    for (let x = x1; x <= x2; x += 1.3) {
+      const h = new THREE.Group();
+      h.position.set(x, GROUND_Y + 0.07, z);
+      bush(h, 0.75 + greenery() * 0.2);
+      g.add(h);
+    }
+  }
+  for (const [x, z] of [
+    [-19, -17],
+    [-14, -20],
+    [-11, -14],
+    [12, -18],
+    [17, -20.5],
+    [20, -16],
+  ] as const) {
+    const t = new THREE.Group();
+    t.position.set(x, GROUND_Y + 0.07, z);
+    tree(t, 0.9 + greenery() * 0.6, x * 5 + z);
+    g.add(t);
+  }
+  const flowers: Ink[] = ['red', 'mustard', 'pink', 'white', 'lilac'];
+  for (let i = 0; i < 70; i++) {
+    const inLeft = i % 2 === 0;
+    const x = inLeft ? -21 + greenery() * 11 : 9.5 + greenery() * 11.5;
+    const z = inLeft ? -21.5 + greenery() * 3.5 : -21.5 + greenery() * 3;
+    shape(g, new THREE.IcosahedronGeometry(0.1 + greenery() * 0.06, 0), flowers[i % flowers.length], x, GROUND_Y + 0.17, z);
+  }
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    shape(g, new THREE.IcosahedronGeometry(0.11, 0), flowers[i % flowers.length], 4.5 + Math.cos(a) * 2.85, GROUND_Y + 0.15, -11 + Math.sin(a) * 2.85);
+  }
   // Bunting between the lamps.
   const lamps = PLACE_PROPS.square.filter((p) => p.kind === 'lamp').map((l) => new THREE.Vector3(l.x, GROUND_Y + 3.2, l.z));
   const flags: Ink[] = ['red', 'mustard', 'teal', 'pink', 'white'];
