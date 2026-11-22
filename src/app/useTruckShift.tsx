@@ -196,7 +196,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   useEffect(
     () =>
       bridge.on('use', (id) => {
-        if (order && id === orderObject) setOrderOpen(true);
+        // With the Data Lens on, E always opens the object's data (even where the order is
+        // answered): the lens is for looking at the database.
+        const lensOn = bridge.last('lens') === true;
+        if (order && id === orderObject && !(lensOn && OBJECT_STATION[id])) setOrderOpen(true);
         else if (id === 'guide-book') {
           // The app opens the guide (TruckApp listens too).
         } else if (id === 'radio') {

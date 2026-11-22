@@ -2228,3 +2228,58 @@ body {
     flex-direction: column;
   }
 }
+
+/* Looking around: a button per table, and what the table's query does. */
+.explore-tables {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.explore-table {
+  padding: 4px 10px;
+  border: 2px solid #25304f;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #25304f;
+  background: #fffaf0;
+  cursor: pointer;
+}
+
+.explore-table.active {
+  color: #fffaf0;
+  background: #25304f;
+}
+
+.explore-table.active code {
+  color: inherit;
+}
+
+.explain-query {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 4px solid #2b9c8e;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: #e8f4ef;
+}
+
+.explain-query ol {
+  margin: 4px 0;
+  padding-left: 1.2rem;
+  line-height: 1.6;
+}
+
+.explain-title,
+.explain-try {
+  margin: 0;
+  font-weight: 600;
+}
+
+.explain-try {
+  font-weight: 400;
+  font-style: italic;
+}
