@@ -29,7 +29,7 @@ export const RISO = {
   grass: '#79b25d',
   grassDark: '#4f8a49',
   // Concrete (skatepark, pier, square).
-  concrete: '#cfc8b8',
+  concrete: '#9fa1ab',
   // Wood.
   wood: '#c27b4b',
   woodDark: '#8a5134',

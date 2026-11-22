@@ -554,6 +554,12 @@ export class TruckGame {
 
   // ── The truck tour and the guide's pictures ──────────────────────────────────────────
 
+  /** Where the camera is now, as a pose. */
+  private cameraPose(): Pose {
+    const e = new THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
+    return { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z, yaw: e.y, pitch: e.x };
+  }
+
   private playerPose(): Pose {
     return { x: this.at.x, y: EYE_Y, z: this.at.z, yaw: this.yaw, pitch: this.pitch };
   }
@@ -565,8 +571,15 @@ export class TruckGame {
     // the tour's card (owner's feedback: it used to sit too high).
     const pose = stop ? { ...stop, pitch: stop.pitch - 0.06 } : null;
     if (pose) {
-      this.tourView ??= this.playerPose();
+      // From the title screen the tour starts where the camera is (outside, circling the truck).
+      this.tourView ??= this.showcase ? this.cameraPose() : this.playerPose();
       this.tourTarget = pose;
+      this.tourReturning = false;
+    } else if (this.tourView && this.showcase) {
+      // Back on the title screen: no flight back to where the player stands inside the truck
+      // (owner's bug report: a pause inside the truck before the title view came back).
+      this.tourView = null;
+      this.tourTarget = null;
       this.tourReturning = false;
     } else if (this.tourView) {
       this.tourTarget = this.playerPose();

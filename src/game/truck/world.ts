@@ -304,8 +304,9 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: -9.5, z: -7.5 },
   ],
   school: [
-    { kind: 'hoop', x: 4, z: -14, yaw: 0 },
-    { kind: 'hoop', x: 4, z: -8.4, yaw: Math.PI },
+    // A hoop faces −z before turning: the far one turns round to face the court.
+    { kind: 'hoop', x: 4, z: -14, yaw: Math.PI },
+    { kind: 'hoop', x: 4, z: -8.4, yaw: 0 },
     { kind: 'bikeRack', x: -5.6, z: -3.4, yaw: 0.5 },
     { kind: 'bikeRack', x: 9.5, z: -5.5, yaw: -1.2 },
     { kind: 'flagPole', x: -3, z: -17 },

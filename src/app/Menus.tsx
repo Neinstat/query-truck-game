@@ -280,18 +280,18 @@ export function Guide({
               </ul>
             )}
             <footer className="guide-nav">
-              <button className="link-button" disabled={index === 0} onClick={() => setIndex(index - 1)}>
+              <button className="nav-button" disabled={index === 0} onClick={() => setIndex(index - 1)}>
                 ← {t.guidePrev}
               </button>
-              <span>
+              <span className="guide-count">
                 {index + 1} / {pages.length}
               </span>
               {index < pages.length - 1 ? (
-                <button className="link-button" onClick={() => setIndex(index + 1)}>
+                <button className="nav-button nav-button-main" onClick={() => setIndex(index + 1)}>
                   {t.guideNext} →
                 </button>
               ) : (
-                <button className="link-button" onClick={onClose}>
+                <button className="nav-button nav-button-main" onClick={onClose}>
                   {t.guideDone} ✓
                 </button>
               )}
@@ -401,7 +401,7 @@ export function TruckTour({
           </p>
         )}
         <footer className="tour-nav">
-          <button className="link-button" disabled={step === 0} onClick={() => onStep(step - 1)}>
+          <button className="nav-button" disabled={step === 0} onClick={() => onStep(step - 1)}>
             ← {t.guidePrev}
           </button>
           <div className="tour-dots" aria-hidden="true">

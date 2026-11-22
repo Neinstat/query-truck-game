@@ -45,9 +45,60 @@ const lampMaterials = {
 
 // ── Things near the truck ───────────────────────────────────────────────────────────
 
-function tree(g: THREE.Group, size: number): void {
-  shape(g, new THREE.CylinderGeometry(0.12 * size, 0.16 * size, 1.4 * size, 6), 'woodDark', 0, 0.7 * size, 0);
-  shape(g, new THREE.IcosahedronGeometry(1.1 * size, 0), size > 1 ? 'tealDark' : 'teal', 0, 2.0 * size, 0);
+/**
+ * A tree, never quite like the next one: a seed picks its shape (a round crown, a crown of two
+ * or three lumps, or a pine of stacked cones), its colour, its height and how it leans.
+ */
+function tree(g: THREE.Group, size: number, seed = 1): void {
+  const r = seeded(Math.floor(seed * 9301 + size * 49297));
+  const greens: Ink[] = ['teal', 'tealDark', 'grass', 'grassDark'];
+  const green = greens[Math.floor(r() * greens.length)];
+  const trunkH = (1.1 + r() * 0.8) * size;
+  const kind = r();
+  shape(g, new THREE.CylinderGeometry(0.1 * size, 0.16 * size, trunkH, 6), 'woodDark', 0, trunkH / 2, 0);
+  if (kind < 0.25) {
+    // A pine: three cones, smaller towards the top.
+    for (let i = 0; i < 3; i++) {
+      const cone = shape(g, new THREE.ConeGeometry((1.1 - i * 0.28) * size, 1.2 * size, 7), green === 'grass' ? 'tealDark' : green, 0, trunkH + (0.3 + i * 0.65) * size, 0);
+      cone.rotation.y = r() * Math.PI;
+    }
+  } else if (kind < 0.6) {
+    // A crown of a few lumps.
+    const lumps = 2 + Math.floor(r() * 2);
+    for (let i = 0; i < lumps; i++) {
+      const a = (i / lumps) * Math.PI * 2 + r();
+      const lump = shape(g, new THREE.IcosahedronGeometry((0.65 + r() * 0.35) * size, 0), green, Math.cos(a) * 0.45 * size, trunkH + (0.45 + r() * 0.5) * size, Math.sin(a) * 0.45 * size);
+      lump.rotation.set(r(), r(), r());
+    }
+  } else {
+    const crown = shape(g, new THREE.IcosahedronGeometry((0.9 + r() * 0.45) * size, 0), green, 0, trunkH + 0.55 * size, 0);
+    crown.scale.set(1, 0.8 + r() * 0.5, 1);
+    crown.rotation.y = r() * Math.PI;
+  }
+  g.rotation.z = (r() - 0.5) * 0.08;
+}
+
+/** A thin rope or wire through points (for string lights and bunting). */
+function rope(g: THREE.Group, points: THREE.Vector3[], ink: Ink = 'ink'): void {
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const length = a.distanceTo(b);
+    const piece = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, length, 4), mat(ink));
+    piece.position.copy(a).add(b).multiplyScalar(0.5);
+    piece.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+    g.add(piece);
+  }
+}
+
+/** Points along a sagging line from a to b. */
+function sag(a: THREE.Vector3, b: THREE.Vector3, depth: number, steps = 14): THREE.Vector3[] {
+  return Array.from({ length: steps + 1 }, (_, k) => {
+    const t = k / steps;
+    const p = new THREE.Vector3().lerpVectors(a, b, t);
+    p.y -= Math.sin(t * Math.PI) * depth;
+    return p;
+  });
 }
 
 function bush(g: THREE.Group, size: number): void {
@@ -101,7 +152,7 @@ function quarterPipe(g: THREE.Group): void {
     const z1 = -Math.sin(a1) * R;
     const y1 = R - Math.cos(a1) * R;
     const len = Math.hypot(z1 - z0, y1 - y0) + 0.02;
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, len), mat(i % 2 ? 'concrete' : 'paperShade'));
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, len), mat(i % 2 ? 'concrete' : 'tealLight'));
     slab.position.set(0, (y0 + y1) / 2, (z0 + z1) / 2);
     slab.rotation.x = -Math.atan2(y1 - y0, z0 - z1);
     g.add(slab);
@@ -119,9 +170,9 @@ function quarterPipe(g: THREE.Group): void {
 }
 
 function funBox(g: THREE.Group): void {
-  block(g, 'concrete', [-1.0, 0, -0.6, 1.0, 0.5, 0.6]);
+  block(g, 'pink', [-1.0, 0, -0.6, 1.0, 0.5, 0.6]);
   for (const side of [-1, 1]) {
-    const ramp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 1.2), mat('paperShade'));
+    const ramp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 1.2), mat('lilac'));
     ramp.position.set(side * 1.45, 0.25, 0);
     ramp.rotation.z = side * -0.47;
     g.add(ramp);
@@ -152,8 +203,16 @@ function hoop(g: THREE.Group): void {
   block(g, 'red', [-0.3, 2.75, 0.05, 0.3, 3.15, 0.06]);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.025, 4, 12), mat('red'));
   ring.rotation.x = Math.PI / 2;
-  ring.position.set(0, 3.05, -0.2);
+  ring.position.set(0, 3.05, -0.25);
   g.add(ring);
+  block(g, 'red', [-0.03, 3.03, -0.06, 0.03, 3.07, 0.06]);
+  // The net hanging from the rim.
+  const net = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.23, 0.15, 0.4, 10, 2, true),
+    new THREE.MeshBasicMaterial({ color: 0xfffaf0, wireframe: true }),
+  );
+  net.position.set(0, 2.85, -0.25);
+  g.add(net);
 }
 
 function bike(g: THREE.Group, x: number, ink: Ink): void {
@@ -254,7 +313,7 @@ function buildProp(parent: THREE.Group, p: Prop, rand: () => number): Animate | 
   const size = p.size ?? 1;
   switch (p.kind) {
     case 'tree':
-      tree(g, size);
+      tree(g, size, p.x * 13 + p.z * 7);
       break;
     case 'bush':
       bush(g, size);
@@ -386,11 +445,19 @@ function park(g: THREE.Group, animations: Animate[]): void {
   const lamps = PLACE_PROPS.park.filter((p) => p.kind === 'lamp').map((l) => new THREE.Vector3(l.x, GROUND_Y + 3.3, l.z));
   stringLights(g, lamps);
   // A row of trees further back, and the city far away.
-  for (let x = -40; x <= 40; x += 5) {
+  const rand = seeded(7);
+  for (let x = -44; x <= 44; x += 3 + rand() * 3) {
     const t = new THREE.Group();
-    t.position.set(x + ((x * 7) % 3), GROUND_Y, -24 - ((x * 13) % 4));
-    tree(t, 1.5);
+    t.position.set(x, GROUND_Y, -21 - rand() * 9);
+    tree(t, 1 + rand() * 1.1, x);
     g.add(t);
+  }
+  // A few bushes along the lawn's far edge.
+  for (let x = -30; x <= 30; x += 4 + rand() * 4) {
+    const b = new THREE.Group();
+    b.position.set(x, GROUND_Y, -18 - rand() * 2);
+    bush(b, 0.8 + rand() * 0.7);
+    g.add(b);
   }
   skyline(g);
 }
@@ -399,6 +466,7 @@ function stringLights(g: THREE.Group, points: THREE.Vector3[]): void {
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1];
     const b = points[i];
+    rope(g, sag(a, b, 0.6));
     for (let k = 1; k < 12; k++) {
       const t = k / 12;
       const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), k % 2 ? lampMaterials.mustard : lampMaterials.red);
@@ -411,11 +479,91 @@ function stringLights(g: THREE.Group, points: THREE.Vector3[]): void {
 
 function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): void {
   ground(g, 'grassDark');
-  // The concrete yard, a darker strip in the overpass's shadow, and painted lines.
+  // The yard: warm concrete near the truck, dark asphalt in the overpass's shadow, and paint
+  // on the ground — a big teal circle, red and mustard stripes, white lines.
   patch(g, 'concrete', -30, -26, 30, 6, 0.004);
-  patch(g, 'paperShade', -30, -22, 30, -14, 0.008);
+  patch(g, 'inkSoft', -30, -23, 30, -13.5, 0.008);
   queuePath(g, 'paperShade');
   for (const z of [-5.5, -9.5]) patch(g, 'white', 8, z - 0.05, 14, z + 0.05, 0.012);
+  const circle = new THREE.Mesh(new THREE.RingGeometry(2.2, 3.0, 24), mat('teal'));
+  circle.rotation.x = -Math.PI / 2;
+  circle.position.set(6.5, GROUND_Y + 0.011, -10);
+  g.add(circle);
+  for (let i = 0; i < 6; i++) patch(g, i % 2 ? 'mustard' : 'red', -6 + i * 1.1, -22.5, -5.6 + i * 1.1, -14, 0.012);
+  // Lighter and darker grey tiles near the truck, and painted stripes on them.
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 5; j++) {
+      if ((i + j) % 2 === 0) patch(g, 'inkSoft', -14 + i * 3, -12 + j * 3, -11 + i * 3, -9 + j * 3, 0.006);
+    }
+  }
+  for (let i = 0; i < 4; i++) patch(g, (['pink', 'teal', 'mustard', 'lilac'] as const)[i], 8 + i * 1.4, -9, 8.8 + i * 1.4, -1.5, 0.013);
+  // Painted ends on the ramps' decks and coping colours come from the props; here, the
+  // street details: traffic cones, a crate stage, a vending machine, a boombox, planters,
+  // a graffiti-covered shipping container, benches and pennants along the fence.
+  const cone = (x: number, z: number) => {
+    shape(g, new THREE.ConeGeometry(0.2, 0.55, 8), 'red', x, GROUND_Y + 0.3, z);
+    block(g, 'white', [x - 0.14, GROUND_Y + 0.25, z - 0.14, x + 0.14, GROUND_Y + 0.33, z + 0.14]).scale.set(0.85, 1, 0.85);
+    block(g, 'red', [x - 0.25, GROUND_Y, z - 0.25, x + 0.25, GROUND_Y + 0.04, z + 0.25]);
+  };
+  for (const [x, z] of [
+    [9.5, -6.8],
+    [11, -7.6],
+    [12.4, -6.6],
+    [-11, -4.2],
+  ] as const) {
+    cone(x, z);
+  }
+  // The container, covered in paint.
+  block(g, 'tealDark', [10, GROUND_Y, -22.5, 16, GROUND_Y + 2.6, -20]);
+  for (let i = 0; i < 9; i++) block(g, 'teal', [10.2 + i * 0.66, GROUND_Y + 0.1, -20.01, 10.45 + i * 0.66, GROUND_Y + 2.5, -19.98]);
+  for (const [x, y, w, h, ink] of [
+    [10.6, 0.5, 2.2, 1.0, 'mustard'],
+    [12.4, 1.1, 1.8, 0.9, 'pink'],
+    [14.1, 0.4, 1.4, 1.6, 'red'],
+  ] as const) {
+    block(g, ink, [x, GROUND_Y + y, -19.97, x + w, GROUND_Y + y + h, -19.95]);
+  }
+  // A vending machine glowing by the fence, and a boombox on a crate stage.
+  block(g, 'red', [-14.5, GROUND_Y, -20.5, -13.4, GROUND_Y + 2.0, -19.8]);
+  block(g, 'tealLight', [-14.3, GROUND_Y + 0.8, -19.81, -13.6, GROUND_Y + 1.8, -19.79]);
+  block(g, 'ink', [-14.3, GROUND_Y + 0.25, -19.81, -13.6, GROUND_Y + 0.55, -19.79]);
+  block(g, 'wood', [-12.5, GROUND_Y, -20.5, -9.5, GROUND_Y + 0.5, -19]);
+  block(g, 'woodDark', [-12.5, GROUND_Y + 0.5, -20.5, -9.5, GROUND_Y + 0.54, -19]);
+  block(g, 'ink', [-11.4, GROUND_Y + 0.54, -19.9, -10.4, GROUND_Y + 1.0, -19.6]);
+  for (const x of [-11.15, -10.65]) {
+    const speaker = shape(g, new THREE.CylinderGeometry(0.15, 0.15, 0.02, 10), 'mustard', x, GROUND_Y + 0.77, -19.59);
+    speaker.rotation.x = Math.PI / 2;
+  }
+  for (const x of [-12, 13, 16]) {
+    const b = new THREE.Group();
+    b.position.set(x, GROUND_Y, -3.2);
+    bench(b);
+    b.rotation.y = x < 0 ? 0.4 : -0.3;
+    g.add(b);
+  }
+  for (const [x, z] of [
+    [-12.5, -6.5],
+    [14.5, -5],
+  ] as const) {
+    const p = new THREE.Group();
+    p.position.set(x, GROUND_Y, z);
+    planter(p);
+    g.add(p);
+  }
+  const pennants: Ink[] = ['red', 'mustard', 'teal', 'pink', 'white'];
+  for (let i = 0; i < 4; i++) {
+    const a = new THREE.Vector3(-24 + i * 12, GROUND_Y + 2.2, -25.55);
+    const b = new THREE.Vector3(-12 + i * 12, GROUND_Y + 2.2, -25.55);
+    rope(g, sag(a, b, 0.5));
+    for (let k = 1; k < 16; k++) {
+      const t = k / 16;
+      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.26, 3), mat(pennants[(k + i) % pennants.length]));
+      flag.position.lerpVectors(a, b, t);
+      flag.position.y -= Math.sin(t * Math.PI) * 0.5 + 0.14;
+      flag.rotation.x = Math.PI;
+      g.add(flag);
+    }
+  }
   // The overpass: a deck across the sky with a railing, held by the pillars (props) and more
   // further out; cars drive across it.
   const deckY = GROUND_Y + 7;
@@ -460,21 +608,29 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
     block(g, inks[Math.floor(rand() * inks.length)], [x, GROUND_Y + y, -26.61, x + 1 + rand() * 1.5, GROUND_Y + y + 0.4 + rand() * 0.8, -26.58]);
   }
   skyline(g, -60);
-  // A skater rolling back and forth behind the ramps.
-  const skater = buildCustomer('runner');
-  const board = new THREE.Group();
-  block(board, 'red', [-0.12, 0.08, -0.45, 0.12, 0.11, 0.45]);
-  for (const z of [-0.3, 0.3]) block(board, 'ink', [-0.13, 0, z - 0.05, 0.13, 0.08, z + 0.05]);
-  skater.root.add(board);
-  skater.root.children.forEach((c) => c !== board && (c.position.y += 0.11));
-  g.add(skater.root);
-  animations.push((time) => {
-    const t = (Math.sin(time * 0.35) + 1) / 2;
-    skater.root.position.set(-2 + t * 12, GROUND_Y, -18.6);
-    skater.root.rotation.y = Math.cos(time * 0.35) > 0 ? -Math.PI / 2 : Math.PI / 2;
-    skater.arms[0].rotation.z = 0.9;
-    skater.arms[1].rotation.z = -0.9;
-  });
+  // Skaters rolling back and forth behind the ramps.
+  const lanes = [
+    { z: -18.6, from: -2, to: 10, speed: 0.35, kind: 'runner', seed: 101, deck: 'red' },
+    { z: -21.4, from: -16, to: 6, speed: 0.27, kind: 'student', seed: 202, deck: 'teal' },
+    { z: -16.8, from: 10, to: 20, speed: 0.42, kind: 'painter', seed: 303, deck: 'mustard' },
+  ] as const;
+  for (const lane of lanes) {
+    const skater = buildCustomer(lane.kind, lane.seed);
+    const board = new THREE.Group();
+    block(board, lane.deck, [-0.12, 0.08, -0.45, 0.12, 0.11, 0.45]);
+    for (const z of [-0.3, 0.3]) block(board, 'ink', [-0.13, 0, z - 0.05, 0.13, 0.08, z + 0.05]);
+    skater.root.add(board);
+    skater.root.children.forEach((c) => c !== board && (c.position.y += 0.11));
+    g.add(skater.root);
+    const phase = lane.seed;
+    animations.push((time) => {
+      const t = (Math.sin(time * lane.speed + phase) + 1) / 2;
+      skater.root.position.set(lane.from + t * (lane.to - lane.from), GROUND_Y, lane.z);
+      skater.root.rotation.y = Math.cos(time * lane.speed + phase) > 0 ? -Math.PI / 2 : Math.PI / 2;
+      skater.arms[0].rotation.z = 0.9;
+      skater.arms[1].rotation.z = -0.9;
+    });
+  }
 }
 
 function school(g: THREE.Group, animations: Animate[], rand: () => number): void {
@@ -518,11 +674,18 @@ function school(g: THREE.Group, animations: Animate[], rand: () => number): void
   block(g, 'ink', [-0.04, GROUND_Y + 9.5, -23.88, 0.04, GROUND_Y + 10.2, -23.86]);
   block(g, 'ink', [-0.04, GROUND_Y + 9.46, -23.88, 0.5, GROUND_Y + 9.54, -23.86]);
   // A row of trees down each side and the city behind.
-  for (const x of [-20, -16, 20, 24]) {
+  for (const x of [-24, -20.5, -17, 19, 22.5, 26, 30]) {
     const t = new THREE.Group();
-    t.position.set(x, GROUND_Y, -21 + rand());
-    tree(t, 1.4);
+    t.position.set(x + rand(), GROUND_Y, -21.5 + rand() * 2);
+    tree(t, 0.9 + rand() * 0.8, x * 3.1);
     g.add(t);
+  }
+  // Bushes along the fence, and flowers in a bed by the door.
+  for (let x = -13; x <= 15; x += 2.5 + rand() * 2) {
+    const b = new THREE.Group();
+    b.position.set(x, GROUND_Y, -20.6);
+    bush(b, 0.6 + rand() * 0.5);
+    g.add(b);
   }
   skyline(g, -62);
 }
@@ -574,23 +737,120 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
   boat(-7, -19, 'red', false);
   boat(8, -22, 'teal', true);
   boat(-18, -30, 'mustard', false);
-  // A lighthouse, cranes and containers far away, green hills on the horizon.
+  // A lighthouse on its own rocks.
+  for (const [dx, dz, rr] of [
+    [0, 0, 3.2],
+    [2.2, 1.4, 1.8],
+    [-2, 1.8, 1.5],
+  ] as const) {
+    shape(g, new THREE.DodecahedronGeometry(rr, 0), 'concrete', -32 + dx, SEA + rr * 0.35, -52 + dz).scale.y = 0.55;
+  }
   shape(g, new THREE.CylinderGeometry(1.2, 1.8, 2, 8), 'concrete', -32, GROUND_Y + 1, -52);
   for (let i = 0; i < 5; i++) shape(g, new THREE.CylinderGeometry(1.2 - i * 0.08, 1.28 - i * 0.08, 2.4, 10), i % 2 ? 'red' : 'white', -32, GROUND_Y + 3.2 + i * 2.4, -52);
-  const beacon = shape(g, new THREE.CylinderGeometry(0.7, 0.7, 1.2, 8), lampMaterials.mustard, -32, GROUND_Y + 15.6, -52);
+  shape(g, new THREE.CylinderGeometry(0.7, 0.7, 1.2, 8), lampMaterials.mustard, -32, GROUND_Y + 15.6, -52);
   shape(g, new THREE.ConeGeometry(1, 1, 8), 'red', -32, GROUND_Y + 16.7, -52);
-  void beacon;
-  const containerInks: Ink[] = ['red', 'teal', 'mustard', 'tealDark', 'redDark'];
-  for (let i = 0; i < 18; i++) {
-    const x = 24 + (i % 6) * 3.2;
-    const y = Math.floor(i / 6) * 1.3;
-    block(g, containerInks[Math.floor(rand() * containerInks.length)], [x, GROUND_Y + y, -48, x + 3, GROUND_Y + y + 1.25, -45]);
+
+  // The container terminal across the water: a concrete quay standing on the sea, a yard of
+  // stacked containers, two gantry cranes on rails, and a container ship moored along it.
+  const quay = { x1: 16, x2: 90, z1: -64, z2: -38 };
+  const QUAY_TOP = GROUND_Y + 0.5;
+  block(g, 'concrete', [quay.x1, SEA - 0.5, quay.z1, quay.x2, QUAY_TOP, quay.z2]);
+  block(g, 'mustard', [quay.x1, QUAY_TOP, quay.z2 - 0.3, quay.x2, QUAY_TOP + 0.02, quay.z2 - 0.2]);
+  for (let x = quay.x1 + 1; x < quay.x2; x += 4) block(g, 'ink', [x, QUAY_TOP - 0.6, quay.z2, x + 0.5, QUAY_TOP - 0.1, quay.z2 + 0.15]);
+  const containerInks: Ink[] = ['red', 'teal', 'mustard', 'tealDark', 'redDark', 'lilac', 'white'];
+  const container = (x: number, y: number, z: number, ink: Ink, long = true) => {
+    const len = long ? 6 : 3;
+    block(g, ink, [x, y, z, x + len, y + 1.25, z + 1.25]);
+    for (let k = 0.3; k < len - 0.1; k += 0.4) block(g, 'ink', [x + k, y + 0.1, z - 0.01, x + k + 0.05, y + 1.15, z]);
+  };
+  // The yard: rows of stacks, two to four high.
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 8; col++) {
+      const height = 2 + Math.floor(rand() * 3);
+      for (let level = 0; level < height; level++) {
+        container(quay.x1 + 6 + col * 6.6, QUAY_TOP + level * 1.27, quay.z1 + 3 + row * 3.2, containerInks[Math.floor(rand() * containerInks.length)]);
+      }
+    }
   }
-  for (const x of [30, 40]) {
-    block(g, 'mustard', [x, GROUND_Y, -44, x + 0.5, GROUND_Y + 14, -43.5]);
-    block(g, 'mustard', [x - 6, GROUND_Y + 13.5, -44, x + 4, GROUND_Y + 14.2, -43.5]);
-    block(g, 'ink', [x - 4.5, GROUND_Y + 9, -43.85, x - 4.45, GROUND_Y + 13.5, -43.8]);
+  // Two gantry cranes: legs on the quay, a boom reaching out over the ship.
+  for (const x of [28, 52]) {
+    for (const dz of [0, 9]) {
+      block(g, 'mustard', [x, QUAY_TOP, quay.z2 - 10 + dz, x + 0.6, QUAY_TOP + 18, quay.z2 - 9.4 + dz]);
+      block(g, 'mustard', [x + 6, QUAY_TOP, quay.z2 - 10 + dz, x + 6.6, QUAY_TOP + 18, quay.z2 - 9.4 + dz]);
+    }
+    block(g, 'mustard', [x, QUAY_TOP + 18, quay.z2 - 10, x + 6.6, QUAY_TOP + 19, quay.z2 + 9]);
+    block(g, 'mustardDark', [x, QUAY_TOP + 8, quay.z2 - 10, x + 6.6, QUAY_TOP + 8.6, quay.z2 - 0.4]);
+    block(g, 'white', [x + 1.5, QUAY_TOP + 16.5, quay.z2 - 2, x + 5, QUAY_TOP + 18, quay.z2 + 1]);
+    block(g, 'ink', [x + 3.2, QUAY_TOP + 12, quay.z2 + 5, x + 3.3, QUAY_TOP + 18, quay.z2 + 5.1]);
+    container(x + 0.3, QUAY_TOP + 10.7, quay.z2 + 4.4, 'red');
   }
+  // The ship: a long dark hull, a white bridge at the back, and containers on deck.
+  const ship = new THREE.Group();
+  block(ship, 'ink', [0, -1.5, -4.5, 56, 3.2, 4.5]);
+  block(ship, 'red', [0, -1.5, -4.52, 56, 0.2, 4.52]);
+  const prow = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 4.7, 3, 1, false, 0, Math.PI), mat('ink'));
+  prow.rotation.y = Math.PI / 2;
+  prow.position.set(56, 0.85, 0);
+  prow.scale.set(1, 1, 0.8);
+  ship.add(prow);
+  block(ship, 'white', [1, 3.2, -4, 8, 11, 4]);
+  for (let f = 0; f < 4; f++) block(ship, 'tealLight', [0.98, 4.2 + f * 1.7, -3.5, 1.0, 5.2 + f * 1.7, 3.5]);
+  block(ship, 'red', [3, 11, -1, 6, 14, 1]);
+  for (let col = 0; col < 7; col++) {
+    for (let row = 0; row < 6; row++) {
+      const stack = 1 + Math.floor(rand() * 3);
+      for (let level = 0; level < stack; level++) {
+        const ink = containerInks[Math.floor(rand() * containerInks.length)];
+        block(ship, ink, [10 + col * 6.3, 3.2 + level * 1.27, -4 + row * 1.33, 16 + col * 6.3, 4.45 + level * 1.27, -2.75 + row * 1.33]);
+      }
+    }
+  }
+  ship.position.set(quay.x1 + 6, SEA, quay.z2 + 6);
+  g.add(ship);
+  animations.push((time) => {
+    ship.position.y = SEA + Math.sin(time * 0.5) * 0.06;
+  });
+
+  // On the pier, left: a harbour warehouse with a big door, a life ring post and a coil of rope.
+  block(g, 'tealDark', [-29, GROUND_Y, -8, -17, GROUND_Y + 5, 3]);
+  block(g, 'white', [-29.3, GROUND_Y + 5, -8.3, -16.7, GROUND_Y + 5.4, 3.3]);
+  block(g, 'inkSoft', [-17.01, GROUND_Y, -6, -16.98, GROUND_Y + 3.8, -1]);
+  for (let y = 0.4; y < 3.8; y += 0.5) block(g, 'ink', [-16.99, GROUND_Y + y, -6, -16.97, GROUND_Y + y + 0.05, -1]);
+  block(g, 'white', [-17.01, GROUND_Y + 4.1, 0, -16.98, GROUND_Y + 4.7, 2.5]);
+  block(g, 'woodDark', [-14, GROUND_Y, -10.5, -13.85, GROUND_Y + 1.6, -10.35]);
+  const ring = shape(g, new THREE.TorusGeometry(0.32, 0.09, 6, 14), 'red', -13.92, GROUND_Y + 1.2, -10.25);
+  void ring;
+  shape(g, new THREE.TorusGeometry(0.4, 0.12, 6, 14), 'wood', -15.5, GROUND_Y + 0.12, -2).rotation.x = Math.PI / 2;
+  // Right: a fish stall under an awning, crates of fish, and a small harbour office.
+  const fishStall = new THREE.Group();
+  fishStall.position.set(16, GROUND_Y, -3);
+  fishStall.rotation.y = -0.4;
+  stall(fishStall, 'teal', rand);
+  g.add(fishStall);
+  block(g, 'white', [20, GROUND_Y, -10, 26, GROUND_Y + 3.4, -5]);
+  block(g, 'red', [19.8, GROUND_Y + 3.4, -10.2, 26.2, GROUND_Y + 3.8, -4.8]);
+  block(g, 'tealLight', [21, GROUND_Y + 1.4, -5.01, 23, GROUND_Y + 2.6, -4.98]);
+  block(g, 'woodDark', [23.8, GROUND_Y, -5.01, 25, GROUND_Y + 2.3, -4.98]);
+  for (const [x, z] of [
+    [13.5, -7.5],
+    [14.6, -8.3],
+    [18.6, 1.5],
+  ] as const) {
+    const c = new THREE.Group();
+    c.position.set(x, GROUND_Y, z);
+    c.rotation.y = rand();
+    crates(c);
+    g.add(c);
+  }
+  // A row of lamps along the pier's edge, on both sides.
+  for (const x of [-26, -20, 16, 22, 28]) {
+    const l = new THREE.Group();
+    l.position.set(x, GROUND_Y, -13.6);
+    lamp(l);
+    g.add(l);
+  }
+
+  // Green hills on the horizon.
   for (const [x, r, h] of [
     [-60, 22, 10],
     [-20, 16, 7],
@@ -637,13 +897,22 @@ function square(g: THREE.Group, animations: Animate[], rand: () => number): void
   // Bunting between the lamps.
   const lamps = PLACE_PROPS.square.filter((p) => p.kind === 'lamp').map((l) => new THREE.Vector3(l.x, GROUND_Y + 3.2, l.z));
   const flags: Ink[] = ['red', 'mustard', 'teal', 'pink', 'white'];
-  for (let i = 1; i < lamps.length; i++) {
-    for (let k = 1; k < 14; k++) {
-      const t = k / 14;
+  // Each line hangs from a lamp to the next, and from the lamps to the shophouses' roofs.
+  const tops = [new THREE.Vector3(-14, GROUND_Y + 6.2, -24), ...lamps, new THREE.Vector3(14, GROUND_Y + 6.2, -24)];
+  const lines: [THREE.Vector3, THREE.Vector3][] = [];
+  for (let i = 1; i < tops.length; i++) lines.push([tops[i - 1], tops[i]]);
+  lines.push([lamps[0], new THREE.Vector3(-4, GROUND_Y + 8, -24)], [lamps[lamps.length - 1], new THREE.Vector3(4, GROUND_Y + 8, -24)]);
+  for (const [a, b] of lines) {
+    const depth = 0.4 + a.distanceTo(b) * 0.05;
+    rope(g, sag(a, b, depth, 16));
+    const n = Math.max(6, Math.round(a.distanceTo(b) / 0.7));
+    for (let k = 1; k < n; k++) {
+      const t = k / n;
       const flag = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.3, 3), mat(flags[k % flags.length]));
-      flag.position.lerpVectors(lamps[i - 1], lamps[i], t);
-      flag.position.y -= Math.sin(t * Math.PI) * 0.7 + 0.15;
+      flag.position.lerpVectors(a, b, t);
+      flag.position.y -= Math.sin(t * Math.PI) * depth + 0.15;
       flag.rotation.x = Math.PI;
+      flag.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
       g.add(flag);
     }
   }

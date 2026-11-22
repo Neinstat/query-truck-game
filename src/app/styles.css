@@ -2464,3 +2464,126 @@ body {
     padding-left: 6vw;
   }
 }
+
+/* ── Buttons that look like buttons (owner's feedback, 22 Nov 2026) ──────────────────
+   Every clickable thing has a border, a fill and a press: no text-only "links" that leave
+   players guessing whether they can be clicked. */
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.8rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #25304f;
+  background: #fffaf0;
+  box-shadow: 2px 2px 0 #25304f;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+}
+
+.link-button:hover:not(:disabled) {
+  background: #fdf3d8;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #25304f;
+}
+
+.link-button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 #25304f;
+}
+
+.link-button:disabled {
+  border-color: #c9bfa9;
+  color: #a89f8c;
+  background: #f1e6d4;
+  box-shadow: none;
+  cursor: default;
+  text-decoration: none;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 7.5rem;
+  padding: 0.55rem 1rem;
+  border: 2px solid #25304f;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #25304f;
+  background: #fffaf0;
+  box-shadow: 3px 3px 0 #25304f;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+}
+
+.nav-button:hover:not(:disabled) {
+  background: #fdf3d8;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #25304f;
+}
+
+.nav-button:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 #25304f;
+}
+
+.nav-button-main {
+  background: #f2b234;
+}
+
+.nav-button-main:hover:not(:disabled) {
+  background: #f0c75e;
+}
+
+.nav-button:disabled {
+  border-color: #c9bfa9;
+  color: #a89f8c;
+  background: #f1e6d4;
+  box-shadow: none;
+  cursor: default;
+}
+
+.guide-count {
+  font-weight: 700;
+  color: #4a5878;
+}
+
+/* Small helper buttons in consoles (hints, lesson, clear) sit on their own line. */
+.hints .link-button,
+.guided-hints .link-button,
+.task .link-button {
+  margin-top: 4px;
+}
+
+/* Secondary and close buttons: a clear edge and a press, like the rest. */
+.secondary-button,
+.close-button {
+  border-width: 2px;
+  box-shadow: 2px 2px 0 currentColor;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.close-button {
+  border-color: #25304f;
+}
+
+.secondary-button:hover:not(:disabled),
+.close-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 currentColor;
+}
+
+.secondary-button:active:not(:disabled),
+.close-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
