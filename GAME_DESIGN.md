@@ -305,6 +305,7 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 | 5.2e ✅ | **A guided Manager case, a centred truck tour** (owner's feedback, 22 Nov 2026: the case was unclear — what to do, what *Load query* was for): one question at a time with a goal in plain words, the query already in the editor with one `___`, a run → read → answer checklist, three hints per question (the last shows the whole query), the Manager's reply, and the last result as proof (no pinning). The tour camera now looks straight at each object. A mouse capture still on its way when a console opens is let go, so the cursor is always there in a console | Checked in the browser |
 | 5.2f ✅ | **Data Lens shows the data** (owner's request, 22 Nov 2026): lens + E opens the object's tables already shown, with the query that shows them explained line by line | Checked in the browser |
 | 5.2g ✅ | **Developer mode and a size check** (owner's request, 22 Nov 2026): the F2 developer panel and `npm run size` | Checked in the browser |
+| 5.2h ✅ | **A readable wall clock** (owner's request, 22 Nov 2026): a dot for every hour (red at 12, 3, 6, 9), a rim and a cap; looking at the clock from anywhere in the truck shows "It's 13:49" under the crosshair (`lookClock` on the bridge) | Checked in the browser |
 | 5.3 | Owner playtest of several days + fixes | The owner plays three days and they feel different |
 
 **5.1 as built (20 Nov 2026):**

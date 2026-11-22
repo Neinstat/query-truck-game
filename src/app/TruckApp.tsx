@@ -93,6 +93,9 @@ export function TruckApp() {
   /** How hard it rains (0–1), for the clock card's icon. */
   const [rain, setRain] = useState(0);
   useEffect(() => bridge.on('weather', setRain), [bridge]);
+  /** Looking at the wall clock: a pop-up with the time. */
+  const [lookClock, setLookClock] = useState(false);
+  useEffect(() => bridge.on('lookClock', setLookClock), [bridge]);
   useSound(bridge, { knocking, consoleOpen, dayDone, lens, paused: menuOpen });
   const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
 
@@ -251,6 +254,11 @@ export function TruckApp() {
           <>
             <div className={aimed ? 'crosshair crosshair-on' : 'crosshair'} aria-hidden="true" />
             {aimed && <p className="aim-label">E · {t.truckThings[aimed]}</p>}
+            {lookClock && !aimed && (
+              <p className="clock-popup" role="status">
+                🕐 {t.clockNow(formatClock(day.clock))}
+              </p>
+            )}
           </>
         )}
         {front && order && anchor && !consoleOpen && !lens && !menuOpen && view.width > 0 && (

@@ -175,6 +175,22 @@ export function buildTruck(): THREE.Group {
     g.add(h);
     return h;
   };
+  // A dark rim, a dot for every hour (bigger at 12, 3, 6 and 9) and a cap over the hands.
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(CLOCK3D.r, 0.014, 4, 24), mat('ink'));
+  rim.position.set(CLOCK3D.x, CLOCK3D.y, CLOCK3D.z - 0.036);
+  g.add(rim);
+  for (let h = 0; h < 12; h++) {
+    const a = (h / 12) * Math.PI * 2;
+    const big = h % 3 === 0;
+    const dot = new THREE.Mesh(new THREE.CylinderGeometry(big ? 0.014 : 0.008, big ? 0.014 : 0.008, 0.006, 8), mat(big ? 'red' : 'ink'));
+    dot.rotation.x = Math.PI / 2;
+    dot.position.set(CLOCK3D.x - Math.sin(a) * CLOCK3D.r * 0.8, CLOCK3D.y + Math.cos(a) * CLOCK3D.r * 0.8, CLOCK3D.z - 0.038);
+    g.add(dot);
+  }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.01, 8), mat('ink'));
+  cap.rotation.x = Math.PI / 2;
+  cap.position.set(CLOCK3D.x, CLOCK3D.y, CLOCK3D.z - 0.052);
+  g.add(cap);
   const hourHand = hand(0.08, 'ink');
   const minuteHand = hand(0.12, 'red');
   // The clock faces −z: seen from the front, +rotation.z turns clockwise.

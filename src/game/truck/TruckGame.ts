@@ -26,6 +26,8 @@ import { LookPass } from './lookPass';
 import { skyAt } from './sky';
 import {
   aimedInteractable,
+  CLOCK3D,
+  rayBox,
   EYE_Y,
   FACING_TRUCK,
   GROUND_Y,
@@ -40,6 +42,16 @@ import {
   walkStep,
   type InteractableId,
 } from './world';
+
+/** Around the wall clock's face, for "is the player looking at it?". */
+const CLOCK_BOX = {
+  min: { x: CLOCK3D.x - CLOCK3D.r, y: CLOCK3D.y - CLOCK3D.r, z: CLOCK3D.z - 0.06 },
+  max: { x: CLOCK3D.x + CLOCK3D.r, y: CLOCK3D.y + CLOCK3D.r, z: CLOCK3D.z + 0.02 },
+};
+const lookingAt = (eye: { x: number; y: number; z: number }, dir: { x: number; y: number; z: number }, box: typeof CLOCK_BOX, reach: number) => {
+  const t = rayBox(eye, dir, box);
+  return t !== null && t <= reach;
+};
 
 /** The grey-blue a rainy sky turns towards. */
 const RAIN_SKY = new THREE.Color(0.5, 0.55, 0.62);
@@ -103,6 +115,7 @@ export class TruckGame {
   private noclip = false;
   private statsOn = false;
   private panelOpen = false;
+  private lookingAtClock = false;
   private statsClock = 0;
   private frames = 0;
   private lastSkyMinute = -1;
@@ -654,6 +667,12 @@ export class TruckGame {
     if (aimed !== this.aimed) {
       this.aimed = aimed;
       this.bridge.emit('hover', aimed);
+    }
+    // Looking at the wall clock (from anywhere in the truck): the app shows the time.
+    const atClock = !this.paused && !this.tourView && lookingAt(eye, lookDirection(this.yaw, this.pitch), CLOCK_BOX, 5);
+    if (atClock !== this.lookingAtClock) {
+      this.lookingAtClock = atClock;
+      this.bridge.emit('lookClock', atClock);
     }
 
     this.updateCustomers(dt);

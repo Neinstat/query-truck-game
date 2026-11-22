@@ -31,6 +31,7 @@
  *   game → app   'step'    the player took a step inside the truck (for a footstep sound)
  *   game → app   'weather' how hard it rains now (0–1; sent when it changes noticeably)
  *   game → app   'thunder' lightning flashed over the city (heavy rain only)
+ *   game → app   'lookClock' the player is (true) or is no longer (false) looking at the wall clock
  *   app → game   'dev'     a developer command (the developer panel, DevPanel.tsx)
  *   game → app   'devStats' what the game is doing, twice a second while the panel asks for it
  */
@@ -102,6 +103,7 @@ type TruckEvents = {
   step: true;
   weather: number;
   thunder: true;
+  lookClock: boolean;
   dev: DevCommand;
   devStats: DevStats;
 };
