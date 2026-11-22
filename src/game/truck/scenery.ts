@@ -523,23 +523,17 @@ function stringLights(g: THREE.Group, points: THREE.Vector3[]): void {
 
 function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): void {
   ground(g, 'grassDark');
-  // The yard: warm concrete near the truck, dark asphalt in the overpass's shadow, and paint
-  // on the ground — a big teal circle, red and mustard stripes, white lines.
+  // The yard: grey concrete near the truck, dark asphalt in the overpass's shadow (no paint
+  // on the ground: the owner found the stripes and the ring confusing).
   patch(g, 'concrete', -30, -26, 30, 6, 0.004);
   patch(g, 'inkSoft', -30, -23, 30, -13.5, 0.008);
-  for (const z of [-5.5, -9.5]) patch(g, 'white', 8, z - 0.05, 14, z + 0.05, 0.012);
-  const circle = new THREE.Mesh(new THREE.RingGeometry(2.2, 3.0, 24), mat('teal'));
-  circle.rotation.x = -Math.PI / 2;
-  circle.position.set(6.5, GROUND_Y + 0.011, -10);
-  g.add(circle);
-  for (let i = 0; i < 6; i++) patch(g, i % 2 ? 'mustard' : 'red', -6 + i * 1.1, -22.5, -5.6 + i * 1.1, -14, 0.012);
-  // Lighter and darker grey tiles near the truck, and painted stripes on them.
+  // Lighter and darker grey tiles near the truck.
   for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 5; j++) {
       if ((i + j) % 2 === 0) patch(g, 'inkSoft', -14 + i * 3, -12 + j * 3, -11 + i * 3, -9 + j * 3, 0.006);
     }
   }
-  for (let i = 0; i < 4; i++) patch(g, (['pink', 'teal', 'mustard', 'lilac'] as const)[i], 8 + i * 1.4, -9, 8.8 + i * 1.4, -1.5, 0.013);
+
   // Painted ends on the ramps' decks and coping colours come from the props; here, the
   // street details: traffic cones, a crate stage, a vending machine, a boombox, planters,
   // a graffiti-covered shipping container, benches and pennants along the fence.
