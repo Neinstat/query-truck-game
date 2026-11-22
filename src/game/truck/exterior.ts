@@ -87,7 +87,12 @@ export function buildExterior(): THREE.Group {
     block(g, 'teal', [w.max.x + 0.05, 0.55, z1, HX + T, 0.72, z2]);
     if (z1 > 0) block(g, 'teal', [w.min.x - 0.05, 0.55, z1, w.max.x + 0.05, 0.72, z2]);
   }
-  block(g, 'white', [-HX - T, GROUND_Y + 0.3, front - P, HX + T + P, 0, back + P]);
+  // Only round the outside: a solid slab here would fight with the floor inside (z-fighting).
+  const skirtTop = 0.02;
+  const proud = 0.006; // just in front of the paint, so the two never share a face
+  block(g, 'white', [-HX - T, GROUND_Y + 0.3, front - P - proud, HX + T + P + proud, skirtTop, front]);
+  block(g, 'white', [-HX - T, GROUND_Y + 0.3, back, HX + T + P + proud, skirtTop, back + P + proud]);
+  block(g, 'white', [HX + T, GROUND_Y + 0.3, front, HX + T + P + proud, skirtTop, back]);
   // The serving window's frame and a fold-down shelf outside it.
   block(g, 'white', [w.min.x - 0.12, w.min.y - 0.1, front - P - 0.25, w.max.x + 0.12, w.min.y - 0.04, front - P]);
   for (const x of [w.min.x - 0.12, w.max.x + 0.08]) block(g, 'white', [x, w.min.y, front - P - 0.03, x + 0.04, w.max.y + 0.12, front - P]);
