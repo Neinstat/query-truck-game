@@ -15,7 +15,7 @@ import {
 } from '../../sql-core/truck/day';
 import type { CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
-import type { LensCard, TruckBridge } from './bridge';
+import type { DevCommand, LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
@@ -96,6 +96,15 @@ export class TruckGame {
   private flashLight = 0;
   private nextThunder = 20;
   private lastStep = 0;
+  // Developer mode (DevPanel): clock speed, forced rain, walking anywhere, and stats.
+  private devSpeed = 1;
+  private devRain: number | null = null;
+  private devSpawn = false;
+  private noclip = false;
+  private statsOn = false;
+  private panelOpen = false;
+  private statsClock = 0;
+  private frames = 0;
   private lastSkyMinute = -1;
   private readonly observer: ResizeObserver;
   private readonly offs: (() => void)[] = [];
@@ -179,6 +188,8 @@ export class TruckGame {
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
     this.renderer.domElement.className = 'truck-canvas';
+    // Count every pass of a frame together (the developer panel shows draw calls).
+    this.renderer.info.autoReset = false;
     parent.appendChild(this.renderer.domElement);
 
     this.scene.background = inkColour('peach');
@@ -225,6 +236,7 @@ export class TruckGame {
       bridge.on('snapshotRequest', () => this.bridge.emit('snapshots', this.snapshots())),
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
       bridge.on('lock', () => this.lockMouse()),
+      bridge.on('dev', (c) => this.devCommand(c)),
       bridge.on('managerDone', () => {
         this.managerDone = true;
         this.knocking = false;
@@ -263,7 +275,7 @@ export class TruckGame {
       ArrowRight: 'right',
     };
     const onKey = (down: boolean) => (e: KeyboardEvent) => {
-      if (this.paused) return;
+      if (this.paused || this.panelOpen) return;
       // Any key but Esc counts as the player's action: capture the mouse again if it is free.
       if (down && e.code !== 'Escape' && !this.lockUnavailable && document.pointerLockElement !== canvas) this.lockMouse();
       const key = keyMap[e.code];
@@ -282,7 +294,7 @@ export class TruckGame {
     window.addEventListener('keyup', keyup);
 
     const onMove = (e: MouseEvent) => {
-      if (this.paused) return;
+      if (this.paused || this.panelOpen) return;
       // Captured mouse, dragging, or — only where the mouse can't be captured at all — simply
       // moving the mouse over the view.
       const free = (this.lockUnavailable && e.target === canvas) || this.freeLook;
@@ -292,7 +304,7 @@ export class TruckGame {
       }
     };
     const onDown = (e: MouseEvent) => {
-      if (this.paused) return;
+      if (this.paused || this.panelOpen) return;
       if (document.pointerLockElement === canvas) {
         this.use();
         return;
@@ -363,7 +375,7 @@ export class TruckGame {
 
   /** The mouse could not be captured: look around with it anyway (cursor hidden) until it can. */
   private lockRefused(): void {
-    if (!this.paused && !this.destroyed) this.setFreeLook(true);
+    if (!this.paused && !this.panelOpen && !this.destroyed) this.setFreeLook(true);
     this.bridge.emit('lockFailed', true);
   }
 
@@ -386,6 +398,80 @@ export class TruckGame {
 
   private use(): void {
     if (!this.paused && this.aimed) this.bridge.emit('use', this.aimed);
+  }
+
+  // ── Developer mode ───────────────────────────────────────────────────────────────
+
+  private devCommand(c: DevCommand): void {
+    switch (c.cmd) {
+      case 'clock': {
+        // Only forward: the day log keeps the latest time.
+        this.clock = Math.min(CLOSING, Math.max(this.clock, c.minutes));
+        this.lastSkyMinute = -1;
+        this.lastClockMinute = Math.floor(this.clock);
+        this.setWallClock(this.clock);
+        this.bridge.emit('clock', Math.floor(this.clock));
+        break;
+      }
+      case 'speed':
+        this.devSpeed = Math.max(0, c.factor);
+        break;
+      case 'rain':
+        this.devRain = c.amount;
+        break;
+      case 'spawn':
+        this.devSpawn = true;
+        break;
+      case 'knock':
+        if (!this.managerDone && !this.knocking) {
+          this.knocking = true;
+          this.bridge.emit('knock', true);
+        }
+        break;
+      case 'noclip':
+        this.noclip = c.on;
+        if (!c.on) this.at = walkStep(this.at, this.yaw, { forward: false, back: false, left: false, right: false }, 0);
+        break;
+      case 'stats':
+        this.statsOn = c.on;
+        break;
+      case 'panel':
+        this.panelOpen = c.open;
+        this.keys = { forward: false, back: false, left: false, right: false };
+        if (c.open) {
+          this.setFreeLook(false);
+          if (document.pointerLockElement) document.exitPointerLock();
+        } else this.lockMouse();
+        break;
+    }
+  }
+
+  /** Twice a second, while the developer panel is open: what the game is doing. */
+  private devStats(seconds: number): void {
+    if (!this.statsOn) return;
+    this.frames++;
+    this.statsClock += seconds;
+    if (this.statsClock < 0.5) return;
+    const info = this.renderer.info;
+    this.bridge.emit('devStats', {
+      fps: Math.round(this.frames / this.statsClock),
+      drawCalls: info.render.calls,
+      triangles: info.render.triangles,
+      geometries: info.memory.geometries,
+      textures: info.memory.textures,
+      clock: this.clock,
+      speed: this.devSpeed,
+      rain: this.rainAmount,
+      rainForced: this.devRain !== null,
+      queue: this.queue.line.length,
+      ordersLeft: this.orders.length - this.nextOrder,
+      knocking: this.knocking,
+      managerDone: this.managerDone,
+      noclip: this.noclip,
+      position: { x: Math.round(this.at.x * 10) / 10, z: Math.round(this.at.z * 10) / 10 },
+    });
+    this.frames = 0;
+    this.statsClock = 0;
   }
 
   /** The sky, the sun and the lamps for the clock's time (changes once a game minute). */
@@ -418,7 +504,7 @@ export class TruckGame {
    */
   private updateWeather(seconds: number): void {
     this.time += seconds;
-    const target = rainAt(this.showers, this.clock);
+    const target = this.devRain ?? rainAt(this.showers, this.clock);
     // Follow the plan smoothly (a reload mid-shower fades the rain in).
     this.rainAmount += (target - this.rainAmount) * Math.min(1, seconds * 0.8);
     if (Math.abs(this.rainAmount - this.lastWeather) > 0.02 || (target === 0 && this.rainAmount < 0.005 && this.lastWeather !== 0)) {
@@ -538,7 +624,8 @@ export class TruckGame {
   /** One frame (also used by tests in the browser to move time forward). */
   step(seconds: number): void {
     const dt = this.paused ? 0 : seconds;
-    this.at = walkStep(this.at, this.yaw, this.keys, dt);
+    this.at = walkStep(this.at, this.yaw, this.keys, dt, this.noclip);
+    this.devStats(seconds);
     // A gentle head bob while walking.
     const moving = Object.values(this.keys).some(Boolean) && dt > 0;
     this.walkClock += dt;
@@ -580,6 +667,7 @@ export class TruckGame {
     this.manager.visible = this.knocking && this.doorAmount > 0.02;
     this.updateWeather(seconds);
     this.applySky();
+    this.renderer.info.reset();
     this.look.render(this.renderer, this.scene, this.camera);
     this.emitAnchor();
     this.emitLensCards();
@@ -592,7 +680,7 @@ export class TruckGame {
   private updateClock(seconds: number): number {
     if (seconds <= 0 || this.clock >= CLOSING) return 0;
     const quiet = this.queue.line.length === 0;
-    const minutes = Math.min(CLOSING - this.clock, seconds * GAME_MINUTES_PER_SECOND * (quiet ? QUIET_SPEEDUP : 1));
+    const minutes = Math.min(CLOSING - this.clock, seconds * GAME_MINUTES_PER_SECOND * (quiet ? QUIET_SPEEDUP : 1) * this.devSpeed);
     this.clock += minutes;
     const whole = Math.floor(this.clock);
     if (whole !== this.lastClockMinute) {
@@ -607,7 +695,9 @@ export class TruckGame {
     const gameMinutes = this.updateClock(seconds);
     // Customers arrive at their time of day, until closing.
     const next = this.orders[this.nextOrder];
-    if (next && this.clock < CLOSING && this.clock >= arrivalTime(this.allOrders.indexOf(next)) && this.queue.canJoin() && seconds > 0) {
+    const due = this.devSpawn || this.clock >= arrivalTime(this.allOrders.indexOf(next));
+    if (next && this.clock < CLOSING && due && this.queue.canJoin() && seconds > 0) {
+      this.devSpawn = false;
       const order = this.orders[this.nextOrder++];
       const customer = this.queue.join(order.id);
       if (customer) {

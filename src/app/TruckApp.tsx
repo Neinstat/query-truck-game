@@ -10,6 +10,7 @@ import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
 import { useSound } from './useSound';
+import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
 import { sound } from '../audio/sound';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
@@ -65,8 +66,11 @@ export function TruckApp() {
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
   const [dataReady, setDataReady] = useState(false);
+  /** The developer panel (F2): the game keeps running, with the mouse free for the panel. */
+  const [devOpen, setDevOpen] = useState(false);
+  const canDev = useMemo(() => devAllowed(), []);
   const menuOpen = screen !== 'playing' || guideOpen || tourStep !== null || !ready || !dataReady;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays } =
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen);
   useEffect(() => setDataReady(db !== null), [db]);
   // The orders served before this page load: the game skips those customers.
@@ -138,11 +142,11 @@ export function TruckApp() {
   // console, the Data Lens or the guide took the mouse.
   const wasLocked = useRef(false);
   useEffect(() => {
-    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone) {
+    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone && !devOpen) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
@@ -152,7 +156,18 @@ export function TruckApp() {
         play();
         return;
       }
+      if (canDev && (e.key === 'F2' || e.code === 'Backquote') && screen === 'playing') {
+        e.preventDefault();
+        setDevOpen(!devOpen);
+        bridge.emit('dev', { cmd: 'panel', open: !devOpen });
+        return;
+      }
       if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (devOpen) {
+        setDevOpen(false);
+        bridge.emit('dev', { cmd: 'panel', open: false });
+        return;
+      }
       if (tourStep !== null) endTour();
       else if (guideOpen) {
         setGuideOpen(false);
@@ -258,6 +273,22 @@ export function TruckApp() {
           </div>
         )}
         {overlays}
+        {devOpen && (
+          <DevPanel
+            bridge={bridge}
+            day={day}
+            past={past}
+            place={place}
+            hasOrder={Boolean(order)}
+            onServe={devServe}
+            onRestart={() => restartDay(day)}
+            onNextDay={() => startNextDay(past, day)}
+            onClose={() => {
+              setDevOpen(false);
+              bridge.emit('dev', { cmd: 'panel', open: false });
+            }}
+          />
+        )}
         {screen === 'title' && tourStep === null && (
           <TitleScreen
             dayNumber={past.length + 1}

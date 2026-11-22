@@ -31,6 +31,8 @@
  *   game → app   'step'    the player took a step inside the truck (for a footstep sound)
  *   game → app   'weather' how hard it rains now (0–1; sent when it changes noticeably)
  *   game → app   'thunder' lightning flashed over the city (heavy rain only)
+ *   app → game   'dev'     a developer command (the developer panel, DevPanel.tsx)
+ *   game → app   'devStats' what the game is doing, twice a second while the panel asks for it
  */
 import type { InteractableId } from './world';
 
@@ -41,6 +43,37 @@ export type FrontCustomer = { orderId: string };
  * there), where it is (0–1 from the top left), and its distance.
  */
 export type LensCard = { id: string; tables: string[]; object: InteractableId; x: number; y: number; distance: number };
+
+/** Developer commands (the developer panel). */
+export type DevCommand =
+  | { cmd: 'clock'; minutes: number }
+  | { cmd: 'speed'; factor: number }
+  | { cmd: 'rain'; amount: number | null }
+  | { cmd: 'spawn' }
+  | { cmd: 'knock' }
+  | { cmd: 'noclip'; on: boolean }
+  | { cmd: 'stats'; on: boolean }
+  /** The panel is open: the game keeps running, but the mouse is free for the panel. */
+  | { cmd: 'panel'; open: boolean };
+
+/** What the developer panel shows about the running game. */
+export type DevStats = {
+  fps: number;
+  drawCalls: number;
+  triangles: number;
+  geometries: number;
+  textures: number;
+  clock: number;
+  speed: number;
+  rain: number;
+  rainForced: boolean;
+  queue: number;
+  ordersLeft: number;
+  knocking: boolean;
+  managerDone: boolean;
+  noclip: boolean;
+  position: { x: number; z: number };
+};
 
 type TruckEvents = {
   front: FrontCustomer | null;
@@ -69,6 +102,8 @@ type TruckEvents = {
   step: true;
   weather: number;
   thunder: true;
+  dev: DevCommand;
+  devStats: DevStats;
 };
 
 type Listener<T> = (payload: T) => void;

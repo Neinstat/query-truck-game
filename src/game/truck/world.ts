@@ -113,18 +113,22 @@ export function walkStep(
   yaw: number,
   keys: { forward: boolean; back: boolean; left: boolean; right: boolean },
   seconds: number,
+  /** Developer mode: walk anywhere (through the walls), twice as fast. */
+  free = false,
 ): { x: number; z: number } {
   const f = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
   const s = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   const length = Math.hypot(f, s);
   if (length === 0) return at;
-  const step = (WALK_SPEED * seconds) / length;
+  const step = (WALK_SPEED * (free ? 2 : 1) * seconds) / length;
   const fx = -Math.sin(yaw);
   const fz = -Math.cos(yaw);
   // Right is the forward direction turned a quarter to the right.
   const rx = Math.cos(yaw);
   const rz = -Math.sin(yaw);
-  return clampWalk(at.x + (fx * f + rx * s) * step, at.z + (fz * f + rz * s) * step);
+  const x = at.x + (fx * f + rx * s) * step;
+  const z = at.z + (fz * f + rz * s) * step;
+  return free ? { x, z } : clampWalk(x, z);
 }
 
 /** Distance along a ray to a box (slab method), or null when it misses. */

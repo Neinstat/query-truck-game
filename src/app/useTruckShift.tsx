@@ -268,6 +268,16 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     bridge.emit('serve', true);
   }, [bridge, solved, order, day, db, patience, hintsUsed, updateDay]);
 
+  /** Developer mode: hand over the current order at once, as if it were answered with ⭐⭐⭐. */
+  const devServe = useCallback(() => {
+    if (!order) return;
+    const served = { orderId: order.id, at: Math.floor(day.clock), tip: TIPS.happy, stars: 3 };
+    setOrderOpen(false);
+    updateDay((log) => serveOrder(log, served));
+    db?.write(saleSql(order, day.date, served.at)).catch((err) => setToast(String(err)));
+    bridge.emit('serve', true);
+  }, [bridge, order, day, db, updateDay]);
+
   const closeExplore = useCallback(() => setExploring(null), []);
 
   /** A table clicked in the Data Lens: look around it with the object that holds it. */
@@ -402,6 +412,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     mood: front && patience?.orderId === front.orderId ? moodFor(patience.left) : null,
     patienceLeft: front && patience?.orderId === front.orderId ? patience.left : null,
     consoleOpen: open,
+    /** Developer mode: serve the current order without SQL. */
+    devServe,
     openTable,
     overlays: (
       <>
