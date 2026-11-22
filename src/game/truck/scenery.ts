@@ -11,7 +11,7 @@ import type { PlaceId } from '../../sql-core/truck/places';
 import { block, buildCustomer, mat } from './build';
 import { inkColour } from './colour';
 import type { Sky } from './sky';
-import { GROUND_Y, LAYOUT, PLACE_PROPS, QUEUE_PATH_3D, TRUCK, type Prop } from './world';
+import { GROUND_Y, LAYOUT, PLACE_PROPS, TRUCK, type Prop } from './world';
 
 type Animate = (time: number, rain: number) => void;
 
@@ -305,6 +305,60 @@ function planter(g: THREE.Group): void {
   }
 }
 
+/** A chalkboard face for the A-frame sign: OPEN at the top, then a few things from the menu. */
+function chalkboard(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 384;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#25304f';
+  ctx.fillRect(0, 0, 256, 384);
+  ctx.fillStyle = '#e4573d';
+  ctx.fillRect(20, 20, 216, 70);
+  ctx.fillStyle = '#fffaf0';
+  ctx.font = 'bold 54px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('OPEN', 128, 57);
+  ctx.font = 'bold 30px system-ui, sans-serif';
+  ctx.fillStyle = '#f2b234';
+  ctx.fillText('— MENU —', 128, 122);
+  ctx.font = '24px system-ui, sans-serif';
+  ctx.fillStyle = '#fffaf0';
+  ctx.textAlign = 'left';
+  ['Espresso', 'Latte', 'Green Tea', 'Croissant', 'Apple Pie'].forEach((item, i) => {
+    ctx.fillText(item, 26, 168 + i * 38);
+    ctx.textAlign = 'right';
+    ctx.fillText('$', 230, 168 + i * 38);
+    ctx.textAlign = 'left';
+  });
+  ctx.font = 'italic 20px system-ui, sans-serif';
+  ctx.fillStyle = '#9ad6c8';
+  ctx.textAlign = 'center';
+  ctx.fillText('ask at the window →', 128, 360);
+  return new THREE.CanvasTexture(canvas);
+}
+
+let chalk: THREE.MeshBasicMaterial | null = null;
+
+/** A folding A-frame sign: two wooden-framed chalkboards leaning together. */
+function aFrame(g: THREE.Group): void {
+  chalk ??= new THREE.MeshBasicMaterial({ map: chalkboard() });
+  const lean = 0.22;
+  for (const side of [-1, 1]) {
+    const leaf = new THREE.Group();
+    leaf.position.set(0, 0, side * 0.18);
+    leaf.rotation.x = side * -lean;
+    block(leaf, 'wood', [-0.32, 0, -0.025, 0.32, 1.05, 0.025]);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 0.86), chalk);
+    face.position.set(0, 0.54, side * 0.03);
+    face.rotation.y = side > 0 ? 0 : Math.PI;
+    leaf.add(face);
+    g.add(leaf);
+  }
+  block(g, 'woodDark', [-0.3, 0.98, -0.05, 0.3, 1.03, 0.05]);
+}
+
 /** Builds one prop at its place; some props come back with an animation. */
 function buildProp(parent: THREE.Group, p: Prop, rand: () => number): Animate | null {
   const g = new THREE.Group();
@@ -369,6 +423,9 @@ function buildProp(parent: THREE.Group, p: Prop, rand: () => number): Animate | 
     case 'planter':
       planter(g);
       break;
+    case 'aFrame':
+      aFrame(g);
+      break;
   }
   return null;
 }
@@ -386,19 +443,6 @@ function ground(g: THREE.Group, ink: Ink, z = -40, size = 160): THREE.Mesh {
 /** A flat patch on the ground (painted lines, a court, a shadow). */
 function patch(g: THREE.Group, ink: Ink, x1: number, z1: number, x2: number, z2: number, lift = 0.006): void {
   block(g, ink, [x1, GROUND_Y + lift - 0.003, z1, x2, GROUND_Y + lift, z2]);
-}
-
-/** The path customers walk along. */
-function queuePath(g: THREE.Group, ink: Ink): void {
-  for (let i = 1; i < QUEUE_PATH_3D.length - 1; i++) {
-    const a = QUEUE_PATH_3D[i - 1];
-    const b = QUEUE_PATH_3D[i];
-    const length = Math.hypot(b.x - a.x, b.z - a.z) + 1.2;
-    const piece = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, length), mat(ink));
-    piece.position.set((a.x + b.x) / 2, GROUND_Y + 0.012, (a.z + b.z) / 2);
-    piece.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
-    g.add(piece);
-  }
 }
 
 /** A far-away city skyline. */
@@ -434,7 +478,6 @@ function buildings(g: THREE.Group, z: number, from: number, to: number, rand: ()
 function park(g: THREE.Group, animations: Animate[]): void {
   void animations;
   ground(g, 'grass');
-  queuePath(g, 'paperShade');
   // Mowing stripes.
   for (let z = -6; z > -40; z -= 4) {
     const stripe = new THREE.Mesh(new THREE.PlaneGeometry(140, 2), mat('grassDark'));
@@ -484,7 +527,6 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
   // on the ground — a big teal circle, red and mustard stripes, white lines.
   patch(g, 'concrete', -30, -26, 30, 6, 0.004);
   patch(g, 'inkSoft', -30, -23, 30, -13.5, 0.008);
-  queuePath(g, 'paperShade');
   for (const z of [-5.5, -9.5]) patch(g, 'white', 8, z - 0.05, 14, z + 0.05, 0.012);
   const circle = new THREE.Mesh(new THREE.RingGeometry(2.2, 3.0, 24), mat('teal'));
   circle.rotation.x = -Math.PI / 2;
@@ -507,10 +549,10 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
     block(g, 'red', [x - 0.25, GROUND_Y, z - 0.25, x + 0.25, GROUND_Y + 0.04, z + 0.25]);
   };
   for (const [x, z] of [
-    [9.5, -6.8],
-    [11, -7.6],
-    [12.4, -6.6],
-    [-11, -4.2],
+    [9.5, -9.8],
+    [11, -10.6],
+    [12.4, -9.6],
+    [-11, -10.5],
   ] as const) {
     cone(x, z);
   }
@@ -641,7 +683,6 @@ function school(g: THREE.Group, animations: Animate[], rand: () => number): void
   ground(g, 'grass');
   // The yard: asphalt with a basketball court painted on it.
   patch(g, 'inkSoft', -14, -20, 16, 2, 0.004);
-  queuePath(g, 'paperShade');
   patch(g, 'teal', 0, -16, 8, -6.5, 0.008);
   for (const [x1, z1, x2, z2] of [
     [0, -16, 8, -15.9],
@@ -658,8 +699,11 @@ function school(g: THREE.Group, animations: Animate[], rand: () => number): void
     ball.position.y = GROUND_Y + 0.13 + Math.abs(Math.sin(time * 3.2)) * 1.1;
   });
   // The fence and the school: two floors of classrooms, a red roof, a clock and a door.
-  for (let x = -14; x <= 16; x += 2) block(g, 'tealDark', [x - 0.04, GROUND_Y, -20.1, x + 0.04, GROUND_Y + 1.8, -20]);
-  block(g, 'tealDark', [-14, GROUND_Y + 1.75, -20.1, 16, GROUND_Y + 1.82, -20]);
+  // The fence, with an open gate in front of the school's door (customers come through it).
+  for (let x = -14; x <= 16; x += 2) if (x < -2 || x > 1) block(g, 'tealDark', [x - 0.04, GROUND_Y, -20.1, x + 0.04, GROUND_Y + 1.8, -20]);
+  for (const x of [-2.2, 1.2]) block(g, 'mustard', [x - 0.08, GROUND_Y, -20.14, x + 0.08, GROUND_Y + 2.1, -19.96]);
+  block(g, 'tealDark', [-14, GROUND_Y + 1.75, -20.1, -2.3, GROUND_Y + 1.82, -20]);
+  block(g, 'tealDark', [1.3, GROUND_Y + 1.75, -20.1, 16, GROUND_Y + 1.82, -20]);
   block(g, 'peach', [-26, GROUND_Y, -32, 26, GROUND_Y + 8, -24]);
   block(g, 'red', [-26.5, GROUND_Y + 8, -32.5, 26.5, GROUND_Y + 8.6, -23.5]);
   block(g, 'white', [-26.02, GROUND_Y + 3.9, -24.02, 26.02, GROUND_Y + 4.1, -23.95]);
@@ -686,6 +730,7 @@ function school(g: THREE.Group, animations: Animate[], rand: () => number): void
   }
   // Bushes along the fence, and flowers in a bed by the door.
   for (let x = -13; x <= 15; x += 2.5 + rand() * 2) {
+    if (x > -3.5 && x < 2.5) continue; // keep the gate clear
     const b = new THREE.Group();
     b.position.set(x, GROUND_Y, -20.6);
     bush(b, 0.6 + rand() * 0.5);
@@ -699,7 +744,6 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
   const SEA = GROUND_Y - 0.6;
   ground(g, 'teal', -40, 260).position.y = SEA;
   block(g, 'wood', [-30, SEA, -14.2, 30, GROUND_Y, 8]);
-  queuePath(g, 'woodDark');
   for (let x = -30; x < 30; x += 0.9) block(g, 'woodDark', [x, GROUND_Y, -14.2, x + 0.04, GROUND_Y + 0.004, 8]);
   block(g, 'woodDark', [-30, GROUND_Y - 1.2, -14.5, 30, GROUND_Y + 0.12, -14.2]);
   for (let x = -29; x < 30; x += 3) shape(g, new THREE.CylinderGeometry(0.2, 0.2, 2.5, 6), 'woodDark', x, GROUND_Y - 1.2, -14.5);
@@ -895,7 +939,6 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
 function square(g: THREE.Group, animations: Animate[], rand: () => number): void {
   void animations;
   ground(g, 'paperShade');
-  queuePath(g, 'concrete');
   // Paving lines.
   // Paving lines, stopping short of the buildings round the square.
   for (let x = -30; x <= 30; x += 3) patch(g, 'concrete', x + 0.013, -23.9, x + 0.073, 6, 0.008);

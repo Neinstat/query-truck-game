@@ -164,7 +164,7 @@ describe('the places around the truck', () => {
     const pieces = PLACE_PROPS[place.id].map((p) => ({ name: `${place.id}: ${p.kind} ${p.x},${p.z}`, ...p, r: propRadius(p) }));
 
     it(`keeps everything off the path customers walk (${place.id})`, () => {
-      for (const p of pieces) expect(distanceToQueuePath(p.x, p.z), p.name).toBeGreaterThanOrEqual(p.r + PATH_CLEARANCE);
+      for (const p of pieces) expect(distanceToQueuePath(p.x, p.z, place.id), p.name).toBeGreaterThanOrEqual(p.r + PATH_CLEARANCE);
     });
 
     it(`keeps the pieces apart from each other (${place.id})`, () => {
@@ -174,6 +174,24 @@ describe('the places around the truck', () => {
           expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.name} / ${b.name}`).toBeGreaterThanOrEqual(a.r + b.r);
         }
       }
+    });
+  }
+
+  for (const place of PLACES) {
+    it(`never walks people through the truck or its cab (${place.id})`, () => {
+      // The truck with its cab and bumpers, from above, and a little room round it.
+      const inside = (x: number, z: number) => x > -5.2 && x < 3.5 && z > -1.45 && z < 1.45;
+      for (let u = 0; u <= QUEUE.exitX; u += 5) {
+        const p = queuePosition(u, place.id);
+        expect(inside(p.x, p.z), `${place.id} at ${u}: ${p.x.toFixed(2)}, ${p.z.toFixed(2)}`).toBe(false);
+      }
+    });
+
+    it(`queues straight out from the window (${place.id})`, () => {
+      const spots = [0, 1, 2].map((s) => queuePosition(spotX(s), place.id));
+      for (const s of spots) expect(s.z).toBeLessThan(-TRUCK.depth / 2);
+      expect(spots[1].z).toBeLessThan(spots[0].z);
+      expect(spots[2].z).toBeLessThan(spots[1].z);
     });
   }
 

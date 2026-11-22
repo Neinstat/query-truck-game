@@ -119,7 +119,11 @@ export class TruckGame {
   private lookingAtClock = false;
   /** The title screen: the camera circles the truck outside. */
   private showcase = false;
+  /** Where the truck parks today (its customers' route comes with it). */
+  private place: PlaceId = 'park';
   private steam: THREE.Object3D[] = [];
+  private setOpenSign: (open: boolean) => void = () => {};
+  private signOpen = true;
   private statsClock = 0;
   private frames = 0;
   private lastSkyMinute = -1;
@@ -229,11 +233,13 @@ export class TruckGame {
     this.manager.position.set(TRUCK.length / 2 + 0.42, 0, 0.05);
     this.manager.rotation.y = Math.PI / 2;
     this.manager.visible = false;
-    const place = buildPlace(start.place ?? 'park');
+    this.place = start.place ?? 'park';
+    const place = buildPlace(this.place);
     this.setSky = place.userData.setSky as typeof this.setSky;
     this.updatePlace = place.userData.update as typeof this.updatePlace;
     const exterior = buildExterior();
     this.steam = (exterior.userData.steam as THREE.Object3D[]) ?? [];
+    this.setOpenSign = (exterior.userData.setOpen as (open: boolean) => void) ?? (() => {});
     this.scene.add(truck, exterior, place, this.manager, this.rain.group);
     this.applySky();
 
@@ -716,6 +722,12 @@ export class TruckGame {
     this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget ? 1 : -1) * seconds * 2.2));
     this.setDoor(this.doorAmount, this.knocking && this.doorAmount === 0 ? this.walkClock : undefined);
     this.manager.visible = this.knocking && this.doorAmount > 0.02;
+    // The OPEN sign turns to CLOSED at closing time.
+    const open = this.clock < CLOSING;
+    if (open !== this.signOpen) {
+      this.signOpen = open;
+      this.setOpenSign(open);
+    }
     this.updateWeather(seconds);
     this.applySky();
     this.renderer.info.reset();
@@ -773,7 +785,7 @@ export class TruckGame {
       this.customers.delete(gone);
     }
     for (const [customer, model] of this.customers) {
-      const p = queuePosition(customer.x);
+      const p = queuePosition(customer.x, this.place);
       const walking = customer.state !== 'waiting';
       model.root.position.set(p.x, GROUND_Y, p.z);
       // Turn smoothly towards where they walk, or towards the truck while waiting.
@@ -832,7 +844,7 @@ export class TruckGame {
     const front = this.queue.front();
     let anchor: { x: number; y: number } | null = null;
     if (front) {
-      const p = queuePosition(front.x);
+      const p = queuePosition(front.x, this.place);
       const head = new THREE.Vector3(p.x, GROUND_Y + 1.95, p.z).project(this.camera);
       if (head.z < 1 && Math.abs(head.x) < 1.1 && Math.abs(head.y) < 1.1) {
         anchor = { x: (head.x + 1) / 2, y: (1 - head.y) / 2 };
@@ -862,7 +874,7 @@ export class TruckGame {
       }
       const front = this.queue.front();
       if (front) {
-        const p = queuePosition(front.x);
+        const p = queuePosition(front.x, this.place);
         // Customers live in the till's data: the tablet opens their table.
         place('customer', ['customers'], 'tablet', new THREE.Vector3(p.x - 0.55, GROUND_Y + 1.6, p.z));
       }

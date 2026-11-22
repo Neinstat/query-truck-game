@@ -9,14 +9,15 @@ export const QUEUE = {
   /** Progress units along the park path (truckWorld.ts maps them to the screen). */
   enterX: 0,
   /** Past the window: the served customer walks off to the side. */
-  exitX: 420,
-  /** Spot 0 (at the window) and the gap between spots. */
-  frontX: 300,
+  exitX: 900,
+  /** Spot 0 (at the window) and the gap between spots. The long way in (0 → the last spot)
+   * covers the walk from wherever the place's route starts. */
+  frontX: 600,
   gap: 100,
   /** At most this many people wait at once (the window, then two on the path). */
   maxWaiting: 3,
   /** Walking speed in progress units per second. */
-  speed: 70,
+  speed: 55,
 } as const;
 
 export type QueueCustomer = {

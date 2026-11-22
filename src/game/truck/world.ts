@@ -188,18 +188,52 @@ export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: V
 
 // ── The queue in the park ───────────────────────────────────────────────────────────
 
-/** Waypoints on the park ground, in queue progress units (queue.ts). */
-export const QUEUE_PATH_3D: readonly { at: number; x: number; z: number }[] = [
-  { at: QUEUE.enterX, x: -8, z: -11 },
-  { at: QUEUE.frontX - 2 * QUEUE.gap, x: -2.4, z: -4.6 },
-  { at: QUEUE.frontX - QUEUE.gap, x: -1.0, z: -2.9 },
-  { at: QUEUE.frontX, x: 0.5, z: -HZ - 0.55 },
-  { at: QUEUE.exitX, x: 6, z: -4 },
-];
+/**
+ * The line at the window, the same everywhere: straight out from the serving window, as people
+ * queue at a real food truck. Spot 0 is at the window.
+ */
+const LINE = [
+  { x: 0.3, z: -HZ - 0.6 },
+  { x: 0.5, z: -HZ - 1.65 },
+  { x: 0.7, z: -HZ - 2.7 },
+] as const;
+
+/**
+ * Each place's route (queue progress units, queue.ts): where people come from, the line, and
+ * where they walk off to — different at every place, so they don't always come the same way.
+ * No path is painted on the ground.
+ */
+const route = (from: { x: number; z: number }[], to: { x: number; z: number }[]) => {
+  const inSteps = from.length;
+  const outSteps = to.length;
+  return [
+    ...from.map((p, i) => ({ at: QUEUE.enterX + (i / inSteps) * (QUEUE.frontX - 2 * QUEUE.gap - QUEUE.enterX), ...p })),
+    { at: QUEUE.frontX - 2 * QUEUE.gap, ...LINE[2] },
+    { at: QUEUE.frontX - QUEUE.gap, ...LINE[1] },
+    { at: QUEUE.frontX, ...LINE[0] },
+    ...to.map((p, i) => ({ at: QUEUE.frontX + ((i + 1) / outSteps) * (QUEUE.exitX - QUEUE.frontX), ...p })),
+  ];
+};
+
+export const PLACE_ROUTES: Record<PlaceId, readonly { at: number; x: number; z: number }[]> = {
+  // Across the lawn from the left, off to the right.
+  park: route([{ x: -11, z: -8 }], [{ x: 4, z: -2.6 }, { x: 9, z: -3.5 }]),
+  // From the right, past the fun box; off to the left under the overpass.
+  skatepark: route([{ x: 13, z: -6.5 }], [{ x: -3, z: -2.7 }, { x: -9, z: -4.5 }]),
+  // Out of the school gate straight ahead; off to the right.
+  school: route([{ x: -0.8, z: -23.5 }, { x: 0.6, z: -9 }], [{ x: 4, z: -2.6 }, { x: 8, z: -3.2 }]),
+  // Along the pier from the left; off along it to the right.
+  harbour: route([{ x: -13, z: -7 }], [{ x: 4.5, z: -2.6 }, { x: 11, z: -3 }]),
+  // Across the square from the right; off to the left.
+  square: route([{ x: 13, z: -5.2 }], [{ x: -3, z: -2.4 }, { x: -9, z: -2.6 }]),
+};
+
+/** The park's route (the first place), kept for tests and older code. */
+export const QUEUE_PATH_3D = PLACE_ROUTES.park;
 
 /** Where a customer stands, and which way they face (yaw; 0 = looking towards −z). */
-export function queuePosition(progress: number): { x: number; z: number; yaw: number } {
-  const path = QUEUE_PATH_3D;
+export function queuePosition(progress: number, place: PlaceId = 'park'): { x: number; z: number; yaw: number } {
+  const path = PLACE_ROUTES[place];
   const p = Math.min(path[path.length - 1].at, Math.max(path[0].at, progress));
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1];
@@ -240,7 +274,9 @@ export type PropKind =
   | 'barrel'
   | 'stall'
   | 'fountain'
-  | 'planter';
+  | 'planter'
+  /** The truck's own folding chalkboard sign with the menu and OPEN on it. */
+  | 'aFrame';
 
 /** A thing near the truck: where it stands, which way it faces (yaw), and how big it is. */
 export type Prop = { kind: PropKind; x: number; z: number; yaw?: number; size?: number };
@@ -266,6 +302,7 @@ export const PROP_RADIUS: Record<PropKind, number> = {
   stall: 1.7,
   fountain: 2.4,
   planter: 0.7,
+  aFrame: 0.5,
 };
 
 /**
@@ -285,9 +322,10 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: -3.6, z: -3.6 },
     { kind: 'lamp', x: 2.4, z: -4.4 },
     { kind: 'lamp', x: 6.5, z: -7 },
-    { kind: 'tree', x: -7, z: -6, size: 1.2 },
-    { kind: 'tree', x: 9, z: -4.5, size: 1.1 },
+    { kind: 'tree', x: -8.5, z: -1.5, size: 1.2 },
+    { kind: 'tree', x: 9.5, z: -7.5, size: 1.1 },
     { kind: 'tree', x: -2, z: -16, size: 1.3 },
+    { kind: 'aFrame', x: -2.3, z: -2.5, yaw: 0.5 },
   ],
   skatepark: [
     { kind: 'quarterPipe', x: 1.5, z: -12, yaw: 0 },
@@ -298,10 +336,11 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'pillar', x: 11, z: -13 },
     { kind: 'pillar', x: -4, z: -21 },
     { kind: 'pillar', x: 5, z: -21 },
-    { kind: 'bench', x: -5.4, z: -3.0, yaw: 0.4 },
-    { kind: 'bin', x: -3.6, z: -2.4 },
-    { kind: 'lamp', x: 2.6, z: -4.4 },
+    { kind: 'bench', x: -6, z: -7.5, yaw: 0.4 },
+    { kind: 'bin', x: -2.2, z: -6.5 },
+    { kind: 'lamp', x: -1.5, z: -9 },
     { kind: 'lamp', x: -9.5, z: -7.5 },
+    { kind: 'aFrame', x: 2.8, z: -2.3, yaw: -0.5 },
   ],
   school: [
     // A hoop faces −z before turning: the far one turns round to face the court.
@@ -315,6 +354,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'tree', x: -9, z: -14, size: 1.3 },
     { kind: 'tree', x: 11, z: -15, size: 1.2 },
     { kind: 'bin', x: 2.6, z: -4.4 },
+    { kind: 'aFrame', x: -2.3, z: -2.5, yaw: 0.5 },
   ],
   harbour: [
     { kind: 'bollard', x: -6, z: -14 },
@@ -322,25 +362,27 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'bollard', x: 4, z: -14 },
     { kind: 'bollard', x: 9, z: -14 },
     { kind: 'crates', x: 5, z: -8.5, yaw: 0.3 },
-    { kind: 'crates', x: -5.8, z: -3.6, yaw: -0.4 },
+    { kind: 'crates', x: -6.5, z: -1.8, yaw: -0.4 },
     { kind: 'barrel', x: 6.8, z: -9.8 },
     { kind: 'barrel', x: 3.3, z: -10.4 },
     { kind: 'bench', x: 0.5, z: -9.5, yaw: 0 },
     { kind: 'lamp', x: 2.4, z: -4.4 },
     { kind: 'lamp', x: -3.6, z: -11 },
     { kind: 'lamp', x: 8, z: -6.5 },
+    { kind: 'aFrame', x: -2.3, z: -2.4, yaw: 0.5 },
   ],
   square: [
     { kind: 'fountain', x: 4.5, z: -11 },
     { kind: 'stall', x: -6, z: -15, yaw: 0.2 },
     { kind: 'stall', x: 9.5, z: -7.5, yaw: -0.9 },
     { kind: 'stall', x: -0.5, z: -17, yaw: 0 },
-    { kind: 'planter', x: -5.4, z: -3.2 },
-    { kind: 'planter', x: 2.6, z: -5.4 },
+    { kind: 'planter', x: -6.5, z: -6 },
+    { kind: 'planter', x: 3, z: -7.2 },
     { kind: 'bench', x: 8.5, z: -14, yaw: -0.4 },
-    { kind: 'lamp', x: -3.6, z: -3.6 },
+    { kind: 'lamp', x: -3.8, z: -4.4 },
     { kind: 'lamp', x: 6.5, z: -6.5 },
     { kind: 'tree', x: -10, z: -8, size: 1.1 },
+    { kind: 'aFrame', x: 2.8, z: -2.2, yaw: -0.5 },
   ],
 };
 
@@ -353,11 +395,12 @@ export function propRadius(p: Prop): number {
 export const PATH_CLEARANCE = 0.9;
 
 /** Shortest distance from a point to the path customers walk (in to the window, and off again). */
-export function distanceToQueuePath(x: number, z: number): number {
+export function distanceToQueuePath(x: number, z: number, place: PlaceId = 'park'): number {
+  const path = PLACE_ROUTES[place];
   let best = Infinity;
-  for (let i = 1; i < QUEUE_PATH_3D.length; i++) {
-    const a = QUEUE_PATH_3D[i - 1];
-    const b = QUEUE_PATH_3D[i];
+  for (let i = 1; i < path.length; i++) {
+    const a = path[i - 1];
+    const b = path[i];
     const dx = b.x - a.x;
     const dz = b.z - a.z;
     const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));

@@ -143,6 +143,30 @@ export function buildExterior(): THREE.Group {
     wheel(g, HX - 0.9, z);
   }
 
+  // An OPEN / CLOSED sign hanging beside the window; the game turns it at closing time.
+  const openSign = (text: string, colour: string) =>
+    textTexture(256, 112, (ctx, cw, ch) => {
+      ctx.fillStyle = colour;
+      ctx.beginPath();
+      ctx.roundRect(4, 4, cw - 8, ch - 8, 20);
+      ctx.fill();
+      ctx.fillStyle = '#fffaf0';
+      ctx.font = 'bold 60px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, cw / 2, ch / 2 + 2);
+    });
+  const open = openSign('OPEN', '#2b9c8e');
+  const closed = openSign('CLOSED', '#e4573d');
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.22), new THREE.MeshBasicMaterial({ map: open, transparent: true }));
+  sign.position.set(w.max.x + 0.45, w.max.y - 0.25, front - P - 0.012);
+  sign.rotation.y = Math.PI;
+  g.add(sign);
+  for (const dx of [-0.18, 0.18]) block(g, 'ink', [w.max.x + 0.45 + dx - 0.005, w.max.y - 0.14, front - P - 0.015, w.max.x + 0.45 + dx + 0.005, w.max.y + 0.05, front - P - 0.01]);
+  g.userData.setOpen = (isOpen: boolean) => {
+    (sign.material as THREE.MeshBasicMaterial).map = isOpen ? open : closed;
+  };
+
   // The name board over the serving window, facing the customers.
   const name = textTexture(1024, 200, (ctx, cw, ch) => {
     ctx.fillStyle = '#25304f';
