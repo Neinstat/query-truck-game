@@ -2450,3 +2450,17 @@ body {
     opacity: 0;
   }
 }
+
+/* The title screen shows the truck from outside: a light blur, the card on the left. */
+.title-screen {
+  background: linear-gradient(90deg, rgba(37, 48, 79, 0.55), rgba(37, 48, 79, 0.05) 60%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (min-width: 900px) {
+  .title-screen {
+    justify-content: flex-start;
+    padding-left: 6vw;
+  }
+}

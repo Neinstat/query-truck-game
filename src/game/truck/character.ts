@@ -51,48 +51,70 @@ const pair = (a: THREE.Object3D[]) => a as unknown as [THREE.Object3D, THREE.Obj
 const HEAD_Y = 1.6;
 const HEAD_R = 0.21;
 
+/**
+ * A point on the front of the head (which faces −z): how far forward the head's surface is at
+ * (x, y), so eyes, glasses and cheeks sit on the face instead of floating in front of it.
+ */
+function faceZ(x: number, y: number, lift = 0): number {
+  const dy = (y - HEAD_Y) / 1.07;
+  return -Math.sqrt(Math.max(0, HEAD_R * HEAD_R - x * x - dy * dy)) * 0.98 - lift;
+}
+
+/** Turn something that faces −z so it lies flat on the face at x (follows the head's curve). */
+const alongFace = (mesh: THREE.Object3D, x: number, y: number) => {
+  mesh.rotation.order = 'YXZ';
+  mesh.rotation.y = Math.atan2(-x, -faceZ(x, y));
+  return mesh;
+};
+
 function head(root: THREE.Group, look: Pick<Look, 'skin' | 'hair' | 'hairStyle' | 'hat' | 'eyes' | 'extras'>): void {
   part(root, new THREE.CylinderGeometry(0.06, 0.07, 0.1, 6), look.skin, 0, 1.4, 0);
-  part(root, new THREE.SphereGeometry(HEAD_R, 9, 7), look.skin, 0, HEAD_Y, 0).scale.set(1, 1.07, 0.98);
-  const front = -HEAD_R * 0.92;
+  part(root, new THREE.SphereGeometry(HEAD_R, 10, 8), look.skin, 0, HEAD_Y, 0).scale.set(1, 1.07, 0.98);
   const eyeY = HEAD_Y + 0.02;
+  const eyeX = 0.072;
   const has = (e: Look['extras'][number]) => look.extras.includes(e);
+  const brow = look.hair === 'white' ? 'paperShade' : look.hair;
 
-  // Eyes.
-  if (look.eyes === 'sunglasses') {
-    for (const side of [-1, 1]) {
-      const lens = part(root, new THREE.CylinderGeometry(0.068, 0.068, 0.02, 8), 'ink', side * 0.075, eyeY, front - 0.02);
-      lens.rotation.x = Math.PI / 2;
-      lens.rotation.y = side * 0.25;
-      lens.scale.set(1.15, 1, 0.8);
-      block(root, 'ink', [side * 0.13, eyeY + 0.02, front + 0.02, side * 0.2, eyeY + 0.035, front + 0.1]);
-    }
-    block(root, 'ink', [-0.02, eyeY + 0.015, front - 0.035, 0.02, eyeY + 0.03, front - 0.02]);
-  } else {
-    for (const side of [-1, 1]) {
-      if (look.eyes === 'sleepy') {
-        block(root, 'ink', [side * 0.075 - 0.03, eyeY - 0.006, front - 0.012, side * 0.075 + 0.03, eyeY + 0.006, front]);
-      } else {
-        const size = look.eyes === 'wide' ? 0.03 : 0.022;
-        const eye = part(root, new THREE.SphereGeometry(size, 5, 4), 'ink', side * 0.075, eyeY, front - 0.005);
-        eye.scale.set(1, 1.4, 0.6);
-        if (look.eyes === 'wide') part(root, new THREE.SphereGeometry(0.009, 4, 3), 'white', side * 0.075 + 0.008, eyeY + 0.014, front - 0.02);
-      }
+  for (const side of [-1, 1]) {
+    const x = side * eyeX;
+    if (look.eyes === 'sunglasses') {
+      const lens = part(root, new THREE.CylinderGeometry(0.06, 0.06, 0.016, 8), 'ink', x, eyeY, faceZ(x, eyeY, 0.012));
+      alongFace(lens, x, eyeY).rotation.x = Math.PI / 2;
+      lens.scale.set(1.15, 1, 0.85);
+    } else if (look.eyes === 'sleepy') {
+      const lid = part(root, new THREE.BoxGeometry(0.05, 0.01, 0.01), 'ink', x, eyeY, faceZ(x, eyeY, 0.002));
+      alongFace(lid, x, eyeY);
+    } else {
+      const size = look.eyes === 'wide' ? 0.027 : 0.02;
+      const eye = part(root, new THREE.SphereGeometry(size, 6, 5), 'ink', x, eyeY, faceZ(x, eyeY, -0.004));
+      eye.scale.set(1, 1.35, 0.5);
+      if (look.eyes === 'wide') part(root, new THREE.SphereGeometry(0.008, 4, 3), 'white', x + 0.008, eyeY + 0.012, faceZ(x + 0.008, eyeY + 0.012, 0.006));
       if (look.eyes === 'glasses') {
-        const frame = part(root, new THREE.TorusGeometry(0.05, 0.008, 3, 8), 'ink', side * 0.075, eyeY, front - 0.025);
-        frame.rotation.y = side * 0.2;
+        const frame = part(root, new THREE.TorusGeometry(0.045, 0.007, 4, 10), 'ink', x, eyeY, faceZ(x, eyeY, 0.012));
+        alongFace(frame, x, eyeY);
       }
-      if (has('brows')) {
-        const brow = block(root, look.hair === 'white' ? 'paperShade' : look.hair, [-0.035, -0.008, -0.008, 0.035, 0.008, 0.008]);
-        brow.position.set(side * 0.075, eyeY + 0.06, front - 0.005);
-        brow.rotation.z = side * -0.15;
-      }
-      if (has('blush')) block(root, 'pink', [side * 0.11 - 0.025, eyeY - 0.06, front + 0.01, side * 0.11 + 0.025, eyeY - 0.04, front + 0.02]);
     }
-    if (look.eyes === 'glasses') block(root, 'ink', [-0.025, eyeY - 0.004, front - 0.03, 0.025, eyeY + 0.004, front - 0.02]);
+    if (has('brows') && look.eyes !== 'sunglasses') {
+      const by = eyeY + 0.055;
+      const b = part(root, new THREE.BoxGeometry(0.055, 0.012, 0.012), brow, x, by, faceZ(x, by, 0.001));
+      alongFace(b, x, by).rotation.z = side * -0.12;
+    }
+    if (has('blush')) {
+      const cx = side * 0.11;
+      const cy = eyeY - 0.055;
+      const cheek = part(root, new THREE.CircleGeometry(0.022, 8), 'pink', cx, cy, faceZ(cx, cy, 0.002));
+      alongFace(cheek, cx, cy).rotation.y += Math.PI;
+    }
   }
-  if (has('moustache')) block(root, look.hair, [-0.06, HEAD_Y - 0.07, front + 0.005, 0.06, HEAD_Y - 0.04, front + 0.03]);
-  if (has('beard')) part(root, new THREE.IcosahedronGeometry(0.13, 0), look.hair, 0, HEAD_Y - 0.12, -0.08).scale.set(1.2, 0.8, 0.9);
+  // The bridge between the lenses.
+  if (look.eyes === 'sunglasses' || look.eyes === 'glasses') {
+    part(root, new THREE.BoxGeometry(0.04, 0.008, 0.008), 'ink', 0, eyeY + 0.01, faceZ(0, eyeY, 0.012));
+  }
+  if (has('moustache')) {
+    const my = HEAD_Y - 0.065;
+    part(root, new THREE.BoxGeometry(0.1, 0.022, 0.02), look.hair, 0, my, faceZ(0, my, 0.004));
+  }
+  if (has('beard')) part(root, new THREE.IcosahedronGeometry(0.13, 0), look.hair, 0, HEAD_Y - 0.12, -0.07).scale.set(1.15, 0.75, 0.85);
 
   // Hair and hats.
   const dome = (ink: Ink, scale = 1.06, lift = 0.025) => {
@@ -100,7 +122,7 @@ function head(root: THREE.Group, look: Pick<Look, 'skin' | 'hair' | 'hairStyle' 
     d.scale.set(scale, scale * 1.05, scale);
     return d;
   };
-  const fringe = () => part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0.04, HEAD_Y + 0.14, -0.13).scale.set(1.7, 0.6, 0.9);
+  const fringe = () => part(root, new THREE.IcosahedronGeometry(0.09, 0), look.hair, 0, HEAD_Y + 0.155, -0.12).scale.set(1.75, 0.5, 0.8);
   switch (look.hairStyle) {
     case 'cap': {
       dome(look.hat, 1.1);
@@ -205,8 +227,8 @@ function body(root: THREE.Group, look: Look) {
     part(root, new THREE.CylinderGeometry(0.215 * w, 0.215 * w, 0.07, 7), look.inner, 0, 0.86, 0).scale.set(1, 1, 0.72);
     block(root, look.inner, [-0.22 * w, 1.16, -0.16, 0.22 * w, 1.21, -0.14]);
   } else {
-    // A tee: a print on the front.
-    part(root, new THREE.CircleGeometry(0.07, 6), look.inner, 0, 1.15, -0.15).rotation.y = Math.PI;
+    // A tee: a neckband in the second colour.
+    part(root, new THREE.CylinderGeometry(0.1, 0.12, 0.04, 8), look.inner, 0, 1.37, 0).scale.set(1, 1, 0.8);
   }
   part(root, new THREE.CylinderGeometry(0.2 * w, 0.21 * w, 0.06, 7), look.legs, 0, 0.86, 0).scale.set(1, 1, 0.7);
 
@@ -496,7 +518,18 @@ function plastic(colour: string): THREE.MeshPhongMaterial {
   return m;
 }
 
-type Costume = { torso: string; legs: string; arms: string; hands?: string; head?: string; mask?: string; hat?: 'helmet' | 'knight' | 'chef' | 'pirate' | 'antenna'; cape?: string; emblem?: string };
+type Costume = {
+  torso: string;
+  legs: string;
+  arms: string;
+  hands?: string;
+  head?: string;
+  mask?: string;
+  hat?: 'helmet' | 'knight' | 'chef' | 'pirate' | 'antenna' | 'cap' | 'hair';
+  hairColour?: string;
+  cape?: string;
+  emblem?: string;
+};
 
 const COSTUMES: Costume[] = [
   { torso: '#f2f2f2', legs: '#f2f2f2', arms: '#f2f2f2', hands: '#dddddd', hat: 'helmet', emblem: '#e4573d' },
@@ -506,142 +539,183 @@ const COSTUMES: Costume[] = [
   // A masked hero of our own: teal and mustard, with a cape and a { } badge.
   { torso: '#2b9c8e', legs: '#1c6b63', arms: '#2b9c8e', hands: '#f2b234', mask: '#f2b234', cape: '#e4573d', emblem: '#f2b234' },
   { torso: '#b9c2cf', legs: '#7b8594', arms: '#b9c2cf', head: '#b9c2cf', hat: 'antenna', emblem: '#2b9c8e' },
-  { torso: '#e4573d', legs: '#25304f', arms: '#e4573d' },
-  { torso: '#4f8a49', legs: '#c27b4b', arms: '#4f8a49' },
+  { torso: '#e4573d', legs: '#25304f', arms: '#e4573d', hat: 'hair', hairColour: '#3b2416' },
+  { torso: '#4f8a49', legs: '#c27b4b', arms: '#4f8a49', hat: 'cap' },
+  { torso: '#2f6fd1', legs: '#25304f', arms: '#2f6fd1', hat: 'hair', hairColour: '#f2b234' },
 ];
 
-function toyFace(mask?: string): THREE.CanvasTexture {
+/** The printed face: two eyes and a smile (or eyes through a mask), drawn on a curved decal. */
+function toyFace(mask?: string, grin = false): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
+  canvas.width = 128;
   canvas.height = 128;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#ffd23f';
-  ctx.fillRect(0, 0, 256, 128);
   if (mask) {
     ctx.fillStyle = mask;
-    ctx.fillRect(0, 30, 256, 34);
-  }
-  // The face on the front quarter of the head (the texture wraps round the cylinder).
-  ctx.fillStyle = '#1b1f33';
-  for (const x of [110, 146]) {
     ctx.beginPath();
-    ctx.ellipse(x, 50, 5, 7, 0, 0, Math.PI * 2);
-    ctx.fillStyle = mask ? '#ffffff' : '#1b1f33';
+    ctx.roundRect(6, 30, 116, 34, 16);
+    ctx.fill();
+  }
+  ctx.fillStyle = mask ? '#ffffff' : '#1b1f33';
+  for (const x of [44, 84]) {
+    ctx.beginPath();
+    ctx.ellipse(x, 47, mask ? 9 : 6, mask ? 6 : 9, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.strokeStyle = '#1b1f33';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.arc(128, 70, 16, 0.15 * Math.PI, 0.85 * Math.PI);
+  if (grin) {
+    ctx.arc(64, 72, 20, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.closePath();
+    ctx.fillStyle = '#1b1f33';
+    ctx.fill();
+  } else ctx.arc(64, 70, 18, 0.18 * Math.PI, 0.82 * Math.PI);
   ctx.stroke();
-  return new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
 }
 
+/** A box whose top is narrower than its bottom (the toy's torso). */
+function taperedBox(w: number, h: number, d: number, topScale: number): THREE.BufferGeometry {
+  const g = new THREE.BoxGeometry(w, h, d);
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0) pos.setX(i, pos.getX(i) * topScale);
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * A brick toy figure, scaled up to a person's height: a rounded cylinder head with a stud and
+ * a printed face, a neck, a torso narrower at the shoulders, arms that hang out a little and bend
+ * forward at the elbow, C-shaped hands on round wrists, a hip block, and two square legs with
+ * feet. Shiny plastic, in costumes of our own.
+ */
 function buildBrick(seed: number): CustomerModel {
   const random = seededRandom(seed);
   const c = COSTUMES[Math.floor(random() * COSTUMES.length)];
+  const skin = c.head ?? '#ffd23f';
   const root = new THREE.Group();
-  const S = 1.7; // scaled up from a toy to a person's height
-  const box = (parent: THREE.Object3D, colour: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), plastic(colour));
+  const add = (parent: THREE.Object3D, geometry: THREE.BufferGeometry, colour: string, x: number, y: number, z: number) => {
+    const m = new THREE.Mesh(geometry, plastic(colour));
     m.position.set(x, y, z);
     parent.add(m);
     return m;
   };
-  // Legs: two blocks hanging from the hip, with feet.
+
+  // Legs (each swings from the hip) with feet that stick out at the front.
   const legs = pair(
-    [-0.11, 0.11].map((x) => {
+    [-0.105, 0.105].map((x) => {
       const hip = new THREE.Group();
       hip.position.set(x, 0.62, 0);
       root.add(hip);
-      box(hip, c.legs, 0.2, 0.56, 0.24, 0, -0.3, 0);
-      box(hip, c.legs, 0.2, 0.06, 0.3, 0, -0.59, -0.03);
+      add(hip, new THREE.BoxGeometry(0.2, 0.52, 0.22), c.legs, 0, -0.3, 0.01);
+      add(hip, new THREE.BoxGeometry(0.2, 0.1, 0.3), c.legs, 0, -0.57, -0.03);
       return hip;
     }),
   );
-  box(root, c.legs, 0.46, 0.1, 0.24, 0, 0.66, 0);
-  // Torso: a tapered block (narrow at the top).
-  const torsoGeometry = new THREE.CylinderGeometry(0.17, 0.25, 0.6, 4, 1).rotateY(Math.PI / 4);
-  torsoGeometry.scale(1, 1, 0.62);
-  const torso = new THREE.Mesh(torsoGeometry, plastic(c.torso));
-  torso.position.y = 1.01;
-  root.add(torso);
+  // The hip block.
+  add(root, new THREE.BoxGeometry(0.44, 0.1, 0.22), c.legs, 0, 0.66, 0.01);
+
+  // Torso: narrower at the shoulders.
+  const torsoH = 0.5;
+  add(root, taperedBox(0.46, torsoH, 0.22, 0.72), c.torso, 0, 0.71 + torsoH / 2, 0.01);
   if (c.emblem) {
-    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.07, 12), plastic(c.emblem));
-    badge.position.set(0, 1.07, -0.135);
+    const badge = add(root, new THREE.CircleGeometry(0.065, 16), c.emblem, 0, 1.0, -0.101);
     badge.rotation.y = Math.PI;
-    root.add(badge);
   }
   if (c.cape) {
-    const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.9), plastic(c.cape));
+    const cape = add(root, new THREE.PlaneGeometry(0.42, 0.85), c.cape, 0, 0.82, 0.135);
+    (cape.material as THREE.Material) = plastic(c.cape).clone();
     (cape.material as THREE.Material).side = THREE.DoubleSide;
-    cape.position.set(0, 0.85, 0.17);
-    cape.rotation.x = 0.12;
-    root.add(cape);
+    cape.rotation.x = 0.1;
   }
-  // Arms: angled tubes from the shoulders with C-shaped hands.
+
+  // Arms: from the top corners of the torso, out a little, bending forward at the elbow.
   const arms = pair(
     [-1, 1].map((side) => {
       const shoulder = new THREE.Group();
-      shoulder.position.set(side * 0.25, 1.24, 0);
+      shoulder.position.set(side * 0.215, 1.14, 0.01);
       root.add(shoulder);
-      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.42, 10).translate(0, -0.21, 0), plastic(c.arms));
-      arm.rotation.z = side * 0.2;
-      shoulder.add(arm);
-      const hand = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.03, 8, 12, Math.PI * 1.5), plastic(c.hands ?? '#ffd23f'));
-      hand.position.set(side * 0.09, -0.46, -0.04);
-      hand.rotation.set(Math.PI / 2, 0, Math.PI / 4);
-      shoulder.add(hand);
+      add(shoulder, new THREE.SphereGeometry(0.07, 12, 8), c.arms, 0, 0, 0);
+      add(shoulder, new THREE.CylinderGeometry(0.065, 0.06, 0.26, 12), c.arms, 0, -0.13, 0);
+      const elbow = new THREE.Group();
+      elbow.position.set(0, -0.25, 0);
+      elbow.rotation.x = -0.55;
+      shoulder.add(elbow);
+      add(elbow, new THREE.SphereGeometry(0.06, 10, 8), c.arms, 0, 0, 0);
+      add(elbow, new THREE.CylinderGeometry(0.06, 0.058, 0.2, 12), c.arms, 0, -0.1, 0);
+      add(elbow, new THREE.CylinderGeometry(0.03, 0.03, 0.05, 10), c.hands ?? skin, 0, -0.22, 0);
+      // The C-shaped hand: a thick ring with its opening forward.
+      const hand = add(elbow, new THREE.TorusGeometry(0.05, 0.026, 10, 16, Math.PI * 1.45), c.hands ?? skin, 0, -0.28, 0);
+      hand.rotation.set(0, Math.PI / 2, Math.PI * 0.27 + Math.PI / 2);
+      shoulder.rotation.z = side * 0.26;
       return shoulder;
     }),
   );
-  // Head: a short cylinder with a printed face and a stud on top.
-  box(root, '#ffd23f', 0.12, 0.06, 0.12, 0, 1.34, 0);
-  const faceTexture = toyFace(c.mask);
-  faceTexture.offset.x = 0.25;
-  const headMaterials = [
-    new THREE.MeshPhongMaterial({ map: faceTexture, shininess: 70, specular: 0x333333 }),
-    plastic(c.head ?? '#ffd23f'),
-    plastic(c.head ?? '#ffd23f'),
+  // Unbend the hanging arms a little at the shoulder, so they reach forward like the toy's.
+  arms.forEach((arm) => (arm.rotation.x = -0.15));
+
+  // Neck, head (a cylinder with rounded top and bottom edges) and the stud on top.
+  add(root, new THREE.CylinderGeometry(0.075, 0.075, 0.05, 14), skin, 0, 1.24, 0.01);
+  const profile = [
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(0.125, 0),
+    new THREE.Vector2(0.148, 0.025),
+    new THREE.Vector2(0.15, 0.06),
+    new THREE.Vector2(0.15, 0.2),
+    new THREE.Vector2(0.148, 0.235),
+    new THREE.Vector2(0.125, 0.26),
+    new THREE.Vector2(0, 0.26),
   ];
-  const headMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.27, 20), headMaterials);
-  headMesh.position.y = 1.51;
-  headMesh.rotation.y = Math.PI;
-  root.add(headMesh);
-  const stud = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.07, 14), plastic(c.head ?? '#ffd23f'));
-  stud.position.y = 1.68;
-  root.add(stud);
+  add(root, new THREE.LatheGeometry(profile, 24), skin, 0, 1.265, 0.01);
+  add(root, new THREE.CylinderGeometry(0.075, 0.075, 0.06, 16), skin, 0, 1.555, 0.01);
+  // The face, printed on a curved strip just in front of the head's surface.
+  const face = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.152, 0.152, 0.2, 16, 1, true, Math.PI - 0.95, 1.9),
+    new THREE.MeshBasicMaterial({ map: toyFace(c.mask, random() < 0.4), transparent: true }),
+  );
+  face.position.set(0, 1.395, 0.01);
+  root.add(face);
+
   // Headgear.
   if (c.hat === 'helmet') {
-    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), new THREE.MeshPhongMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, shininess: 120 }));
-    helmet.position.y = 1.53;
-    root.add(helmet);
-    box(root, '#f2f2f2', 0.34, 0.06, 0.34, 0, 1.33, 0);
+    const glass = new THREE.Mesh(
+      new THREE.SphereGeometry(0.23, 20, 14),
+      new THREE.MeshPhongMaterial({ color: 0xcfeeff, transparent: true, opacity: 0.22, shininess: 140, depthWrite: false }),
+    );
+    glass.position.set(0, 1.4, 0.01);
+    root.add(glass);
+    const ring = add(root, new THREE.TorusGeometry(0.2, 0.035, 10, 24), '#f2f2f2', 0, 1.24, 0.01);
+    ring.rotation.x = Math.PI / 2;
+    add(root, new THREE.BoxGeometry(0.3, 0.32, 0.12), '#f2f2f2', 0, 0.98, 0.17);
   } else if (c.hat === 'knight') {
-    const helm = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.3, 16, 1, true, Math.PI * 0.8, Math.PI * 1.4), plastic('#9aa3ad'));
+    const helm = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.3, 20, 1, true, Math.PI * 0.75, Math.PI * 1.5), plastic('#9aa3ad').clone());
     (helm.material as THREE.Material).side = THREE.DoubleSide;
-    helm.position.y = 1.53;
+    helm.position.set(0, 1.4, 0.01);
     root.add(helm);
-    box(root, '#9aa3ad', 0.36, 0.04, 0.36, 0, 1.68, 0);
-    box(root, '#e4573d', 0.03, 0.14, 0.2, 0, 1.76, 0.02);
+    const top = add(root, new THREE.SphereGeometry(0.17, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), '#9aa3ad', 0, 1.55, 0.01);
+    top.scale.y = 0.6;
+    add(root, new THREE.BoxGeometry(0.03, 0.16, 0.26), '#e4573d', 0, 1.7, 0.03);
   } else if (c.hat === 'chef') {
-    box(root, '#ffffff', 0.3, 0.06, 0.3, 0, 1.67, 0);
-    const puff = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 8), plastic('#ffffff'));
-    puff.position.y = 1.82;
-    puff.scale.y = 0.8;
-    root.add(puff);
+    add(root, new THREE.CylinderGeometry(0.16, 0.16, 0.08, 20), '#ffffff', 0, 1.56, 0.01);
+    const puff = add(root, new THREE.SphereGeometry(0.2, 16, 10), '#ffffff', 0, 1.7, 0.01);
+    puff.scale.y = 0.75;
   } else if (c.hat === 'pirate') {
-    const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 0.14, 3), plastic('#25304f'));
-    hat.position.y = 1.72;
+    const hat = add(root, new THREE.CylinderGeometry(0.1, 0.24, 0.13, 3), '#25304f', 0, 1.6, 0.01);
     hat.rotation.y = Math.PI / 2;
-    root.add(hat);
   } else if (c.hat === 'antenna') {
-    box(root, '#7b8594', 0.02, 0.2, 0.02, 0.08, 1.8, 0);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), plastic('#e4573d'));
-    tip.position.set(0.08, 1.91, 0);
-    root.add(tip);
+    add(root, new THREE.CylinderGeometry(0.012, 0.012, 0.18, 6), '#7b8594', 0.08, 1.66, 0.01);
+    add(root, new THREE.SphereGeometry(0.03, 10, 8), '#e4573d', 0.08, 1.76, 0.01);
+  } else if (c.hat === 'cap') {
+    const cap = add(root, new THREE.SphereGeometry(0.16, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), c.torso, 0, 1.5, 0.01);
+    cap.scale.y = 0.7;
+    add(root, new THREE.BoxGeometry(0.22, 0.02, 0.14), c.torso, 0, 1.52, -0.15);
+  } else if (c.hat === 'hair') {
+    const hair = add(root, new THREE.SphereGeometry(0.162, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.62), c.hairColour ?? '#6f3820', 0, 1.47, 0.02);
+    hair.scale.y = 0.85;
   }
-  root.scale.setScalar(S / 1.7 * 1.05);
   root.position.y = GROUND_Y;
   return { root, legs, arms };
 }

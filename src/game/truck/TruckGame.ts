@@ -19,6 +19,7 @@ import type { DevCommand, LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
+import { buildExterior } from './exterior';
 import { Rain } from './rain';
 import { hashString, planShowers, rainAt, type Shower } from './weather';
 import type { PlaceId } from '../../sql-core/truck/places';
@@ -116,6 +117,9 @@ export class TruckGame {
   private statsOn = false;
   private panelOpen = false;
   private lookingAtClock = false;
+  /** The title screen: the camera circles the truck outside. */
+  private showcase = false;
+  private steam: THREE.Object3D[] = [];
   private statsClock = 0;
   private frames = 0;
   private lastSkyMinute = -1;
@@ -228,7 +232,9 @@ export class TruckGame {
     const place = buildPlace(start.place ?? 'park');
     this.setSky = place.userData.setSky as typeof this.setSky;
     this.updatePlace = place.userData.update as typeof this.updatePlace;
-    this.scene.add(truck, place, this.manager, this.rain.group);
+    const exterior = buildExterior();
+    this.steam = (exterior.userData.steam as THREE.Object3D[]) ?? [];
+    this.scene.add(truck, exterior, place, this.manager, this.rain.group);
     this.applySky();
 
     this.observer = new ResizeObserver(() => this.resize());
@@ -250,6 +256,7 @@ export class TruckGame {
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
       bridge.on('lock', () => this.lockMouse()),
       bridge.on('dev', (c) => this.devCommand(c)),
+      bridge.on('showcase', (on) => (this.showcase = on)),
       bridge.on('managerDone', () => {
         this.managerDone = true;
         this.knocking = false;
@@ -654,7 +661,19 @@ export class TruckGame {
       this.camera.fov += (fovTarget - this.camera.fov) * (1 - Math.exp(-seconds * 4.5));
       this.camera.updateProjectionMatrix();
     }
-    if (this.tourView) {
+    // The steam over the roof's coffee cup drifts up and round.
+    this.steam.forEach((puff, i) => {
+      const t = (this.time * 0.35 + i / 3) % 1;
+      puff.position.y = TRUCK.height + 1.6 + t * 0.9;
+      puff.scale.setScalar(0.7 + t * 0.6);
+    });
+    if (this.showcase && !this.tourView) {
+      // A slow circle in front of the truck, a little above head height.
+      const a = -0.55 + Math.sin(this.time * 0.12) * 0.45;
+      this.camera.position.set(Math.sin(a) * 9.5 - 0.8, 2.3, -Math.cos(a) * 9.5);
+      // Aimed to the left of the truck, so it shows on the right of the title card.
+      this.camera.lookAt(2.8, 1.4, 0);
+    } else if (this.tourView) {
       this.camera.position.set(this.tourView.x, this.tourView.y, this.tourView.z);
       this.camera.rotation.set(this.tourView.pitch, this.tourView.yaw, 0, 'YXZ');
     } else {

@@ -96,6 +96,8 @@ export function TruckApp() {
   /** Looking at the wall clock: a pop-up with the time. */
   const [lookClock, setLookClock] = useState(false);
   useEffect(() => bridge.on('lookClock', setLookClock), [bridge]);
+  // The title screen shows the truck from outside.
+  useEffect(() => bridge.emit('showcase', screen === 'title'), [bridge, screen, ready]);
   useSound(bridge, { knocking, consoleOpen, dayDone, lens, paused: menuOpen });
   const summaries = useTableSummaries(lens ? db : null, ALL_TABLES, day.served.length);
 
