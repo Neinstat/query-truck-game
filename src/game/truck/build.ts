@@ -37,7 +37,8 @@ export function buildTruck(): THREE.Group {
 
   // Floor and ceiling.
   block(g, 'wood', [-HX, -0.1, -HZ, HX, 0, HZ]);
-  for (let x = -HX + 0.4; x < HX; x += 0.4) block(g, 'woodDark', [x, 0, -HZ, x + 0.02, 0.003, HZ]);
+  // Floor boards' gaps, off the counters' edges (shared planes flicker).
+  for (let x = -HX + 0.413; x < HX - 0.1; x += 0.4) block(g, 'woodDark', [x, 0, -HZ, x + 0.02, 0.003, HZ]);
   block(g, 'inkSoft', [-HX, H, -HZ, HX, H + 0.1, HZ]);
   for (let x = -2; x <= 2; x += 2) block(g, 'mustard', [x - 0.3, H - 0.04, -0.1, x + 0.3, H, 0.1]);
 
@@ -46,10 +47,11 @@ export function buildTruck(): THREE.Group {
   block(g, 'paper', [w.max.x, 0, -HZ - T, HX, H, -HZ]);
   block(g, 'paper', [w.min.x, w.max.y, -HZ - T, w.max.x, H, -HZ]);
   block(g, 'teal', [w.min.x, 0, -HZ - T, w.max.x, w.min.y, -HZ]);
-  // Window frame and rolled-up shutter.
-  block(g, 'ink', [w.min.x - 0.05, w.max.y, -HZ - 0.02, w.max.x + 0.05, w.max.y + 0.12, -HZ + 0.02]);
-  block(g, 'ink', [w.min.x - 0.05, w.min.y, -HZ - 0.02, w.min.x, w.max.y, -HZ + 0.02]);
-  block(g, 'ink', [w.max.x, w.min.y, -HZ - 0.02, w.max.x + 0.05, w.max.y, -HZ + 0.02]);
+  // Window frame and rolled-up shutter. Each piece sticks 1 cm out into the opening, so its
+  // inner face never lies in the same plane as the wall's cut edge (that flickered: z-fighting).
+  block(g, 'ink', [w.min.x - 0.05, w.max.y - 0.01, -HZ - 0.02, w.max.x + 0.05, w.max.y + 0.12, -HZ + 0.02]);
+  block(g, 'ink', [w.min.x - 0.05, w.min.y, -HZ - 0.02, w.min.x + 0.01, w.max.y, -HZ + 0.02]);
+  block(g, 'ink', [w.max.x - 0.01, w.min.y, -HZ - 0.02, w.max.x + 0.05, w.max.y, -HZ + 0.02]);
 
   // Back and end walls: paper above, a teal band below. The right end wall has the back door's
   // opening cut out, so the park shows when the door swings open.
@@ -147,7 +149,7 @@ export function buildTruck(): THREE.Group {
   }
   const m = LAYOUT.menuBoard;
   block(g, 'woodDark', [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
-  block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z]);
+  block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z - 0.005]);
   block(g, 'mustard', [m.min.x + 0.2, m.max.y - 0.14, m.min.z - 0.03, m.max.x - 0.2, m.max.y - 0.1, m.min.z - 0.02]);
   for (let i = 0; i < 5; i++) {
     const y = m.max.y - 0.24 - i * 0.1;
@@ -246,7 +248,7 @@ export function buildTruck(): THREE.Group {
   const radio = new THREE.Group();
   radio.position.set((rd.min.x + rd.max.x) / 2, rd.min.y, (rd.min.z + rd.max.z) / 2);
   radio.rotation.y = 0.12;
-  block(radio, 'teal', [-0.19, 0, -0.08, 0.19, 0.2, 0.08]);
+  block(radio, 'teal', [-0.19, 0.025, -0.08, 0.19, 0.2, 0.08]);
   block(radio, 'tealDark', [-0.2, 0, -0.09, 0.2, 0.025, 0.09]);
   const grille = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.01, 10), mat('inkSoft'));
   grille.rotation.x = Math.PI / 2;

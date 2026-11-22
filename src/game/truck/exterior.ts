@@ -90,9 +90,9 @@ export function buildExterior(): THREE.Group {
   // Only round the outside: a solid slab here would fight with the floor inside (z-fighting).
   const skirtTop = 0.02;
   const proud = 0.006; // just in front of the paint, so the two never share a face
-  block(g, 'white', [-HX - T, GROUND_Y + 0.3, front - P - proud, HX + T + P + proud, skirtTop, front]);
-  block(g, 'white', [-HX - T, GROUND_Y + 0.3, back, HX + T + P + proud, skirtTop, back + P + proud]);
-  block(g, 'white', [HX + T, GROUND_Y + 0.3, front, HX + T + P + proud, skirtTop, back]);
+  block(g, 'white', [-HX - T - proud, GROUND_Y + 0.3, front - P - proud, HX + T + P + proud, skirtTop, front - 0.002]);
+  block(g, 'white', [-HX - T - proud, GROUND_Y + 0.3, back + 0.002, HX + T + P + proud, skirtTop, back + P + proud]);
+  block(g, 'white', [HX + T + 0.002, GROUND_Y + 0.3, front - 0.002, HX + T + P + proud, skirtTop, back + 0.002]);
   // The serving window's frame and a fold-down shelf outside it.
   block(g, 'white', [w.min.x - 0.12, w.min.y - 0.1, front - P - 0.25, w.max.x + 0.12, w.min.y - 0.04, front - P]);
   for (const x of [w.min.x - 0.12, w.max.x + 0.08]) block(g, 'white', [x, w.min.y, front - P - 0.03, x + 0.04, w.max.y + 0.12, front - P]);
@@ -118,7 +118,7 @@ export function buildExterior(): THREE.Group {
     block(g, 'white', [cab - 1.7, 0.55, z - 0.005, cab, 0.72, z + 0.005]);
   }
   block(g, 'ink', [cab - 1.72, 0.3, -0.55, cab - 1.69, 0.75, 0.55]);
-  for (let y = 0.36; y < 0.72; y += 0.09) block(g, 'inkSoft', [cab - 1.74, y, -0.5, cab - 1.71, y + 0.03, 0.5]);
+  for (let y = 0.36; y < 0.7; y += 0.09) block(g, 'inkSoft', [cab - 1.74, y, -0.5, cab - 1.71, y + 0.03, 0.5]);
   for (const z of [-0.85, 0.85]) {
     const light = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 12), mat('white'));
     light.rotation.z = Math.PI / 2;

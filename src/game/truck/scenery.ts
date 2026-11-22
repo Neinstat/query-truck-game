@@ -121,7 +121,8 @@ function picnicTable(g: THREE.Group): void {
   block(g, 'ink', [0.62, 0, -0.06, 0.7, 0.72, 0.06]);
   for (const x of [-0.7, 0.62]) {
     for (const z of [-0.77, 0.69]) block(g, 'ink', [x, 0, z, x + 0.08, 0.42, z + 0.08]);
-    block(g, 'inkSoft', [x, 0.16, -0.77, x + 0.08, 0.22, 0.77]);
+    // The crossbar sits just inside the legs, so their faces never share a plane.
+    block(g, 'inkSoft', [x + 0.01, 0.16, -0.76, x + 0.07, 0.22, 0.76]);
   }
   block(g, 'ink', [-0.02, 0.78, -0.02, 0.02, 2.1, 0.02]);
   shape(g, new THREE.ConeGeometry(1.2, 0.5, 8), 'red', 0, 2.1, 0);
@@ -228,7 +229,7 @@ function bike(g: THREE.Group, x: number, ink: Ink): void {
   block(g, ink, [x - 0.025, 0.34, 0.1, x + 0.025, 0.65, 0.15]);
   block(g, 'ink', [x - 0.06, 0.66, 0.08, x + 0.06, 0.7, 0.28]);
   block(g, 'inkSoft', [x - 0.25, 0.82, -0.45, x + 0.25, 0.85, -0.42]);
-  block(g, ink, [x - 0.02, 0.6, -0.45, x + 0.02, 0.84, -0.42]);
+  block(g, ink, [x - 0.02, 0.6, -0.445, x + 0.02, 0.84, -0.425]);
 }
 
 function bikeRack(g: THREE.Group): void {
@@ -516,12 +517,15 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
   // The container, covered in paint.
   block(g, 'tealDark', [10, GROUND_Y, -22.5, 16, GROUND_Y + 2.6, -20]);
   for (let i = 0; i < 9; i++) block(g, 'teal', [10.2 + i * 0.66, GROUND_Y + 0.1, -20.01, 10.45 + i * 0.66, GROUND_Y + 2.5, -19.98]);
-  for (const [x, y, w, h, ink] of [
-    [10.6, 0.5, 2.2, 1.0, 'mustard'],
-    [12.4, 1.1, 1.8, 0.9, 'pink'],
-    [14.1, 0.4, 1.4, 1.6, 'red'],
-  ] as const) {
-    block(g, ink, [x, GROUND_Y + y, -19.97, x + w, GROUND_Y + y + h, -19.95]);
+  // Each tag a few millimetres further out than the last, so overlapping paint never flickers.
+  for (const [i, [x, y, w, h, ink]] of (
+    [
+      [10.6, 0.5, 2.2, 1.0, 'mustard'],
+      [12.4, 1.1, 1.8, 0.9, 'pink'],
+      [14.1, 0.4, 1.4, 1.45, 'red'],
+    ] as const
+  ).entries()) {
+    block(g, ink, [x, GROUND_Y + y, -19.97 + i * 0.006, x + w, GROUND_Y + y + h, -19.95 + i * 0.006]);
   }
   // A vending machine glowing by the fence, and a boombox on a crate stage.
   block(g, 'red', [-14.5, GROUND_Y, -20.5, -13.4, GROUND_Y + 2.0, -19.8]);
@@ -568,9 +572,9 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
   // further out; cars drive across it.
   const deckY = GROUND_Y + 7;
   block(g, 'concrete', [-90, deckY, -22, 90, deckY + 0.9, -12]);
-  block(g, 'paperShade', [-90, deckY - 0.3, -21.5, 90, deckY, -12.5]);
+  block(g, 'paperShade', [-89.5, deckY - 0.3, -21.5, 89.5, deckY, -12.5]);
   block(g, 'inkSoft', [-90, deckY + 0.9, -12.2, 90, deckY + 1.6, -12]);
-  block(g, 'mustard', [-90, deckY + 0.5, -12.02, 90, deckY + 0.6, -11.98]);
+  block(g, 'mustard', [-89.8, deckY + 0.5, -12.02, 89.8, deckY + 0.6, -11.98]);
   for (const x of [-30, -20, 20, 30]) {
     const p = new THREE.Group();
     p.position.set(x, GROUND_Y, -13);
@@ -584,7 +588,7 @@ function skatepark(g: THREE.Group, animations: Animate[], rand: () => number): v
     const ink = carInks[i % carInks.length];
     block(root, ink, [-1.1, 0, -0.5, 1.1, 0.6, 0.5]);
     block(root, 'tealLight', [-0.6, 0.6, -0.45, 0.5, 1.0, 0.45]);
-    block(root, ink, [-0.55, 0.98, -0.45, 0.45, 1.05, 0.45]);
+    block(root, ink, [-0.55, 0.98, -0.47, 0.45, 1.05, 0.47]);
     root.position.y = deckY + 0.9;
     g.add(root);
     const lane = i % 2;
@@ -658,7 +662,7 @@ function school(g: THREE.Group, animations: Animate[], rand: () => number): void
   block(g, 'tealDark', [-14, GROUND_Y + 1.75, -20.1, 16, GROUND_Y + 1.82, -20]);
   block(g, 'peach', [-26, GROUND_Y, -32, 26, GROUND_Y + 8, -24]);
   block(g, 'red', [-26.5, GROUND_Y + 8, -32.5, 26.5, GROUND_Y + 8.6, -23.5]);
-  block(g, 'white', [-26, GROUND_Y + 3.9, -24.02, 26, GROUND_Y + 4.1, -23.95]);
+  block(g, 'white', [-26.02, GROUND_Y + 3.9, -24.02, 26.02, GROUND_Y + 4.1, -23.95]);
   for (let f = 0; f < 2; f++) {
     for (let x = -24; x < 24; x += 3) {
       if (f === 0 && Math.abs(x) < 2) continue;
@@ -711,7 +715,8 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
   const boat = (x: number, z: number, hull: Ink, sail: boolean) => {
     const root = new THREE.Group();
     block(root, hull, [-2, -0.4, -0.8, 2, 0.5, 0.8]);
-    block(root, 'white', [-2.05, 0.35, -0.82, 2.05, 0.5, 0.82]);
+    // The white band stops just under the deck, so its top never shares the deck's plane.
+    block(root, 'white', [-2.05, 0.3, -0.82, 2.05, 0.47, 0.82]);
     const bow = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.2, 4), mat(hull));
     bow.rotation.z = -Math.PI / 2;
     bow.rotation.x = Math.PI / 4;
@@ -779,7 +784,7 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
       block(g, 'mustard', [x + 6, QUAY_TOP, quay.z2 - 10 + dz, x + 6.6, QUAY_TOP + 18, quay.z2 - 9.4 + dz]);
     }
     block(g, 'mustard', [x, QUAY_TOP + 18, quay.z2 - 10, x + 6.6, QUAY_TOP + 19, quay.z2 + 9]);
-    block(g, 'mustardDark', [x, QUAY_TOP + 8, quay.z2 - 10, x + 6.6, QUAY_TOP + 8.6, quay.z2 - 0.4]);
+    block(g, 'mustardDark', [x + 0.05, QUAY_TOP + 8, quay.z2 - 9.95, x + 6.55, QUAY_TOP + 8.6, quay.z2 - 0.45]);
     block(g, 'white', [x + 1.5, QUAY_TOP + 16.5, quay.z2 - 2, x + 5, QUAY_TOP + 18, quay.z2 + 1]);
     block(g, 'ink', [x + 3.2, QUAY_TOP + 12, quay.z2 + 5, x + 3.3, QUAY_TOP + 18, quay.z2 + 5.1]);
     container(x + 0.3, QUAY_TOP + 10.7, quay.z2 + 4.4, 'red');
@@ -787,7 +792,7 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
   // The ship: a long dark hull, a white bridge at the back, and containers on deck.
   const ship = new THREE.Group();
   block(ship, 'ink', [0, -1.5, -4.5, 56, 3.2, 4.5]);
-  block(ship, 'red', [0, -1.5, -4.52, 56, 0.2, 4.52]);
+  block(ship, 'red', [-0.02, -1.5, -4.52, 56.02, 0.2, 4.52]);
   const prow = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 4.7, 3, 1, false, 0, Math.PI), mat('ink'));
   prow.rotation.y = Math.PI / 2;
   prow.position.set(56, 0.85, 0);
@@ -815,7 +820,7 @@ function harbour(g: THREE.Group, animations: Animate[], rand: () => number): voi
   block(g, 'tealDark', [-29, GROUND_Y, -8, -17, GROUND_Y + 5, 3]);
   block(g, 'white', [-29.3, GROUND_Y + 5, -8.3, -16.7, GROUND_Y + 5.4, 3.3]);
   block(g, 'inkSoft', [-17.01, GROUND_Y, -6, -16.98, GROUND_Y + 3.8, -1]);
-  for (let y = 0.4; y < 3.8; y += 0.5) block(g, 'ink', [-16.99, GROUND_Y + y, -6, -16.97, GROUND_Y + y + 0.05, -1]);
+  for (let y = 0.4; y < 3.8; y += 0.5) block(g, 'ink', [-16.99, GROUND_Y + y, -5.95, -16.97, GROUND_Y + y + 0.05, -1.05]);
   block(g, 'white', [-17.01, GROUND_Y + 4.1, 0, -16.98, GROUND_Y + 4.7, 2.5]);
   block(g, 'woodDark', [-14, GROUND_Y, -10.5, -13.85, GROUND_Y + 1.6, -10.35]);
   const ring = shape(g, new THREE.TorusGeometry(0.32, 0.09, 6, 14), 'red', -13.92, GROUND_Y + 1.2, -10.25);
@@ -892,8 +897,9 @@ function square(g: THREE.Group, animations: Animate[], rand: () => number): void
   ground(g, 'paperShade');
   queuePath(g, 'concrete');
   // Paving lines.
-  for (let x = -30; x <= 30; x += 3) patch(g, 'concrete', x, -26, x + 0.06, 6, 0.008);
-  for (let z = -26; z <= 6; z += 3) patch(g, 'concrete', -30, z, 30, z + 0.06, 0.008);
+  // Paving lines, stopping short of the buildings round the square.
+  for (let x = -30; x <= 30; x += 3) patch(g, 'concrete', x + 0.013, -23.9, x + 0.073, 6, 0.008);
+  for (let z = -23; z <= 6; z += 3) patch(g, 'concrete', -30, z, 30, z + 0.06, 0.008);
   // Bunting between the lamps.
   const lamps = PLACE_PROPS.square.filter((p) => p.kind === 'lamp').map((l) => new THREE.Vector3(l.x, GROUND_Y + 3.2, l.z));
   const flags: Ink[] = ['red', 'mustard', 'teal', 'pink', 'white'];
