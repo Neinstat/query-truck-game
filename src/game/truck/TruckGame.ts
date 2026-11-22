@@ -312,6 +312,12 @@ export class TruckGame {
     const onLockChange = () => {
       const locked = document.pointerLockElement === canvas;
       if (locked) this.setFreeLook(false);
+      // A capture that was still on its way when a console or menu opened: let the mouse go
+      // again, so the cursor is there to use the console (no Esc needed).
+      if (locked && this.paused) {
+        document.exitPointerLock();
+        return;
+      }
       this.bridge.emit('locked', locked);
     };
     // Older browsers report a refused capture with an event instead of a rejected promise.
@@ -449,9 +455,9 @@ export class TruckGame {
   /** Fly the camera to an object's tour stop, or (null) back to where the player stands. */
   private setTour(object: InteractableId | null): void {
     const stop = object ? stopPose(object) : null;
-    // Look a little lower than the object, so it sits in the upper half of the screen, above the
-    // tour's card.
-    const pose = stop ? { ...stop, pitch: stop.pitch - 0.32 } : null;
+    // Look straight at the object, a touch low, so it sits in the middle of the view just above
+    // the tour's card (owner's feedback: it used to sit too high).
+    const pose = stop ? { ...stop, pitch: stop.pitch - 0.06 } : null;
     if (pose) {
       this.tourView ??= this.playerPose();
       this.tourTarget = pose;

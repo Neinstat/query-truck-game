@@ -5,6 +5,7 @@ import { isCase, type Level } from '../sql-core/levels';
 import type { UiText } from '../i18n';
 import { Console } from '../console/Console';
 import { CaseConsole } from '../console/CaseConsole';
+import { GuidedCase } from '../console/GuidedCase';
 import type { Table } from '../console/SchemaPanel';
 import { Hints, Lesson } from './LevelParts';
 import { RewardLine } from './Stars';
@@ -115,9 +116,26 @@ export function ConsoleOverlay(props: Props) {
           {lessonOpen && level.lesson && <Lesson lesson={level.lesson} />}
         </div>
 
-        <Hints hints={level.hints} used={hintsUsed} onReveal={onRevealHint} t={t} />
+        {/* A guided case has hints in each step. */}
+        {!(isCase(level) && level.guided) && <Hints hints={level.hints} used={hintsUsed} onReveal={onRevealHint} t={t} />}
 
-        {db && isCase(level) ? (
+        {db && isCase(level) && level.guided ? (
+          <GuidedCase
+            db={db}
+            schema={schema}
+            level={level}
+            lang={lang}
+            t={t}
+            hintsUsed={hintsUsed}
+            onRevealHint={onRevealHint}
+            asker={speech?.speaker}
+            onSolved={(wrong) => {
+              setSolved(true);
+              onCorrect(wrong);
+            }}
+            solvedPanel={solved && solvedPanelContent}
+          />
+        ) : db && isCase(level) ? (
           <CaseConsole
             db={db}
             schema={schema}

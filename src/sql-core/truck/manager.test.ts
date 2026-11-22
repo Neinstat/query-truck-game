@@ -43,6 +43,22 @@ describe("The Manager's case", () => {
     }
   });
 
+  it('is guided: every question has a goal, its starter, hints that end with the whole query, and words in Indonesian', async () => {
+    const en = await buildManagerCase(db, DATE);
+    const id = await managerCaseFor(db, DATE, 'id');
+    if (id.kind !== 'case') throw new Error('expected a case');
+    expect(en.guided).toBe(true);
+    for (const [i, q] of en.questions.entries()) {
+      expect(q.guide?.starter, `step ${i + 1}`).toBe(en.starters[i]);
+      expect(q.guide?.hints.length).toBeGreaterThanOrEqual(3);
+      expect(q.guide?.goal.length).toBeGreaterThan(20);
+      const t = id.questions[i].guide;
+      expect(t?.starter, 'the SQL stays the same').toBe(q.guide?.starter);
+      expect(t?.goal).not.toBe(q.guide?.goal);
+      expect(t?.hints).toHaveLength(q.guide!.hints.length);
+    }
+  });
+
   it('still works on a day with no orders yet (zero orders, $0)', async () => {
     const fresh = await createCafeDatabase();
     const level = await buildManagerCase(fresh, DATE);

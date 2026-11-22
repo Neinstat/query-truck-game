@@ -2066,3 +2066,165 @@ body {
   cursor: pointer;
 }
 
+
+/* Guided case (the Manager): one question at a time. */
+.guided-case {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guided-steps {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guided-step {
+  flex: 1;
+  min-width: 0;
+}
+
+.guided-step-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 2px solid #e6d6b6;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  color: #4a5878;
+  background: #fffaf0;
+  cursor: pointer;
+}
+
+.guided-step-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.guided-step.current .guided-step-button {
+  border-color: #25304f;
+  color: #25304f;
+  font-weight: 600;
+}
+
+.guided-step.done .guided-step-button {
+  border-color: #2b9c8e;
+  color: #1c6b63;
+}
+
+.guided-step-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-weight: 700;
+  color: #fffaf0;
+  background: #25304f;
+}
+
+.guided-step.done .guided-step-number {
+  background: #2b9c8e;
+}
+
+.guided-step-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.guided-question {
+  padding: 10px 12px;
+  border: 2px solid #25304f;
+  border-radius: 10px;
+  background: #fffaf0;
+}
+
+.guided-asks {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e4573d;
+}
+
+.guided-prompt {
+  margin: 4px 0 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.guided-goal {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.guided-checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.guided-hints {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.guided-hints .hint {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid #f2b234;
+  font-size: 0.88rem;
+  background: #fdf3d8;
+}
+
+.guided-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 2px dashed #25304f;
+  border-radius: 10px;
+}
+
+.guided-answer.done {
+  border-style: solid;
+  border-color: #2b9c8e;
+  background: #e1f0dc;
+}
+
+.guided-reply {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.guided-reply-line {
+  margin: 0;
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .guided-steps {
+    flex-direction: column;
+  }
+}

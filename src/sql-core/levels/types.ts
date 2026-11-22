@@ -74,6 +74,11 @@ export type RequestLevel = LevelBase & {
  */
 export type CaseLevel = LevelBase & {
   kind: 'case';
+  /**
+   * Guided (the Manager's cases): one question at a time, each with its own goal, starting query,
+   * hints and reply; the last result the player ran is the proof (no pinning).
+   */
+  guided?: boolean;
   /** Editable starting queries the player can load (may contain `___` to fill in). */
   starters: string[];
   questions: CaseQuestion[];
@@ -115,6 +120,22 @@ export type CaseQuestion = {
   answer: CaseAnswer;
   /** Several ways to prove it: any one of them is enough (analysts reach the same fact by different queries). */
   evidence: Evidence | Evidence[];
+  /** A guided case's step (CaseLevel.guided). */
+  guide?: CaseGuide;
+};
+
+/** One step of a guided case, in plain words. */
+export type CaseGuide = {
+  /** What to find and why, in one or two sentences. */
+  goal: string;
+  /** Where the answer is in the result once the query runs. */
+  read: string;
+  /** The query the step starts with (SQL, never translated; may contain `___`). */
+  starter: string;
+  /** Hints for this step, simplest first; the last one shows the whole query. */
+  hints: string[];
+  /** What the asker says once the answer is right. */
+  reply: string;
 };
 
 export type Chapter = {
@@ -138,7 +159,7 @@ export type LevelText = {
   success: string;
   soWhat?: { question: string; choices: string[]; explanation: string };
   /** Mini Case only: each question's prompt, and its choices when it is multiple choice. */
-  questions?: { prompt: string; choices?: string[] }[];
+  questions?: { prompt: string; choices?: string[]; guide?: Omit<CaseGuide, 'starter'> }[];
 };
 
 /** A chapter's translation: chapter text + text for each level, by level id. */

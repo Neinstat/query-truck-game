@@ -66,7 +66,9 @@ export function applyText(level: Level, text: LevelText | undefined): Level {
       const qt = text.questions?.[i];
       if (!qt) return q;
       const answer = q.answer.kind === 'choice' && qt.choices ? { ...q.answer, choices: qt.choices } : q.answer;
-      return { ...q, prompt: qt.prompt, answer };
+      // A guided step's words are translated; its starting query is SQL and stays as it is.
+      const guide = q.guide && qt.guide ? { ...q.guide, ...qt.guide, starter: q.guide.starter } : q.guide;
+      return { ...q, prompt: qt.prompt, answer, guide };
     }),
   };
 }
