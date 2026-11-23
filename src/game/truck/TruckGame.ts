@@ -18,6 +18,7 @@ import { inkColour } from './colour';
 import type { DevCommand, LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { alongPath, DineIn, stepAside, type Diner } from './dineIn';
+import { filmAt } from './cinematic';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
 import { buildExterior } from './exterior';
@@ -93,6 +94,13 @@ export class TruckGame {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 120);
+  /** A dark veil just in front of the camera, for the title film's fades between shots. */
+  private readonly veil = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 4),
+    new THREE.MeshBasicMaterial({ color: '#1a2036', transparent: true, opacity: 0, depthTest: false, depthWrite: false, fog: false }),
+  );
+  /** The title film's view is pushed right, clear of the title card (0 = centred). */
+  private filmOffset = 0;
   private readonly look = new LookPass();
   private readonly ambient = new THREE.AmbientLight(0xffffff, 0.8 * Math.PI);
   private readonly sun = new THREE.DirectionalLight(0xffffff, 0.4 * Math.PI);
@@ -229,6 +237,12 @@ export class TruckGame {
     // light's colour and strength over the day. (Three.js lights are physical: × π gives a
     // surface its own colour at full light.)
     this.scene.add(this.ambient, this.sun);
+    // The fade veil rides in front of the camera (so the camera joins the scene).
+    this.veil.position.z = -0.1;
+    this.veil.renderOrder = 999;
+    this.veil.frustumCulled = false;
+    this.camera.add(this.veil);
+    this.scene.add(this.camera);
     const fill = new THREE.DirectionalLight(0xffffff, 0.15 * Math.PI);
     fill.position.set(3, 4, 8);
     this.scene.add(fill);
@@ -287,6 +301,16 @@ export class TruckGame {
 
   // ── Setup ────────────────────────────────────────────────────────────────────────────
 
+  /** Shifts the picture right by a share of the width (the title card covers the left). */
+  private setFilmOffset(share: number, force = false): void {
+    if (share === this.filmOffset && !force) return;
+    this.filmOffset = share;
+    const w = Math.max(1, this.parent.clientWidth);
+    const h = Math.max(1, this.parent.clientHeight);
+    if (share === 0) this.camera.clearViewOffset();
+    else this.camera.setViewOffset(w, h, -share * w, 0, w, h);
+  }
+
   private resize(): void {
     const w = Math.max(1, this.parent.clientWidth);
     const h = Math.max(1, this.parent.clientHeight);
@@ -294,6 +318,7 @@ export class TruckGame {
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
     this.camera.aspect = w / h;
+    this.setFilmOffset(this.filmOffset, true);
     this.camera.updateProjectionMatrix();
     const ratio = this.renderer.getPixelRatio();
     this.look.setSize(Math.round(w * ratio), Math.round(h * ratio), ratio);
@@ -712,12 +737,16 @@ export class TruckGame {
       puff.position.y = TRUCK.height + 1.6 + t * 0.9;
       puff.scale.setScalar(0.7 + t * 0.6);
     });
-    if (this.showcase && !this.tourView) {
-      // A slow circle in front of the truck, a little above head height.
-      const a = -0.55 + Math.sin(this.time * 0.12) * 0.45;
-      this.camera.position.set(Math.sin(a) * 9.5 - 0.8, 2.3, -Math.cos(a) * 9.5);
-      // Aimed to the left of the truck, so it shows on the right of the title card.
-      this.camera.lookAt(2.8, 1.4, 0);
+    const filming = this.showcase && !this.tourView;
+    // On a wide screen the title card covers the left third: frame the film to its right.
+    this.setFilmOffset(filming && this.parent.clientWidth >= 800 ? 0.17 : 0);
+    (this.veil.material as THREE.MeshBasicMaterial).opacity = 0;
+    if (filming) {
+      // The title film: slow shots round the world, with a fade between them (cinematic.ts).
+      const film = filmAt(this.time);
+      this.camera.position.set(film.at.x, film.at.y, film.at.z);
+      this.camera.lookAt(film.look.x, film.look.y, film.look.z);
+      (this.veil.material as THREE.MeshBasicMaterial).opacity = film.dark * 0.92;
     } else if (this.tourView) {
       this.camera.position.set(this.tourView.x, this.tourView.y, this.tourView.z);
       this.camera.rotation.set(this.tourView.pitch, this.tourView.yaw, 0, 'YXZ');

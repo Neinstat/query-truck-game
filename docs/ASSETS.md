@@ -15,7 +15,7 @@ with their source and licence. Earlier 2D art lives only in git history (see `do
 | Fridge with bottles, stock shelves with boxes and coffee sacks | 🟥 Placeholder | |
 | Red espresso machine, wall clock, menu board, recipe binders | 🟥 Placeholder | Clock hands should follow the time of day |
 | Back door, spare apron | 🟥 Placeholder | |
-| Truck exterior (`exterior.ts`): mustard body, cab, wheels, roof, name board, coffee cup on the roof | 🟨 Style chosen | |
+| Truck exterior (`exterior.ts`): white step van, coral flower band, cab with grille and round lights, awning with bunting, flower box and coffee cup on the roof | 🟨 Style chosen | |
 | Guide book on the back counter, "GUIDE ?" sign (text drawn in a canvas) | 🟥 Placeholder | |
 | Places (`scenery.ts`): park, skatepark under the overpass, behind the school, harbour pier, town square — ground, props, backdrops, moving cars, skater, ball, boats, gulls, fountain | 🟥 Placeholder | Seats fill with visitors when business is good (Phase 7); CC0 city/props kits later |
 | Rain (`rain.ts`): streaks, splash rings, lightning flashes | 🟨 Style chosen | |

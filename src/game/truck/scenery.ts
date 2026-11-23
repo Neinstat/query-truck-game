@@ -11,7 +11,7 @@ import type { PlaceId } from '../../sql-core/truck/places';
 import { block, buildCustomer, mat } from './build';
 import { inkColour } from './colour';
 import type { Sky } from './sky';
-import { GROUND_Y, LAYOUT, PLACE_PROPS, TRUCK, type Prop } from './world';
+import { GROUND_Y, PLACE_PROPS, type Prop } from './world';
 
 type Animate = (time: number, rain: number) => void;
 
@@ -1069,17 +1069,6 @@ export function buildPlace(id: PlaceId): THREE.Group {
   for (const p of PLACE_PROPS[id]) {
     const animate = buildProp(g, p, rand);
     if (animate) animations.push(animate);
-  }
-
-  // The truck's own striped awning over the window, seen from inside.
-  const w = LAYOUT.window;
-  const HZ = TRUCK.depth / 2;
-  for (let i = 0; i < 8; i++) {
-    const x = w.min.x - 0.2 + i * ((w.max.x - w.min.x + 0.4) / 8);
-    const stripe = block(g, i % 2 ? 'white' : 'red', [x, 0, 0, x + (w.max.x - w.min.x + 0.4) / 8, 0.04, 0.9]);
-    stripe.position.y = w.max.y + 0.25;
-    stripe.position.z = -HZ - 0.5;
-    stripe.rotation.x = -0.35;
   }
 
   // The sun, which crosses the sky over the day, and the moon at night.
