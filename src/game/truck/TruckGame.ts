@@ -17,6 +17,7 @@ import type { CustomerLook } from '../../sql-core/truck/orders';
 import { inkColour } from './colour';
 import type { DevCommand, LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
+import { alongPath, DineIn, stepAside, type Diner } from './dineIn';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
 import { buildExterior } from './exterior';
@@ -143,6 +144,11 @@ export class TruckGame {
 
   private queue = new TruckQueue();
   private customers = new Map<QueueCustomer, CustomerModel>();
+  /** Customers eating in (dineIn.ts), with their model and the cup on their table. */
+  private dineIn = new DineIn('park');
+  private diners = new Map<Diner, { model: CustomerModel; cup: THREE.Object3D | null }>();
+  /** Served customers who have already decided whether to sit down. */
+  private decided = new WeakSet<QueueCustomer>();
   private nextOrder = 0;
   private frontOrderId: string | null = null;
   /** The truck's clock: minutes since midnight. */
@@ -234,6 +240,7 @@ export class TruckGame {
     this.manager.rotation.y = Math.PI / 2;
     this.manager.visible = false;
     this.place = start.place ?? 'park';
+    this.dineIn = new DineIn(this.place);
     const place = buildPlace(this.place);
     this.setSky = place.userData.setSky as typeof this.setSky;
     this.updatePlace = place.userData.update as typeof this.updatePlace;
@@ -754,6 +761,93 @@ export class TruckGame {
     return minutes;
   }
 
+  /**
+   * Eating in (dineIn.ts): a served customer stepping aside may sit down on a free seat for a
+   * while, then walks back and on out. Flat cartoons have no legs to sit with and take it away.
+   */
+  private updateDiners(seconds: number, gameMinutes: number): void {
+    const aside = stepAside(this.place);
+    for (const customer of [...this.queue.leaving]) {
+      if (customer.walkOff !== 'on' || customer.x < aside.at || this.decided.has(customer)) continue;
+      this.decided.add(customer);
+      const model = this.customers.get(customer);
+      const choose = (hashString(`${customer.orderId}:eat-in`) % 1000) / 1000;
+      const canSit = !!model?.hipY && this.clock < CLOSING - 30;
+      const diner = model ? this.dineIn.tryToSit(customer.orderId, choose, canSit) : null;
+      if (!diner || !model) continue;
+      this.queue.release(customer);
+      this.customers.delete(customer);
+      this.diners.set(diner, { model, cup: null });
+    }
+    for (const done of this.dineIn.update(seconds, gameMinutes)) {
+      const entry = this.diners.get(done);
+      this.diners.delete(done);
+      if (!entry) continue;
+      if (entry.cup) this.scene.remove(entry.cup);
+      this.resetPose(entry.model);
+      const walker = this.queue.walkOn(done.orderId, aside.at);
+      this.decided.add(walker);
+      this.customers.set(walker, entry.model);
+    }
+    for (const [diner, entry] of this.diners) {
+      const { model } = entry;
+      if (diner.state === 'sitting') {
+        const seat = diner.seat;
+        const hip = model.hipY ?? 0.86;
+        const seatTop = seat.height + 0.03;
+        model.root.position.set(seat.x, GROUND_Y + seatTop - hip, seat.z);
+        const diff = Math.atan2(Math.sin(seat.yaw - model.root.rotation.y), Math.cos(seat.yaw - model.root.rotation.y));
+        model.root.rotation.y += diff * Math.min(1, seconds * 10);
+        // Thighs forward, feet down towards the ground; one hand lifts the cup now and then.
+        const bend = Math.max(1.0, Math.acos(Math.min(1, seatTop / hip)));
+        model.legs[0].rotation.x = bend;
+        model.legs[1].rotation.x = bend;
+        const sip = Math.max(0, Math.sin(this.walkClock * 0.9 + seat.x * 3) - 0.85) / 0.15;
+        model.arms[0].rotation.x = 0.55 + sip * 1.1;
+        model.arms[1].rotation.x = 0.4;
+        if (!entry.cup && seat.cup) {
+          entry.cup = this.takeawayCup();
+          entry.cup.position.set(seat.cup.x, GROUND_Y + seat.cup.y, seat.cup.z);
+          this.scene.add(entry.cup);
+        }
+        continue;
+      }
+      const p = alongPath(diner.path, diner.walked);
+      model.root.position.set(p.x, GROUND_Y, p.z);
+      const diff = Math.atan2(Math.sin(p.yaw - model.root.rotation.y), Math.cos(p.yaw - model.root.rotation.y));
+      model.root.rotation.y += diff * Math.min(1, seconds * 8);
+      const swing = Math.sin(this.walkClock * 8 + p.x) * 0.55;
+      model.legs[0].rotation.x = swing;
+      model.legs[1].rotation.x = -swing;
+      model.arms[0].rotation.x = -swing * 0.8;
+      model.arms[1].rotation.x = swing * 0.8;
+      if (entry.cup && diner.state === 'leaving') {
+        this.scene.remove(entry.cup);
+        entry.cup = null;
+      }
+    }
+  }
+
+  /** Standing again after sitting. */
+  private resetPose(model: CustomerModel): void {
+    model.root.position.y = GROUND_Y;
+    for (const limb of [...model.legs, ...model.arms]) limb.rotation.x = 0;
+  }
+
+  /** A paper cup with the truck's red band, set on a diner's table. */
+  private takeawayCup(): THREE.Object3D {
+    const cup = new THREE.Group();
+    const paper = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.032, 0.11, 8), new THREE.MeshLambertMaterial({ color: inkColour('white'), flatShading: true }));
+    paper.position.y = 0.055;
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.0395, 0.035, 0.035, 8), new THREE.MeshLambertMaterial({ color: inkColour('red'), flatShading: true }));
+    band.position.y = 0.05;
+    band.scale.setScalar(1.03);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.043, 0.015, 8), new THREE.MeshLambertMaterial({ color: inkColour('ink'), flatShading: true }));
+    lid.position.y = 0.117;
+    cup.add(paper, band, lid);
+    return cup;
+  }
+
   private updateCustomers(seconds: number): void {
     const gameMinutes = this.updateClock(seconds);
     // Customers arrive at their time of day, until closing.
@@ -784,6 +878,7 @@ export class TruckGame {
       if (model) this.scene.remove(model.root);
       this.customers.delete(gone);
     }
+    this.updateDiners(seconds, gameMinutes);
     for (const [customer, model] of this.customers) {
       const p = queuePosition(customer.x, this.place);
       const walking = customer.state !== 'waiting';

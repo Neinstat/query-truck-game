@@ -276,7 +276,9 @@ export type PropKind =
   | 'fountain'
   | 'planter'
   /** The truck's own folding chalkboard sign with the menu and OPEN on it. */
-  | 'aFrame';
+  | 'aFrame'
+  /** The truck's own folding table with two stools, for customers who eat in (dineIn.ts). */
+  | 'bistroSet';
 
 /** A thing near the truck: where it stands, which way it faces (yaw), and how big it is. */
 export type Prop = { kind: PropKind; x: number; z: number; yaw?: number; size?: number };
@@ -303,12 +305,13 @@ export const PROP_RADIUS: Record<PropKind, number> = {
   fountain: 2.4,
   planter: 0.7,
   aFrame: 0.5,
+  bistroSet: 1.0,
 };
 
 /**
  * Where things stand at each place the truck parks (sql-core/truck/places.ts), near the truck.
  * Nothing may stand on the path customers walk, and nothing overlaps: tested against
- * QUEUE_PATH_3D. Seats will fill with visitors when business is good (Phase 7). The far
+ * QUEUE_PATH_3D. Customers who eat in sit on the benches, picnic tables and the truck's bistro sets (dineIn.ts). The far
  * backdrop of each place (buildings, the overpass, the sea) is drawn in scenery.ts.
  */
 export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
@@ -326,6 +329,8 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'tree', x: 9.5, z: -7.5, size: 1.1 },
     { kind: 'tree', x: -2, z: -16, size: 1.3 },
     { kind: 'aFrame', x: -1.6, z: -3.2, yaw: 0.4 },
+    { kind: 'bistroSet', x: 7, z: -5.5, yaw: -0.5 },
+    { kind: 'bistroSet', x: 1, z: -6, yaw: 0.5 },
   ],
   skatepark: [
     { kind: 'quarterPipe', x: 1.5, z: -12, yaw: 0 },
@@ -341,6 +346,8 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: -1.5, z: -9 },
     { kind: 'lamp', x: -9.5, z: -7.5 },
     { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.3 },
+    { kind: 'bistroSet', x: -4, z: -5, yaw: 0 },
+    { kind: 'bistroSet', x: -8, z: -6.5, yaw: 1.57 },
   ],
   school: [
     // A hoop faces −z before turning: the far one turns round to face the court.
@@ -355,6 +362,8 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'tree', x: 11, z: -15, size: 1.2 },
     { kind: 'bin', x: 2.6, z: -4.4 },
     { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.4 },
+    { kind: 'bistroSet', x: 4.5, z: -5, yaw: -0.5 },
+    { kind: 'bistroSet', x: 7, z: -8, yaw: -0.5 },
   ],
   harbour: [
     { kind: 'bollard', x: -6, z: -14 },
@@ -370,6 +379,8 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: -3.6, z: -11 },
     { kind: 'lamp', x: 8, z: -6.5 },
     { kind: 'aFrame', x: -1.6, z: -2.9, yaw: 0.5 },
+    { kind: 'bistroSet', x: 4, z: -5.5, yaw: 0 },
+    { kind: 'bistroSet', x: 6.5, z: -6, yaw: -0.5 },
   ],
   square: [
     { kind: 'fountain', x: 4.5, z: -11 },
@@ -383,6 +394,8 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: 6.5, z: -6.5 },
     { kind: 'tree', x: -10, z: -8, size: 1.1 },
     { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.3 },
+    { kind: 'bistroSet', x: -2, z: -6.5, yaw: -0.5 },
+    { kind: 'bistroSet', x: -8, z: -4.5, yaw: 0.5 },
   ],
 };
 

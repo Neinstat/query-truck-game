@@ -29,6 +29,9 @@ export type CustomerModel = {
   arms: [THREE.Object3D, THREE.Object3D];
   /** A flat cartoon: the card that turns to face the player, and its two walking frames. */
   card?: { mesh: THREE.Mesh; frames: [THREE.Texture, THREE.Texture] };
+  /** How high the hips are (m, after scaling): figures with real legs can sit down (dineIn.ts).
+   * A flat cartoon has none and takes its order away. */
+  hipY?: number;
 };
 
 /** A mesh at (x, y, z) in a parent. */
@@ -729,8 +732,9 @@ function buildBrick(seed: number): CustomerModel {
 export function buildCustomer(kind: CustomerLook, seed = 1): CustomerModel {
   const figure = kindFor(seed);
   if (figure === 'cartoon' && typeof document !== 'undefined') return buildCartoon(seed);
-  if (figure === 'brick') return buildBrick(seed);
-  return buildPerson(lookFor(kind, seed));
+  const model = figure === 'brick' ? buildBrick(seed) : buildPerson(lookFor(kind, seed));
+  model.hipY = model.legs[0].position.y * model.root.scale.y;
+  return model;
 }
 
 /**

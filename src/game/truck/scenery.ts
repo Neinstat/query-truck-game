@@ -362,6 +362,24 @@ function aFrame(g: THREE.Group): void {
   block(g, 'woodDark', [-0.33, 1.0, -0.07, 0.33, 1.06, 0.07]);
 }
 
+/**
+ * The truck's folding bistro set (for customers who eat in, dineIn.ts): a small round table on
+ * one post and two round stools, in the truck's colours. Seats are 0.48 m high, the table 0.72 m.
+ */
+function bistroSet(g: THREE.Group): void {
+  const round = (r: number, h: number, ink: Ink, x: number, y: number) =>
+    shape(g, new THREE.CylinderGeometry(r, r, h, 10), ink, x, y, 0);
+  round(0.36, 0.04, 'white', 0, 0.7);
+  round(0.37, 0.012, 'red', 0, 0.676);
+  round(0.03, 0.66, 'ink', 0, 0.34);
+  round(0.22, 0.02, 'ink', 0, 0.01);
+  for (const x of [-0.62, 0.62]) {
+    round(0.17, 0.05, 'mustard', x, 0.455);
+    round(0.025, 0.43, 'ink', x, 0.215);
+    round(0.13, 0.015, 'ink', x, 0.008);
+  }
+}
+
 /** Builds one prop at its place; some props come back with an animation. */
 function buildProp(parent: THREE.Group, p: Prop, rand: () => number): Animate | null {
   const g = new THREE.Group();
@@ -428,6 +446,9 @@ function buildProp(parent: THREE.Group, p: Prop, rand: () => number): Animate | 
       break;
     case 'aFrame':
       aFrame(g);
+      break;
+    case 'bistroSet':
+      bistroSet(g);
       break;
   }
   return null;

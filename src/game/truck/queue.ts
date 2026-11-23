@@ -79,6 +79,19 @@ export class TruckQueue {
     this.leaving.push(customer);
   }
 
+  /** A customer walking off sits down to eat instead (dineIn.ts): the line no longer moves them. */
+  release(customer: QueueCustomer): void {
+    const index = this.leaving.indexOf(customer);
+    if (index >= 0) this.leaving.splice(index, 1);
+  }
+
+  /** A diner who has finished walks on out along the way off, from `x`. */
+  walkOn(orderId: string, x: number): QueueCustomer {
+    const customer: QueueCustomer = { orderId, x, state: 'leaving', waited: 0, walkOff: 'on' };
+    this.leaving.push(customer);
+    return customer;
+  }
+
   /** Moves everyone; returns customers who walked out of sight this step. */
   update(seconds: number): QueueCustomer[] {
     const step = QUEUE.speed * seconds;
