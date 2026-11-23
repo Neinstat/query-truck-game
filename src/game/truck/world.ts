@@ -325,7 +325,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'tree', x: -8.5, z: -1.5, size: 1.2 },
     { kind: 'tree', x: 9.5, z: -7.5, size: 1.1 },
     { kind: 'tree', x: -2, z: -16, size: 1.3 },
-    { kind: 'aFrame', x: -2.3, z: -2.5, yaw: 0.5 },
+    { kind: 'aFrame', x: -1.6, z: -3.2, yaw: 0.4 },
   ],
   skatepark: [
     { kind: 'quarterPipe', x: 1.5, z: -12, yaw: 0 },
@@ -340,7 +340,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'bin', x: -2.2, z: -6.5 },
     { kind: 'lamp', x: -1.5, z: -9 },
     { kind: 'lamp', x: -9.5, z: -7.5 },
-    { kind: 'aFrame', x: 2.8, z: -2.3, yaw: -0.5 },
+    { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.3 },
   ],
   school: [
     // A hoop faces −z before turning: the far one turns round to face the court.
@@ -354,7 +354,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'tree', x: -9, z: -14, size: 1.3 },
     { kind: 'tree', x: 11, z: -15, size: 1.2 },
     { kind: 'bin', x: 2.6, z: -4.4 },
-    { kind: 'aFrame', x: -2.3, z: -2.5, yaw: 0.5 },
+    { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.4 },
   ],
   harbour: [
     { kind: 'bollard', x: -6, z: -14 },
@@ -369,7 +369,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: 2.4, z: -4.4 },
     { kind: 'lamp', x: -3.6, z: -11 },
     { kind: 'lamp', x: 8, z: -6.5 },
-    { kind: 'aFrame', x: -2.3, z: -2.4, yaw: 0.5 },
+    { kind: 'aFrame', x: -1.6, z: -2.9, yaw: 0.5 },
   ],
   square: [
     { kind: 'fountain', x: 4.5, z: -11 },
@@ -382,7 +382,7 @@ export const PLACE_PROPS: Record<PlaceId, readonly Prop[]> = {
     { kind: 'lamp', x: -3.8, z: -4.4 },
     { kind: 'lamp', x: 6.5, z: -6.5 },
     { kind: 'tree', x: -10, z: -8, size: 1.1 },
-    { kind: 'aFrame', x: 2.8, z: -2.2, yaw: -0.5 },
+    { kind: 'aFrame', x: -1.3, z: -3.8, yaw: 0.3 },
   ],
 };
 

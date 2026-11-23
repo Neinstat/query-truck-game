@@ -326,11 +326,12 @@ function chalkboard(): THREE.CanvasTexture {
   ctx.font = '24px system-ui, sans-serif';
   ctx.fillStyle = '#fffaf0';
   ctx.textAlign = 'left';
-  ['Espresso', 'Latte', 'Green Tea', 'Croissant', 'Apple Pie'].forEach((item, i) => {
-    ctx.fillText(item, 26, 168 + i * 38);
-    ctx.textAlign = 'right';
-    ctx.fillText('$', 230, 168 + i * 38);
+  // Prices from the menu_items table, so the sign agrees with the data.
+  ([['Espresso', '2.50'], ['Latte', '4.00'], ['Green Tea', '2.75'], ['Croissant', '3.25'], ['Apple Pie', '4.75']] as const).forEach(([item, price], i) => {
     ctx.textAlign = 'left';
+    ctx.fillText(item, 24, 168 + i * 38);
+    ctx.textAlign = 'right';
+    ctx.fillText('$' + price, 234, 168 + i * 38);
   });
   ctx.font = 'italic 20px system-ui, sans-serif';
   ctx.fillStyle = '#9ad6c8';
@@ -347,7 +348,8 @@ function aFrame(g: THREE.Group): void {
   const lean = 0.22;
   for (const side of [-1, 1]) {
     const leaf = new THREE.Group();
-    leaf.position.set(0, 0, side * 0.18);
+    // Feet far enough apart that the leaves only meet at the hinge, not cross each other.
+    leaf.position.set(0, 0, side * (Math.sin(lean) * 1.05 + 0.03));
     leaf.rotation.x = side * -lean;
     block(leaf, 'wood', [-0.32, 0, -0.025, 0.32, 1.05, 0.025]);
     const face = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 0.86), chalk);
@@ -356,7 +358,8 @@ function aFrame(g: THREE.Group): void {
     leaf.add(face);
     g.add(leaf);
   }
-  block(g, 'woodDark', [-0.3, 0.98, -0.05, 0.3, 1.03, 0.05]);
+  // The hinge on top, where the two leaves meet.
+  block(g, 'woodDark', [-0.33, 1.0, -0.07, 0.33, 1.06, 0.07]);
 }
 
 /** Builds one prop at its place; some props come back with an animation. */
