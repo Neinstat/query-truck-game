@@ -8,7 +8,7 @@ None yet. Everything in the game is original to Query Truck: the riso palette (`
 
 ## Logo
 
-The Query Truck logo (`src/assets/query-truck-logo.webp`) is the project owner's own artwork, the game's official logo (23 Nov 2026). It is used on the title screen, the loading screen, the truck's roof signs and in the README.
+The Query Truck logo (`src/assets/query-truck-logo.webp`) is the project owner's own artwork, the game's official logo (23 Nov 2026). It is used on the title screen, the loading screen, the truck's 3D roof sign and in the README.
 
 ## Sound
 

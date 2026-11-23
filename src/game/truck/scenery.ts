@@ -497,6 +497,124 @@ function buildings(g: THREE.Group, z: number, from: number, to: number, rand: ()
   }
 }
 
+// ── Behind the truck ────────────────────────────────────────────────────────────────
+
+/**
+ * What stands behind the truck (+z), so the view past it is never empty (owner's feedback,
+ * 23 Nov 2026: the title film looked across bare grass). Each place gets its own: trees and a
+ * path in the park, a graffiti wall and the overpass ramp at the skatepark, houses and a fence
+ * behind the school, the other side of the harbour with containers, shophouses on the square;
+ * a far skyline closes every view.
+ */
+function behindTheTruck(g: THREE.Group, id: PlaceId, rand: () => number): void {
+  // A row of buildings with their fronts towards the truck (−z).
+  const facingTruck = (z: number, from: number, to: number, inks: Ink[]) => {
+    const row = new THREE.Group();
+    row.rotation.y = Math.PI;
+    buildings(row, -z, -to, -from, rand, inks);
+    g.add(row);
+  };
+  const trees = (z1: number, z2: number, from = -40, to = 40, sizes: [number, number] = [0.9, 1.3]) => {
+    for (let x = from; x <= to; x += 2.6 + rand() * 3) {
+      const t = new THREE.Group();
+      t.position.set(x, GROUND_Y, z1 + rand() * (z2 - z1));
+      tree(t, sizes[0] + rand() * sizes[1], x * 3 + z1);
+      g.add(t);
+    }
+  };
+  const hedges = (z: number, from: number, to: number) => {
+    for (let x = from; x <= to; x += 1.6 + rand() * 1.2) {
+      const b = new THREE.Group();
+      b.position.set(x, GROUND_Y, z + rand() * 0.6);
+      bush(b, 0.7 + rand() * 0.5);
+      g.add(b);
+    }
+  };
+  const farSkyline = (z: number, inks?: [Ink, Ink]) => {
+    const far = new THREE.Group();
+    far.rotation.y = Math.PI;
+    skyline(far, -z, inks);
+    g.add(far);
+  };
+
+  if (id === 'park') {
+    // A gravel path behind the truck, lamps along it, hedges and a belt of trees.
+    patch(g, 'paperShade', -45, 6.5, 45, 8.3, 0.005);
+    for (let x = -24; x <= 24; x += 8) {
+      const l = new THREE.Group();
+      l.position.set(x, GROUND_Y, 9);
+      lamp(l);
+      g.add(l);
+    }
+    hedges(10.5, -30, 30);
+    trees(13, 20, -44, 44, [1, 1.2]);
+    trees(22, 30, -50, 50, [1.2, 1.2]);
+    farSkyline(60);
+  } else if (id === 'skatepark') {
+    // A long concrete wall covered in graffiti blocks, the overpass's ramp rising behind it.
+    block(g, 'concrete', [-40, GROUND_Y, 9, 40, GROUND_Y + 3, 9.6]);
+    block(g, 'inkSoft', [-40.1, GROUND_Y + 3, 8.9, 40.1, GROUND_Y + 3.2, 9.7]);
+    const tags: Ink[] = ['red', 'mustard', 'teal', 'pink', 'lilac', 'tealLight'];
+    // Tags may overlap: each sits a little further out than the one before (never the same plane).
+    for (let i = 0, x = -36; x < 36; i++, x += 2.2 + rand() * 2.5) {
+      const w = 1.2 + rand() * 2;
+      const y = GROUND_Y + 0.4 + rand() * 1.2;
+      const out = 0.004 + (i % 3) * 0.004;
+      block(g, tags[Math.floor(rand() * tags.length)], [x, y, 9 - out, x + w, y + 0.6 + rand() * 0.9, 9 - out + 0.002]);
+    }
+    block(g, 'concrete', [-60, GROUND_Y + 4.5, 18, 60, GROUND_Y + 5.4, 23]);
+    block(g, 'red', [-60, GROUND_Y + 5.4, 18, 60, GROUND_Y + 5.9, 18.3]);
+    for (let x = -50; x <= 50; x += 12) block(g, 'inkSoft', [x - 0.6, GROUND_Y, 19.9, x + 0.6, GROUND_Y + 4.5, 21.1]);
+    facingTruck(30, -60, 60, ['inkSoft', 'concrete', 'lilac']);
+    farSkyline(62);
+  } else if (id === 'school') {
+    // A low fence, a strip of lawn with trees, and a row of houses across the street.
+    for (let x = -40; x < 40; x += 2.4) block(g, 'ink', [x, GROUND_Y, 7.9, x + 0.08, GROUND_Y + 1.2, 8.0]);
+    block(g, 'ink', [-40, GROUND_Y + 1.05, 7.92, 40, GROUND_Y + 1.12, 7.98]);
+    block(g, 'ink', [-40, GROUND_Y + 0.4, 7.92, 40, GROUND_Y + 0.47, 7.98]);
+    trees(10, 13, -40, 40, [0.9, 1.0]);
+    patch(g, 'inkSoft', -60, 14.5, 60, 20.5, 0.004);
+    facingTruck(27, -60, 60, ['peach', 'pink', 'mustard', 'tealLight', 'white']);
+    farSkyline(62);
+  } else if (id === 'harbour') {
+    // Across the water: a quay with container stacks, a crane, warehouses, and a ferry moored.
+    block(g, 'concrete', [-70, GROUND_Y - 0.6, 26, 70, GROUND_Y + 0.4, 34]);
+    const boxes: Ink[] = ['red', 'teal', 'mustard', 'tealDark', 'redDark', 'lilac'];
+    for (let x = -50; x < 50; x += 3.2) {
+      const stack = 1 + Math.floor(rand() * 3);
+      for (let k = 0; k < stack; k++) block(g, boxes[Math.floor(rand() * boxes.length)], [x, GROUND_Y + 0.4 + k * 1.3, 27 + (k % 2) * 0.05, x + 3, GROUND_Y + 1.7 + k * 1.3, 29.5]);
+    }
+    for (const x of [-22, 18]) {
+      block(g, 'red', [x - 0.3, GROUND_Y + 0.4, 30, x + 0.3, GROUND_Y + 12, 30.6]);
+      block(g, 'red', [x - 0.3, GROUND_Y + 0.4, 33, x + 0.3, GROUND_Y + 12, 33.6]);
+      block(g, 'red', [x - 0.35, GROUND_Y + 11, 22, x + 0.35, GROUND_Y + 11.8, 36]);
+    }
+    const ferry = new THREE.Group();
+    block(ferry, 'white', [-6, 0, -1.5, 6, 1.6, 1.5]);
+    block(ferry, 'red', [-6.02, 0, -1.52, 6.02, 0.5, 1.52]);
+    block(ferry, 'white', [-3, 1.6, -1.2, 3, 2.8, 1.2]);
+    block(ferry, 'tealLight', [-2.8, 2.0, -1.21, 2.8, 2.5, 1.21]);
+    block(ferry, 'mustard', [-0.4, 2.8, -0.4, 0.4, 3.8, 0.4]);
+    ferry.position.set(-8, GROUND_Y - 0.6, 22);
+    g.add(ferry);
+    facingTruck(42, -70, 70, ['concrete', 'inkSoft', 'tealLight']);
+    farSkyline(66);
+  } else {
+    // The far side of the square: a pavement with trees and benches, and colourful shophouses.
+    patch(g, 'concrete', -44, 6, 44, 14, 0.006);
+    trees(8, 9, -40, 40, [0.8, 0.6]);
+    for (let x = -30; x <= 30; x += 10) {
+      const b = new THREE.Group();
+      b.position.set(x + 3, GROUND_Y, 11);
+      b.rotation.y = Math.PI;
+      bench(b);
+      g.add(b);
+    }
+    facingTruck(20, -60, 60, ['peach', 'mustard', 'pink', 'lilac', 'tealLight']);
+    farSkyline(64);
+  }
+}
+
 // ── The places ──────────────────────────────────────────────────────────────────────
 
 function park(g: THREE.Group, animations: Animate[]): void {
@@ -1066,6 +1184,7 @@ export function buildPlace(id: PlaceId): THREE.Group {
   else if (id === 'school') school(g, animations, rand);
   else if (id === 'harbour') harbour(g, animations, rand);
   else square(g, animations, rand);
+  behindTheTruck(g, id, seeded(id.length * 104729 + 17));
   for (const p of PLACE_PROPS[id]) {
     const animate = buildProp(g, p, rand);
     if (animate) animations.push(animate);

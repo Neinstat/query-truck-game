@@ -2,9 +2,9 @@
  * The truck from the outside (GAME_DESIGN.md §7): a white step-van food truck. A tall, flat-
  * fronted cab at the left end (two-pane windscreen, a red grille panel with round headlights, a
  * grey bumper, big door windows), a body with rounded roof edges, a coral-red band round the
- * bottom painted with white flowers, a mustard pinstripe, wheels with red hubs, a striped awning
- * with bunting over the serving window and a wooden counter under it, the logo sign, a giant
- * coffee cup and a flower box on the roof, and "SELECT * FROM coffee;" painted on the side.
+ * bottom, a mustard pinstripe, wheels with red hubs, a striped awning
+ * over the serving window and a wooden counter under it, and the game's logo as a
+ * 3D cut-out sign on the roof.
  * Our own design (inspired by classic step vans; no third-party art). Built around the inside
  * (build.ts) without touching it: everything here is outside the walls.
  * ⚠ Placeholder model (docs/ASSETS.md).
@@ -43,14 +43,6 @@ function textTexture(
   return texture;
 }
 
-function decal(g: THREE.Group, texture: THREE.Texture, w: number, h: number, x: number, y: number, z: number, yaw: number): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
-  m.position.set(x, y, z);
-  m.rotation.y = yaw;
-  g.add(m);
-  return m;
-}
-
 /**
  * The official logo as a texture (cropped to the artwork). It loads after the truck is built,
  * so the sign stays clear until then; without a browser (tests) it stays empty.
@@ -70,36 +62,6 @@ function logoTexture(): THREE.Texture {
   };
   image.src = logoUrl;
   return texture;
-}
-
-/** White five-petal flowers and leaves, for the coral band (drawn once, used all round). */
-function flowerTexture(): THREE.CanvasTexture {
-  return textTexture(1024, 128, (ctx, w, h) => {
-    let seed = 7;
-    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let x = 30; x < w; x += 70 + rand() * 50) {
-      const y = h * (0.35 + rand() * 0.35);
-      const r = 18 + rand() * 14;
-      // Two leaves behind the flower.
-      ctx.fillStyle = '#fbe3d6';
-      for (const a of [-0.6, 2.4]) {
-        ctx.beginPath();
-        ctx.ellipse(x + Math.cos(a) * r * 1.3, y + Math.sin(a) * r * 0.9, r * 0.9, r * 0.38, a, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = '#fffaf0';
-      for (let p = 0; p < 5; p++) {
-        const a = (p / 5) * Math.PI * 2 + x;
-        ctx.beginPath();
-        ctx.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.32, a, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = '#f2b234';
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.24, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
 }
 
 function wheel(g: THREE.Group, x: number, z: number): void {
@@ -165,12 +127,6 @@ export function buildExterior(): THREE.Group {
   };
   band('red', BAND.bottom, BAND.top, 0.01);
   band('mustard', STRIPE.bottom, STRIPE.top, 0.01);
-  const flowers = flowerTexture();
-  const bandMid = (BAND.bottom + BAND.top) / 2;
-  const bandH = BAND.top - BAND.bottom;
-  decal(g, flowers, 3.4, bandH, 1.2, bandMid, front - P - 0.016, Math.PI);
-  decal(g, flowers, 5.8, bandH, 0, bandMid, back + P + 0.016, 0);
-
   // The roof: a little wider than the body, with rounded edges and a vent.
   block(g, 'white', [-HX - T - 0.04, H + 0.1, front - P - 0.04, end + P + 0.04, H + 0.2, back + P + 0.04]);
   edge(g, 'x', 2 * HX + 2 * T + P + 0.08, 0.1, (end + P - HX - T) / 2, H + 0.15, front - P - 0.05);
@@ -180,12 +136,6 @@ export function buildExterior(): THREE.Group {
 
   // The serving window: a white frame, a wooden counter outside it, and the awning above.
   block(g, 'wood', [w.min.x - 0.14, w.min.y - 0.1, front - P - 0.3, w.max.x + 0.14, w.min.y - 0.03, front - P]);
-  for (const x of [w.min.x - 0.4, w.max.x + 0.36]) {
-    // Brackets under the counter.
-    const bracket = block(g, 'woodDark', [-0.02, -0.3, -0.02, 0.02, 0, 0.02]);
-    bracket.position.set(x + 0.02, w.min.y - 0.1, front - P - 0.15);
-    bracket.rotation.x = 0.6;
-  }
   for (const x of [w.min.x - 0.12, w.max.x + 0.08]) block(g, 'inkSoft', [x, w.min.y, front - P - 0.03, x + 0.04, w.max.y + 0.12, front - P]);
   block(g, 'inkSoft', [w.min.x - 0.12, w.max.y + 0.08, front - P - 0.03, w.max.x + 0.12, w.max.y + 0.12, front - P]);
   awning(g, w.min.x - 0.25, w.max.x + 0.25, w.max.y + 0.22, front - P);
@@ -279,81 +229,45 @@ export function buildExterior(): THREE.Group {
     (sign.material as THREE.MeshBasicMaterial).map = isOpen ? open : closed;
   };
 
-  // The logo on a sign over the serving window, facing the customers, and again on the back.
-  const signW = 3.0;
-  const signH = (signW * LOGO_CROP.h) / LOGO_CROP.w;
-  const logo = logoTexture();
-  for (const sign of [
-    decal(g, logo, signW, signH, 0, H + 0.24 + signH / 2, front - 0.25, Math.PI),
-    decal(g, logo, signW, signH, 0, H + 0.24 + signH / 2, back + 0.25, 0),
-  ]) {
-    // The empty space round the logo draws nothing (not even depth), so no outline shows
-    // the edge of the sign's rectangle.
-    (sign.material as THREE.MeshBasicMaterial).alphaTest = 0.5;
-  }
-  for (const z of [front - 0.25, back + 0.25]) {
-    for (const x of [-0.85, 0.85]) block(g, 'ink', [x - 0.03, H + 0.2, z - 0.03, x + 0.03, H + 0.5, z + 0.03]);
-  }
-
-  // SQL painted on the side, in white on the coral band (left of the window), and on the back.
-  const side = textTexture(1024, 160, (ctx, _w, ch) => {
-    ctx.fillStyle = '#fffaf0';
-    ctx.font = 'bold 84px ui-monospace, Menlo, monospace';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SELECT * FROM coffee;', 20, ch / 2);
-  });
-  decal(g, side, 2.2, 0.34, -1.75, bandMid + 0.03, front - P - 0.018, Math.PI);
-  const sideDark = textTexture(1024, 160, (ctx, _w, ch) => {
-    ctx.fillStyle = '#25304f';
-    ctx.font = 'bold 84px ui-monospace, Menlo, monospace';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SELECT * FROM coffee;', 20, ch / 2);
-  });
-  decal(g, sideDark, 2.4, 0.38, 0.6, 1.4, back + P + 0.01, 0);
-
-  // A giant coffee cup on the roof, with a sleeve, a lid and a wisp of steam.
-  const cupX = -1.4;
-  const cupY = H + 0.2;
-  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.42, 1.0, 16), mat('white'));
-  cup.position.set(cupX, cupY + 0.5, 0);
-  g.add(cup);
-  const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.515, 0.47, 0.36, 16), mat('woodDark'));
-  sleeve.position.set(cupX, cupY + 0.45, 0);
-  g.add(sleeve);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.1, 16), mat('red'));
-  lid.position.set(cupX, cupY + 1.04, 0);
-  g.add(lid);
-  const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 0.1, 16), mat('red'));
-  lidTop.position.set(cupX, cupY + 1.13, 0);
-  g.add(lidTop);
-
-  // A flower box on the roof over the back end: leaves and coral, mustard and pink flowers.
-  block(g, 'wood', [1.75, H + 0.2, -0.5, 2.75, H + 0.36, 0.5]);
-  let seed = 3;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 9; i++) {
-    const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + rand() * 0.08, 0), mat(i % 2 ? 'grass' : 'grassDark'));
-    leaf.position.set(1.85 + rand() * 0.8, H + 0.42 + rand() * 0.1, -0.38 + rand() * 0.76);
-    g.add(leaf);
-  }
-  for (let i = 0; i < 8; i++) {
-    const flower = new THREE.Mesh(new THREE.IcosahedronGeometry(0.07, 0), mat((['red', 'mustard', 'pink'] as const)[i % 3]));
-    flower.position.set(1.85 + rand() * 0.8, H + 0.56 + rand() * 0.08, -0.38 + rand() * 0.76);
-    g.add(flower);
-  }
-
-  for (let i = 0; i < 3; i++) {
-    const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 - i * 0.03, 0), mat('white'));
-    puff.position.set(cupX + Math.sin(i * 1.7) * 0.15, cupY + 1.4 + i * 0.28, Math.cos(i * 1.7) * 0.1);
-    g.add(puff);
-  }
-  g.userData.steam = g.children.slice(-3);
+  logoSign(g);
+  g.userData.steam = [];
   return g;
 }
 
 /**
- * The striped awning over the window, sloping out and down, with a scalloped valance and a
- * string of little pennants (bunting) along its front edge.
+ * The logo as a 3D sign standing on the roof (owner's feedback: the painted board and the giant
+ * cup looked flat, and the cup's steam read as a chimney). The logo's own outline is cut out and
+ * given depth: the artwork on the front and the back, with layers of dark ink between them so
+ * from the side it reads as a thick cut-out board. Two posts and a base hold it up.
+ */
+function logoSign(g: THREE.Group): void {
+  const width = 3.2;
+  const height = (width * LOGO_CROP.h) / LOGO_CROP.w;
+  const depth = 0.14;
+  const layers = 9;
+  const logo = logoTexture();
+  const y = H + 0.62 + height / 2;
+  const plane = new THREE.PlaneGeometry(width, height);
+  for (let i = 0; i < layers; i++) {
+    const t = i / (layers - 1);
+    const outer = i === 0 || i === layers - 1;
+    const material = new THREE.MeshBasicMaterial({ map: logo, alphaTest: 0.5, side: THREE.FrontSide });
+    // The inner layers are the board's edge: the same outline, in dark ink.
+    if (!outer) material.color.set('#2a2230');
+    const layer = new THREE.Mesh(plane, material);
+    layer.position.set(-0.4, y, -depth / 2 + t * depth);
+    // The first layer faces the customers (−z), the last faces the back; inner ones both ways.
+    layer.rotation.y = i === layers - 1 ? 0 : Math.PI;
+    if (!outer) material.side = THREE.DoubleSide;
+    g.add(layer);
+  }
+  // Posts and a low base on the roof.
+  for (const x of [-1.3, 0.5]) block(g, 'ink', [x - 0.05, H + 0.2, -0.05, x + 0.05, H + 0.75, 0.05]);
+  block(g, 'inkSoft', [-1.6, H + 0.2, -0.22, 0.8, H + 0.3, 0.22]);
+}
+
+/**
+ * The striped awning over the window, sloping out and down, with a scalloped valance.
  */
 function awning(g: THREE.Group, x1: number, x2: number, y: number, z: number): void {
   const stripes = 9;
@@ -376,21 +290,5 @@ function awning(g: THREE.Group, x1: number, x2: number, y: number, z: number): v
     flap.material.side = THREE.DoubleSide;
     flap.position.set(x + width / 2, frontY + 0.005, frontZ - 0.004 - 0.002 * (i % 2));
     g.add(flap);
-  }
-  // Bunting: a line just under the front edge with coloured triangles hanging off it.
-  const line = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, x2 - x1, 4), mat('ink'));
-  line.rotation.z = Math.PI / 2;
-  line.position.set((x1 + x2) / 2, frontY - 0.2, frontZ - 0.03);
-  g.add(line);
-  const inks = ['red', 'mustard', 'teal', 'pink'] as const;
-  const flags = 13;
-  for (let i = 0; i < flags; i++) {
-    const t = (i + 0.5) / flags;
-    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 3), mat(inks[i % inks.length]));
-    flag.rotation.set(Math.PI, 0, 0);
-    flag.scale.z = 0.15;
-    // A slight sag in the middle.
-    flag.position.set(x1 + t * (x2 - x1), frontY - 0.28 - Math.sin(t * Math.PI) * 0.06, frontZ - 0.03);
-    g.add(flag);
   }
 }
