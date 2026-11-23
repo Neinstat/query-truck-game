@@ -1,3 +1,5 @@
+<p align="center"><img src="src/assets/query-truck-logo.webp" alt="Query Truck" width="560"></p>
+
 # Query Truck
 
 A first-person 3D game for learning SQL: you run a food truck that parks somewhere new in the city every day, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.

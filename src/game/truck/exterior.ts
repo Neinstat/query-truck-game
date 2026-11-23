@@ -3,7 +3,7 @@
  * fronted cab at the left end (two-pane windscreen, a red grille panel with round headlights, a
  * grey bumper, big door windows), a body with rounded roof edges, a coral-red band round the
  * bottom painted with white flowers, a mustard pinstripe, wheels with red hubs, a striped awning
- * with bunting over the serving window and a wooden counter under it, the name board, a giant
+ * with bunting over the serving window and a wooden counter under it, the logo sign, a giant
  * coffee cup and a flower box on the roof, and "SELECT * FROM coffee;" painted on the side.
  * Our own design (inspired by classic step vans; no third-party art). Built around the inside
  * (build.ts) without touching it: everything here is outside the walls.
@@ -12,6 +12,10 @@
 import * as THREE from 'three';
 import { block, mat } from './build';
 import { GROUND_Y, LAYOUT, TRUCK } from './world';
+import logoUrl from '../../assets/query-truck-logo.webp';
+
+/** Where the artwork sits in the logo picture (the rest is empty space), in pixels. */
+export const LOGO_CROP = { x: 140, y: 51, w: 1492, h: 784 } as const;
 
 const HX = TRUCK.length / 2;
 const HZ = TRUCK.depth / 2;
@@ -45,6 +49,27 @@ function decal(g: THREE.Group, texture: THREE.Texture, w: number, h: number, x: 
   m.rotation.y = yaw;
   g.add(m);
   return m;
+}
+
+/**
+ * The official logo as a texture (cropped to the artwork). It loads after the truck is built,
+ * so the sign stays clear until then; without a browser (tests) it stays empty.
+ */
+function logoTexture(): THREE.Texture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = Math.round((1024 * LOGO_CROP.h) / LOGO_CROP.w);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  if (typeof Image === 'undefined') return texture;
+  const image = new Image();
+  image.onload = () => {
+    canvas.getContext('2d')?.drawImage(image, LOGO_CROP.x, LOGO_CROP.y, LOGO_CROP.w, LOGO_CROP.h, 0, 0, canvas.width, canvas.height);
+    texture.needsUpdate = true;
+  };
+  image.src = logoUrl;
+  return texture;
 }
 
 /** White five-petal flowers and leaves, for the coral band (drawn once, used all round). */
@@ -254,26 +279,21 @@ export function buildExterior(): THREE.Group {
     (sign.material as THREE.MeshBasicMaterial).map = isOpen ? open : closed;
   };
 
-  // The name board over the serving window, facing the customers.
-  const name = textTexture(1024, 200, (ctx, cw, ch) => {
-    ctx.fillStyle = '#25304f';
-    ctx.beginPath();
-    ctx.roundRect(6, 6, cw - 12, ch - 12, 40);
-    ctx.fill();
-    ctx.strokeStyle = '#e4573d';
-    ctx.lineWidth = 12;
-    ctx.stroke();
-    ctx.fillStyle = '#fffaf0';
-    ctx.font = 'bold 118px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('QUERY TRUCK', cw / 2, ch / 2 - 4);
-  });
-  decal(g, name, 3.2, 0.62, 0, H + 0.55, front - 0.25, Math.PI);
-  block(g, 'ink', [-1.5, H + 0.2, front - 0.22, -1.44, H + 0.26, front - 0.16]);
-  block(g, 'ink', [1.44, H + 0.2, front - 0.22, 1.5, H + 0.26, front - 0.16]);
-  // The same name on the back.
-  decal(g, name, 3.2, 0.62, 0, H + 0.55, back + 0.25, 0);
+  // The logo on a sign over the serving window, facing the customers, and again on the back.
+  const signW = 3.0;
+  const signH = (signW * LOGO_CROP.h) / LOGO_CROP.w;
+  const logo = logoTexture();
+  for (const sign of [
+    decal(g, logo, signW, signH, 0, H + 0.24 + signH / 2, front - 0.25, Math.PI),
+    decal(g, logo, signW, signH, 0, H + 0.24 + signH / 2, back + 0.25, 0),
+  ]) {
+    // The empty space round the logo draws nothing (not even depth), so no outline shows
+    // the edge of the sign's rectangle.
+    (sign.material as THREE.MeshBasicMaterial).alphaTest = 0.5;
+  }
+  for (const z of [front - 0.25, back + 0.25]) {
+    for (const x of [-0.85, 0.85]) block(g, 'ink', [x - 0.03, H + 0.2, z - 0.03, x + 0.03, H + 0.5, z + 0.03]);
+  }
 
   // SQL painted on the side, in white on the coral band (left of the window), and on the back.
   const side = textTexture(1024, 160, (ctx, _w, ch) => {

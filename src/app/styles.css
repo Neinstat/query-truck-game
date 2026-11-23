@@ -1472,6 +1472,31 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* The official logo. The picture (1774 × 887) has empty space round the artwork, which sits at
+   x 140–1632, y 51–835: the frame has the artwork's shape and the picture is moved to fill it. */
+.logo {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  aspect-ratio: 1492 / 784;
+  overflow: hidden;
+}
+
+.logo img {
+  position: absolute;
+  width: 118.9%;
+  left: -9.38%;
+  top: -6.5%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.title-logo {
+  width: min(21rem, 100%);
+  margin: -0.4rem auto 0.1rem;
+  filter: drop-shadow(0 4px 0 rgba(37, 48, 79, 0.18));
+}
+
 .title-tagline {
   margin: 0 0 0.4rem;
   font-size: 0.95rem;

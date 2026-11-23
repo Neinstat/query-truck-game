@@ -5,6 +5,7 @@ import { formatClock, OPENING } from '../sql-core/truck/day';
 import { guideFor, type GuideItem } from './guide';
 import { sound } from '../audio/sound';
 import type { Place } from '../sql-core/truck/places';
+import { Logo } from './Logo';
 
 /** Sound on/off, the main volume, and music, ambience and effects on their own (saved). */
 function SoundControl({ t }: { t: UiText }) {
@@ -100,7 +101,7 @@ export function TitleScreen(props: {
     <div className="menu-screen title-screen">
       <div className="title-card">
         <p className="title-kicker">🚚 {t.titleKicker}</p>
-        <h1 className="title-name">Query Truck</h1>
+        <Logo className="title-logo" />
         <p className="title-tagline">{t.titleTagline}</p>
         <p className="title-place">
           <span>
@@ -136,7 +137,7 @@ export function LoadingScreen({ t }: { t: UiText }) {
   return (
     <div className="menu-screen" role="status">
       <div className="title-card">
-        <h1 className="title-name">Query Truck</h1>
+        <Logo className="title-logo" />
         <div className="title-loading">
           <div className="loading-bar" aria-hidden="true" />
           <p>{t.loadingWorld}</p>
