@@ -4,6 +4,7 @@ import type { GuidePage } from '../../guide';
 export const GUIDE_ID: readonly GuidePage[] = [
   {
     id: 'job',
+    note: { text: 'Hari pertama? Tarik napas. Nggak ada yang dipecat gara-gara query salah — pelanggannya cuma nanya lagi di hari lain.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '🚚',
     title: 'Tugasmu',
     paragraphs: [
@@ -16,6 +17,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
   },
   {
     id: 'controls',
+    note: { text: 'Kalau mouse-nya kabur, tekan Esc. Aku kehilangan mouse dua kali di pagi pertamaku.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '🎮',
     title: 'Kontrol',
     paragraphs: ['Cukup gerakkan mouse untuk melihat sekeliling — tidak perlu klik dulu. Esc melepas mouse dan menjeda permainan.'],
@@ -29,6 +31,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
   },
   {
     id: 'truck',
+    note: { text: 'Cek kulkas DULU sebelum janji croissant terakhir ke siapa pun. Percaya deh.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '🧭',
     title: 'Isi truck',
     paragraphs: [
@@ -97,6 +100,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
   },
   {
     id: 'lens',
+    note: { text: 'Lupa nama kolom? Tekan L. Aku masih begitu tiap hari.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '🔍',
     title: 'Data Lens',
     paragraphs: [
@@ -107,6 +111,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
   },
   {
     id: 'sql',
+    note: { text: 'Selalu akhiri dengan ; — Manager pasti lihat. Dia lihat semuanya.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '✍️',
     title: 'Menulis SQL',
     paragraphs: [
@@ -118,6 +123,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
   },
   {
     id: 'days',
+    note: { text: 'Pertanyaan lama bakal balik lagi. Itu bukan bug — begitulah caranya jadi jago.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '📅',
     title: 'Hari & latihan',
     paragraphs: [

@@ -178,7 +178,9 @@ const centre = (b: Box3): Vec3 => ({ x: (b.min.x + b.max.x) / 2, y: (b.min.y + b
  */
 export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: Vec3 }[] = [
   { object: 'tablet', eye: { x: 0.2, y: EYE_Y, z: 0.15 }, target: centre(LAYOUT.tablet) },
-  { object: 'fridge', eye: { x: -0.9, y: EYE_Y, z: 0.35 }, target: centre(LAYOUT.fridge) },
+  // Far back across the truck, so the fridge and the stock shelves beside it both show (owner's
+  // feedback: the close-up showed only the fridge).
+  { object: 'fridge', eye: { x: 0.9, y: EYE_Y, z: 0.3 }, target: { x: -2.5, y: 1.05, z: -0.45 } },
   { object: 'recipe-shelf', eye: { x: 1.2, y: EYE_Y, z: -0.25 }, target: centre(LAYOUT.recipeShelf) },
   { object: 'menu-board', eye: { x: 0.45, y: EYE_Y, z: -0.35 }, target: centre(LAYOUT.menuBoard) },
   { object: 'back-door', eye: { x: 0.4, y: EYE_Y, z: 0 }, target: centre(LAYOUT.door) },

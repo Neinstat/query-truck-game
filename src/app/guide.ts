@@ -19,11 +19,17 @@ export type GuideItem = {
   /** A question a customer might ask that is answered here. */
   example?: string;
 };
-export type GuidePage = { id: string; icon: string; title: string; paragraphs: string[]; items?: GuideItem[] };
+/**
+ * A sticky note on the page from Mira, who worked the window before the player: a tip in her own
+ * words, so the handbook feels handed down by a person (owner's feedback: the UI felt empty).
+ */
+export type GuideNote = { text: string; from: string };
+export type GuidePage = { id: string; icon: string; title: string; paragraphs: string[]; items?: GuideItem[]; note?: GuideNote };
 
 export const GUIDE: readonly GuidePage[] = [
   {
     id: 'job',
+    note: { text: 'First day? Breathe. Nobody gets fired here for a wrong query — the customer just asks again another day.', from: '— Mira, who had this window before you' },
     icon: '🚚',
     title: 'Your job',
     paragraphs: [
@@ -36,6 +42,7 @@ export const GUIDE: readonly GuidePage[] = [
   },
   {
     id: 'controls',
+    note: { text: 'If the mouse runs off, press Esc. I lost it twice on my first morning.', from: '— Mira, who had this window before you' },
     icon: '🎮',
     title: 'Controls',
     paragraphs: ['Just move the mouse to look around — no need to click first. Esc frees the mouse and pauses the game.'],
@@ -49,6 +56,7 @@ export const GUIDE: readonly GuidePage[] = [
   },
   {
     id: 'truck',
+    note: { text: 'Check the fridge BEFORE you promise anyone the last croissant. Trust me.', from: '— Mira, who had this window before you' },
     icon: '🧭',
     title: 'The truck',
     paragraphs: [
@@ -117,6 +125,7 @@ export const GUIDE: readonly GuidePage[] = [
   },
   {
     id: 'lens',
+    note: { text: 'Forgot a column name? Press L. I still do it every single day.', from: '— Mira, who had this window before you' },
     icon: '🔍',
     title: 'Data Lens',
     paragraphs: [
@@ -127,6 +136,7 @@ export const GUIDE: readonly GuidePage[] = [
   },
   {
     id: 'sql',
+    note: { text: 'Always end with ; — the Manager notices. They notice everything.', from: '— Mira, who had this window before you' },
     icon: '✍️',
     title: 'Writing SQL',
     paragraphs: [
@@ -138,6 +148,7 @@ export const GUIDE: readonly GuidePage[] = [
   },
   {
     id: 'days',
+    note: { text: 'Old questions come back. That\'s not a bug — that\'s how you get good.', from: '— Mira, who had this window before you' },
     icon: '📅',
     title: 'Days & practice',
     paragraphs: [

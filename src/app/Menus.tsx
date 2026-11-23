@@ -242,7 +242,12 @@ export function Guide({
     <div className="menu-screen guide-screen" role="dialog" aria-label={t.howToPlay}>
       <section className="guide-book">
         <header className="guide-header">
-          <h2>📖 {t.howToPlay}</h2>
+          <h2>
+            <span className="guide-tape" aria-hidden="true">
+              Query Truck · staff handbook
+            </span>
+            {t.howToPlay}
+          </h2>
           <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
             ✕
           </button>
@@ -256,17 +261,26 @@ export function Guide({
                 aria-current={i === index}
                 onClick={() => setIndex(i)}
               >
-                <span aria-hidden="true">{p.icon}</span> {p.title}
+                <span className="guide-tab-icon" aria-hidden="true">
+                  {p.icon}
+                </span>{' '}
+                {p.title}
               </button>
             ))}
           </nav>
           <article className="guide-page">
             <h3>
-              {page.icon} {page.title}
+              <span aria-hidden="true">{page.icon}</span> <mark>{page.title}</mark>
             </h3>
             {page.paragraphs.map((text) => (
               <p key={text}>{text}</p>
             ))}
+            {page.note && (
+              <aside className="guide-note">
+                <p>{page.note.text}</p>
+                <p className="guide-note-from">{page.note.from}</p>
+              </aside>
+            )}
             {page.items?.some((item) => item.object) && (
               <button className="menu-button menu-button-main guide-tour-button" onClick={onTour}>
                 🎥 {t.tourStart}

@@ -2882,3 +2882,284 @@ body {
 .pause-card .pause-confirm p {
   color: var(--cream);
 }
+
+/* ── The staff handbook (How to play), owner's feedback 23 Nov 2026: simple, but personal ──
+   A ruled notebook with a red margin and binding holes, coloured index tabs down the side, a
+   strip of tape with the handbook's name, the page title under a highlighter stroke, and a
+   sticky note on each page in Mira's handwriting (she worked the window before you). */
+.guide-book {
+  --paper: #fffaf0;
+  --rule: rgba(43, 156, 142, 0.18);
+  --margin: rgba(228, 87, 61, 0.45);
+  position: relative;
+  border: 3px solid #25304f;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 8px 0 #25304f, 0 20px 40px rgba(10, 8, 20, 0.35);
+  font-family: 'Fredoka', system-ui, sans-serif;
+  overflow: visible;
+}
+
+.guide-header {
+  position: relative;
+  padding: 1.1rem 1.2rem 0.7rem 1.6rem;
+  border-bottom: 2px dashed rgba(37, 48, 79, 0.25);
+  border-radius: 13px 13px 0 0;
+  background: var(--paper);
+}
+
+.guide-header h2 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* A strip of masking tape with the handbook's name, stuck on at an angle. */
+.guide-tape {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  padding: 0.3rem 1.2rem;
+  background: rgba(242, 178, 52, 0.85);
+  color: #25304f;
+  font-family: 'Caveat', cursive;
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  clip-path: polygon(2% 0, 98% 4%, 100% 100%, 0 96%);
+}
+
+.guide-book .close-button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 3px solid #25304f;
+  border-radius: 50%;
+  background: #e4573d;
+  color: #fffaf0;
+  font-weight: 700;
+  box-shadow: 0 3px 0 #25304f;
+}
+
+.guide-body {
+  grid-template-columns: 12.5rem 1fr;
+  border-radius: 0 0 13px 13px;
+}
+
+/* Index tabs: each its own colour, the open one sticks out onto the page. */
+.guide-tabs {
+  gap: 7px;
+  padding: 1rem 0 1rem 0.9rem;
+  border-right: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.guide-tab {
+  position: relative;
+  padding: 0.55rem 0.8rem;
+  border: 2px solid #25304f;
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.98rem;
+  color: #25304f;
+  background: var(--tab, #e6d6b6);
+  box-shadow: inset -6px 0 0 rgba(0, 0, 0, 0.06);
+  transform: translateX(8px);
+  transition: transform 0.12s ease;
+}
+
+.guide-tab:nth-child(6n + 1) { --tab: #f6b6a8; }
+.guide-tab:nth-child(6n + 2) { --tab: #f7d58a; }
+.guide-tab:nth-child(6n + 3) { --tab: #b9e3d8; }
+.guide-tab:nth-child(6n + 4) { --tab: #d9cbe8; }
+.guide-tab:nth-child(6n + 5) { --tab: #c8dff5; }
+.guide-tab:nth-child(6n + 6) { --tab: #f3c9a0; }
+
+.guide-tab:hover {
+  background: var(--tab, #e6d6b6);
+  transform: translateX(2px);
+}
+
+.guide-tab-on,
+.guide-tab-on:hover {
+  z-index: 1;
+  font-weight: 700;
+  background: var(--paper);
+  box-shadow: none;
+  transform: translateX(2px);
+}
+
+.guide-tab-on::after {
+  /* Joins the open tab to the page. */
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -4px;
+  width: 6px;
+  background: var(--paper);
+}
+
+/* The page: ruled lines, a red margin, binding holes down the left. */
+.guide-page {
+  position: relative;
+  padding: 1.2rem 1.6rem 1rem 2.6rem;
+  border-left: 2px solid #25304f;
+  font-size: 1.02rem;
+  line-height: 1.6rem;
+  background:
+    radial-gradient(circle at 12px 50%, #25304f 0 4px, transparent 4.5px) 0 0 / 24px 2.6rem repeat-y,
+    linear-gradient(90deg, transparent 1.8rem, var(--margin) 1.8rem, var(--margin) calc(1.8rem + 2px), transparent calc(1.8rem + 2px)),
+    repeating-linear-gradient(180deg, transparent 0 calc(1.6rem - 1px), var(--rule) calc(1.6rem - 1px) 1.6rem),
+    var(--paper);
+  background-attachment: local;
+}
+
+.guide-page h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+.guide-page h3 mark {
+  padding: 0 0.2rem;
+  color: inherit;
+  background: linear-gradient(180deg, transparent 55%, rgba(242, 178, 52, 0.65) 55%, rgba(242, 178, 52, 0.65) 92%, transparent 92%);
+}
+
+.guide-page p {
+  margin: 0 0 1.6rem;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.guide-page > p {
+  margin-bottom: 0;
+  margin-top: 0;
+  padding-bottom: 1.6rem;
+}
+
+/* Mira's sticky note. */
+.guide-note {
+  position: relative;
+  width: min(22rem, 92%);
+  margin: 0.2rem 0 1.4rem auto;
+  padding: 1rem 1.1rem 0.7rem;
+  background: linear-gradient(180deg, #fff3a6, #ffe873);
+  color: #3a3550;
+  transform: rotate(1.6deg);
+  box-shadow: 0 10px 16px -8px rgba(60, 40, 0, 0.45), 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.guide-note::before {
+  /* A bit of tape holding it on. */
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 20px;
+  transform: translateX(-50%) rotate(-4deg);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.guide-note p {
+  margin: 0;
+  font-family: 'Caveat', cursive;
+  font-size: 1.45rem;
+  line-height: 1.6rem;
+}
+
+.guide-note .guide-note-from {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+  text-align: right;
+  opacity: 0.75;
+}
+
+.guide-items li {
+  border: 2px solid #25304f;
+  border-radius: 12px;
+  background: #fffdf7;
+  box-shadow: 0 3px 0 rgba(37, 48, 79, 0.25);
+}
+
+.guide-items li p {
+  margin: 0 0 0.25rem;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.guide-item-name {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-size: 1.02rem !important;
+}
+
+.guide-nav {
+  border-top: 2px dashed rgba(37, 48, 79, 0.3);
+  padding-top: 0.8rem;
+}
+
+.guide-count {
+  font-family: 'Caveat', cursive;
+  font-size: 1.4rem;
+  color: #4a5878;
+}
+
+.guide-book .nav-button {
+  padding: 0.55rem 1.2rem;
+  border: 3px solid #25304f;
+  border-radius: 14px;
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: #fffaf0;
+  box-shadow: 0 4px 0 #25304f;
+}
+
+.guide-book .nav-button-main {
+  background: linear-gradient(180deg, #ffe7a0, #f6b93b 55%, #e9a12a);
+}
+
+.guide-book .nav-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #25304f;
+}
+
+.guide-book .nav-button:disabled {
+  border-color: #c9bfa9;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .guide-tabs {
+    flex-direction: row;
+    padding: 0.6rem 0.6rem 0;
+  }
+  .guide-tab {
+    border-right: 2px solid #25304f;
+    border-bottom: 0;
+    border-radius: 12px 12px 0 0;
+    transform: translateY(6px);
+  }
+  .guide-tab-on,
+  .guide-tab-on:hover {
+    transform: translateY(2px);
+  }
+  .guide-tab-on::after {
+    display: none;
+  }
+  .guide-page {
+    border-left: 0;
+    border-top: 2px solid #25304f;
+  }
+}

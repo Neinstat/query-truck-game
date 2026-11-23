@@ -12,7 +12,7 @@ The Query Truck logo (`src/assets/query-truck-logo.webp`) is the project owner's
 
 ## Fonts
 
-[Fredoka](https://fonts.google.com/specimen/Fredoka) by Milena Brandão and Hafontia, under the [SIL Open Font Licence 1.1](https://openfontlicense.org), loaded from Google Fonts for the menus' lettering (title, pause and loading screens). Without it the menus fall back to the system font.
+[Fredoka](https://fonts.google.com/specimen/Fredoka) by Milena Brandão and Hafontia, under the [SIL Open Font Licence 1.1](https://openfontlicense.org), loaded from Google Fonts for the menus' lettering (title, pause and loading screens). [Caveat](https://fonts.google.com/specimen/Caveat) by Impallari Type, under the same licence, for the handwriting in the staff handbook (Mira's notes). Without them the menus fall back to the system fonts.
 
 ## Sound
 
