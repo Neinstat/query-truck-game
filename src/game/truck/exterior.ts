@@ -3,8 +3,8 @@
  * fronted cab at the left end (two-pane windscreen, a red grille panel with round headlights, a
  * grey bumper, big door windows), a body with rounded roof edges, a coral-red band round the
  * bottom, a mustard pinstripe, wheels with red hubs, a striped awning
- * over the serving window and a wooden counter under it, and the game's logo as a
- * 3D cut-out sign on the roof.
+ * over the serving window and a wooden counter under it, and the game's logo on a
+ * framed sign board on the roof.
  * Our own design (inspired by classic step vans; no third-party art). Built around the inside
  * (build.ts) without touching it: everything here is outside the walls.
  * ⚠ Placeholder model (docs/ASSETS.md).
@@ -132,7 +132,7 @@ export function buildExterior(): THREE.Group {
   edge(g, 'x', 2 * HX + 2 * T + P + 0.08, 0.1, (end + P - HX - T) / 2, H + 0.15, front - P - 0.05);
   edge(g, 'x', 2 * HX + 2 * T + P + 0.08, 0.1, (end + P - HX - T) / 2, H + 0.15, back + P + 0.05);
   edge(g, 'z', back - front + 2 * P + 0.1, 0.1, end + P + 0.05, H + 0.15, 0);
-  block(g, 'paperShade', [0.9, H + 0.2, -0.3, 1.5, H + 0.32, 0.3]);
+  block(g, 'paperShade', [1.9, H + 0.2, -0.3, 2.5, H + 0.32, 0.3]);
 
   // The serving window: a white frame, a wooden counter outside it, and the awning above.
   block(g, 'wood', [w.min.x - 0.14, w.min.y - 0.1, front - P - 0.3, w.max.x + 0.14, w.min.y - 0.03, front - P]);
@@ -235,35 +235,48 @@ export function buildExterior(): THREE.Group {
 }
 
 /**
- * The logo as a 3D sign standing on the roof (owner's feedback: the painted board and the giant
- * cup looked flat, and the cup's steam read as a chimney). The logo's own outline is cut out and
- * given depth: the artwork on the front and the back, with layers of dark ink between them so
- * from the side it reads as a thick cut-out board. Two posts and a base hold it up.
+ * The logo on a 3D sign board on the roof (owner's feedback, 23 Nov 2026: the logo floated in
+ * the air). A cream board with a coral frame stands on two posts set in a base on the roof;
+ * the artwork sits on the board's front and back, a hair in front of it.
  */
 function logoSign(g: THREE.Group): void {
-  const width = 3.2;
-  const height = (width * LOGO_CROP.h) / LOGO_CROP.w;
-  const depth = 0.14;
-  const layers = 9;
+  const logoW = 3.1;
+  const logoH = (logoW * LOGO_CROP.h) / LOGO_CROP.w;
+  const margin = 0.14;
+  const W = logoW + 2 * margin;
+  const Hb = logoH + 2 * margin;
+  const x0 = -0.4;
+  const bottom = H + 0.85;
+  const top = bottom + Hb;
+  const yMid = (bottom + top) / 2;
+  // The board, and its frame (a little thicker than the board, so their faces never meet).
+  block(g, 'white', [x0 - W / 2, bottom, -0.05, x0 + W / 2, top, 0.05]);
+  const f = 0.07;
+  block(g, 'red', [x0 - W / 2 - f, top - f, -0.075, x0 + W / 2 + f, top + f, 0.075]);
+  block(g, 'red', [x0 - W / 2 - f, bottom - f, -0.075, x0 + W / 2 + f, bottom + f, 0.075]);
+  block(g, 'red', [x0 - W / 2 - f, bottom - f, -0.075, x0 - W / 2 + f, top + f, 0.075]);
+  block(g, 'red', [x0 + W / 2 - f, bottom - f, -0.075, x0 + W / 2 + f, top + f, 0.075]);
+  // The artwork on both faces.
   const logo = logoTexture();
-  const y = H + 0.62 + height / 2;
-  const plane = new THREE.PlaneGeometry(width, height);
-  for (let i = 0; i < layers; i++) {
-    const t = i / (layers - 1);
-    const outer = i === 0 || i === layers - 1;
-    const material = new THREE.MeshBasicMaterial({ map: logo, alphaTest: 0.5, side: THREE.FrontSide });
-    // The inner layers are the board's edge: the same outline, in dark ink.
-    if (!outer) material.color.set('#2a2230');
-    const layer = new THREE.Mesh(plane, material);
-    layer.position.set(-0.4, y, -depth / 2 + t * depth);
-    // The first layer faces the customers (−z), the last faces the back; inner ones both ways.
-    layer.rotation.y = i === layers - 1 ? 0 : Math.PI;
-    if (!outer) material.side = THREE.DoubleSide;
-    g.add(layer);
+  const plane = new THREE.PlaneGeometry(logoW, logoH);
+  for (const side of [-1, 1]) {
+    const art = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: logo, transparent: true, alphaTest: 0.5 }));
+    art.position.set(x0, yMid, side * 0.058);
+    art.rotation.y = side < 0 ? Math.PI : 0;
+    g.add(art);
   }
-  // Posts and a low base on the roof.
-  for (const x of [-1.3, 0.5]) block(g, 'ink', [x - 0.05, H + 0.2, -0.05, x + 0.05, H + 0.75, 0.05]);
-  block(g, 'inkSoft', [-1.6, H + 0.2, -0.22, 0.8, H + 0.3, 0.22]);
+  // Two posts running up into the board, each in a foot on a base plate on the roof.
+  for (const x of [x0 - W * 0.3, x0 + W * 0.3]) {
+    block(g, 'ink', [x - 0.06, H + 0.26, -0.04, x + 0.06, bottom + 0.4, 0.04]);
+    block(g, 'inkSoft', [x - 0.14, H + 0.26, -0.12, x + 0.14, H + 0.36, 0.12]);
+    // A diagonal brace from the foot to the post, front and back.
+    for (const z of [-1, 1]) {
+      const brace = block(g, 'ink', [-0.025, -0.35, -0.025, 0.025, 0.35, 0.025]);
+      brace.position.set(x, H + 0.55, z * 0.2);
+      brace.rotation.x = z * 0.55;
+    }
+  }
+  block(g, 'inkSoft', [x0 - W / 2 + 0.2, H + 0.2, -0.28, x0 + W / 2 - 0.2, H + 0.26, 0.28]);
 }
 
 /**

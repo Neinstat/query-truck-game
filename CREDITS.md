@@ -10,6 +10,10 @@ None yet. Everything in the game is original to Query Truck: the riso palette (`
 
 The Query Truck logo (`src/assets/query-truck-logo.webp`) is the project owner's own artwork, the game's official logo (23 Nov 2026). It is used on the title screen, the loading screen, the truck's 3D roof sign and in the README.
 
+## Fonts
+
+[Fredoka](https://fonts.google.com/specimen/Fredoka) by Milena Brandão and Hafontia, under the [SIL Open Font Licence 1.1](https://openfontlicense.org), loaded from Google Fonts for the menus' lettering (title, pause and loading screens). Without it the menus fall back to the system font.
+
 ## Sound
 
 None. Every sound is synthesized in the browser with the Web Audio API (`src/audio/sound.ts`): no audio files are used.

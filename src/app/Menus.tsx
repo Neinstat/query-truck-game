@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { UiText } from '../i18n';
 import { LANGS, type Lang } from '../sql-core/feedback';
-import { formatClock, OPENING } from '../sql-core/truck/day';
+import { OPENING } from '../sql-core/truck/day';
 import { guideFor, type GuideItem } from './guide';
 import { sound } from '../audio/sound';
 import type { Place } from '../sql-core/truck/places';
@@ -100,7 +100,6 @@ export function TitleScreen(props: {
   return (
     <div className="menu-screen title-screen">
       <div className="title-card">
-        <p className="title-kicker">🚚 {t.titleKicker}</p>
         <Logo className="title-logo" />
         <p className="title-tagline">{t.titleTagline}</p>
         <p className="title-place">
@@ -111,7 +110,7 @@ export function TitleScreen(props: {
         </p>
         {ready ? (
           <button className="menu-button menu-button-main" onClick={onStart} autoFocus>
-            {started ? t.titleContinue(dayNumber, formatClock(clock)) : t.titleStart(dayNumber)}
+            {started ? t.titleContinue(dayNumber) : t.titleStart(dayNumber)}
           </button>
         ) : (
           <div className="title-loading" role="status">
