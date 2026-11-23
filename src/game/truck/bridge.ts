@@ -54,6 +54,9 @@ export type DevCommand =
   | { cmd: 'spawn' }
   | { cmd: 'knock' }
   | { cmd: 'noclip'; on: boolean }
+  /** Ghost: fly anywhere (Space up, Shift down) with nothing to do — customers serve themselves,
+   * nobody runs out of patience, the Manager doesn't knock and nothing can be used. */
+  | { cmd: 'ghost'; on: boolean }
   | { cmd: 'stats'; on: boolean }
   /** The panel is open: the game keeps running, but the mouse is free for the panel. */
   | { cmd: 'panel'; open: boolean };
@@ -74,6 +77,7 @@ export type DevStats = {
   knocking: boolean;
   managerDone: boolean;
   noclip: boolean;
+  ghost: boolean;
   position: { x: number; z: number };
 };
 

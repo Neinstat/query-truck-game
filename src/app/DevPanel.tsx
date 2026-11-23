@@ -6,7 +6,8 @@
  *
  * It shows what the game is doing (time, day, place, weather, queue, the Manager, how well each
  * concept is known, and performance), and can move time on, speed it up, make it rain, call the
- * next customer, serve an order without SQL, make the Manager knock, walk anywhere, change the
+ * next customer, serve an order without SQL, make the Manager knock, walk anywhere, fly as a
+ * ghost with no duties, change the
  * place, end, restart or skip the day, and wipe all progress.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -148,10 +149,19 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
 
           <h4>Player</h4>
           <div className="dev-row">
-            <button className={stats?.noclip ? 'active' : ''} onClick={() => dev({ cmd: 'noclip', on: !stats?.noclip })}>
+            <button className={stats?.noclip ? 'active' : ''} disabled={stats?.ghost} onClick={() => dev({ cmd: 'noclip', on: !stats?.noclip })}>
               {stats?.noclip ? '🚶 Walk anywhere: on' : '🚶 Walk anywhere (out of the truck)'}
             </button>
+            <button className={stats?.ghost ? 'active' : ''} onClick={() => dev({ cmd: 'ghost', on: !stats?.ghost })}>
+              {stats?.ghost ? '👻 Ghost: on' : '👻 Ghost (fly, no duties)'}
+            </button>
           </div>
+          {stats?.ghost && (
+            <p className="dev-note">
+              Fly anywhere: WASD to move, Space up, Shift down. Customers serve themselves (not saved as yours), nobody runs out of
+              patience, the Manager doesn't knock and nothing can be used. Turn it off to play again.
+            </p>
+          )}
 
           <h4>Day {past.length + 1}</h4>
           <div className="dev-row">

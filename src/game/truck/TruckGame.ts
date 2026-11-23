@@ -115,6 +115,10 @@ export class TruckGame {
   private devRain: number | null = null;
   private devSpawn = false;
   private noclip = false;
+  /** Developer ghost mode (see DevCommand 'ghost'): flying, and no duties. */
+  private ghost = false;
+  private ghostY = EYE_Y;
+  private flying = { up: false, down: false };
   private statsOn = false;
   private panelOpen = false;
   private lookingAtClock = false;
@@ -315,7 +319,10 @@ export class TruckGame {
       if (key) {
         this.keys[key] = down;
         e.preventDefault();
-      } else if (down && e.code === 'KeyE') {
+      } else if (this.ghost && (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight')) {
+        this.flying[e.code === 'Space' ? 'up' : 'down'] = down;
+        e.preventDefault();
+      } else if (down && e.code === 'KeyE' && !this.ghost) {
         this.use();
       } else if (down && e.code === 'KeyL' && !e.repeat) {
         this.bridge.emit('lensKey', true);
@@ -461,8 +468,15 @@ export class TruckGame {
           this.bridge.emit('knock', true);
         }
         break;
-      case 'noclip':
+      case 'ghost':
+        this.ghost = c.on;
         this.noclip = c.on;
+        this.ghostY = EYE_Y;
+        this.flying = { up: false, down: false };
+        if (!c.on) this.at = walkStep(this.at, this.yaw, { forward: false, back: false, left: false, right: false }, 0);
+        break;
+      case 'noclip':
+        this.noclip = c.on || this.ghost;
         if (!c.on) this.at = walkStep(this.at, this.yaw, { forward: false, back: false, left: false, right: false }, 0);
         break;
       case 'stats':
@@ -501,6 +515,7 @@ export class TruckGame {
       knocking: this.knocking,
       managerDone: this.managerDone,
       noclip: this.noclip,
+      ghost: this.ghost,
       position: { x: Math.round(this.at.x * 10) / 10, z: Math.round(this.at.z * 10) / 10 },
     });
     this.frames = 0;
@@ -671,6 +686,10 @@ export class TruckGame {
   step(seconds: number): void {
     const dt = this.paused ? 0 : seconds;
     this.at = walkStep(this.at, this.yaw, this.keys, dt, this.noclip);
+    if (this.ghost) {
+      const lift = (this.flying.up ? 1 : 0) - (this.flying.down ? 1 : 0);
+      this.ghostY = Math.max(0.3, Math.min(40, this.ghostY + lift * 4 * dt));
+    }
     this.devStats(seconds);
     // A gentle head bob while walking.
     const moving = Object.values(this.keys).some(Boolean) && dt > 0;
@@ -703,18 +722,18 @@ export class TruckGame {
       this.camera.position.set(this.tourView.x, this.tourView.y, this.tourView.z);
       this.camera.rotation.set(this.tourView.pitch, this.tourView.yaw, 0, 'YXZ');
     } else {
-      this.camera.position.set(this.at.x, EYE_Y + bob, this.at.z);
+      this.camera.position.set(this.at.x, this.ghost ? this.ghostY : EYE_Y + bob, this.at.z);
       this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
     }
 
     const eye = { x: this.at.x, y: EYE_Y, z: this.at.z };
-    const aimed = this.paused ? null : aimedInteractable(eye, lookDirection(this.yaw, this.pitch));
+    const aimed = this.paused || this.ghost ? null : aimedInteractable(eye, lookDirection(this.yaw, this.pitch));
     if (aimed !== this.aimed) {
       this.aimed = aimed;
       this.bridge.emit('hover', aimed);
     }
     // Looking at the wall clock (from anywhere in the truck): the app shows the time.
-    const atClock = !this.paused && !this.tourView && lookingAt(eye, lookDirection(this.yaw, this.pitch), CLOCK_BOX, 5);
+    const atClock = !this.paused && !this.ghost && !this.tourView && lookingAt(eye, lookDirection(this.yaw, this.pitch), CLOCK_BOX, 5);
     if (atClock !== this.lookingAtClock) {
       this.lookingAtClock = atClock;
       this.bridge.emit('lookClock', atClock);
@@ -867,6 +886,7 @@ export class TruckGame {
     }
     // Patience runs out while waiting in line (not while walking off, and not while time is stopped).
     for (const customer of [...this.queue.line]) {
+      if (this.ghost) continue;
       customer.waited += gameMinutes;
       if (customer.waited >= PATIENCE_MINUTES) {
         this.queue.giveUp(customer);
@@ -906,6 +926,8 @@ export class TruckGame {
       }
     }
 
+    // A ghost has no duties: whoever reaches the window takes their order and walks on.
+    if (this.ghost && this.queue.front()) this.queue.serveFront();
     const front = this.queue.front();
     const frontId = front?.orderId ?? null;
     if (frontId !== this.frontOrderId) {
@@ -921,7 +943,7 @@ export class TruckGame {
     // The Manager knocks once a day: at their time, or as soon as every customer has been handled.
     const noneToCome = this.clock >= CLOSING || this.nextOrder >= this.orders.length;
     const quietForGood = noneToCome && this.queue.line.length === 0;
-    if (!this.managerDone && !this.knocking && this.clock < CLOSING && (this.clock >= KNOCK_TIME || quietForGood)) {
+    if (!this.ghost && !this.managerDone && !this.knocking && this.clock < CLOSING && (this.clock >= KNOCK_TIME || quietForGood)) {
       this.knocking = true;
       this.bridge.emit('knock', true);
     }
