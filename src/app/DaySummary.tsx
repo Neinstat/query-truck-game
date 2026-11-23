@@ -24,6 +24,7 @@ export function DaySummary({
   t,
   onNewDay,
   onReplay,
+  practice = false,
 }: {
   db: CafeDatabase | null;
   day: DayLog;
@@ -33,6 +34,8 @@ export function DaySummary({
   t: UiText;
   onNewDay: () => void;
   onReplay: () => void;
+  /** A practice run (Days screen): nothing here is kept, and the buttons go back or practise again. */
+  practice?: boolean;
 }) {
   const progress = dayProgress(past, day);
   const sql = revenueSql(day.date);
@@ -85,7 +88,8 @@ export function DaySummary({
           </dd>
         </div>
       </dl>
-      {progress.length > 0 && (
+      {practice && <p className="day-summary-next">{t.summaryPracticeNote}</p>}
+      {!practice && progress.length > 0 && (
         <>
           <p className="day-summary-label">📈 {t.summaryPractised}</p>
           <ul className="day-summary-concepts">
@@ -111,15 +115,18 @@ export function DaySummary({
       <pre className="day-summary-sql">
         <code>{sql}</code>
       </pre>
-      <p className="day-summary-next">{t.summaryNext}</p>
+      {!practice && <p className="day-summary-next">{t.summaryNext}</p>}
       <div className="day-summary-buttons">
         <button className="primary-button" onClick={onNewDay}>
-          {t.newDay}
+          {practice ? t.daysBack(dayAfter(past)) : t.newDay}
         </button>
         <button className="link-button" onClick={onReplay}>
-          ↺ {t.replayDay}
+          {practice ? t.practiceAgain : t.replayDay}
         </button>
       </div>
     </div>
   );
 }
+
+/** The day the player is really on (a practice run goes back to it). */
+const dayAfter = (past: readonly DayLog[]) => past.length + 1;

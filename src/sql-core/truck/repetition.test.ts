@@ -186,3 +186,25 @@ describe('days that follow', () => {
     }
   });
 });
+
+describe('practising a day again', () => {
+  const day = nextDay([]);
+
+  it('keeps the same concepts, with different orders', async () => {
+    const { practiceOrders, dayConcepts } = await import('./repetition');
+    const fresh = practiceOrders(day.orders, 'one');
+    expect(fresh).toHaveLength(day.orders.length);
+    expect(dayConcepts(fresh)).toEqual(dayConcepts(day.orders));
+    // Mostly new cases: at least one order differs from the day's.
+    expect(fresh.some((id) => !day.orders.includes(id))).toBe(true);
+    // Never the same order twice in one practice.
+    expect(new Set(fresh).size).toBe(fresh.length);
+  });
+
+  it('gives a different practice for a different seed, the same for the same seed', async () => {
+    const { practiceOrders } = await import('./repetition');
+    expect(practiceOrders(day.orders, 'a')).toEqual(practiceOrders(day.orders, 'a'));
+    const seeds = ['a', 'b', 'c', 'd'].map((s) => practiceOrders(day.orders, s).join());
+    expect(new Set(seeds).size).toBeGreaterThan(1);
+  });
+});

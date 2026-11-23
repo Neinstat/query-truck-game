@@ -12,7 +12,7 @@ import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, typ
 import { starsFor } from './rewards';
 import { sound } from '../audio/sound';
 import { dayOrders, inputStage, orderLevel, type TruckOrder } from '../sql-core/truck/orders';
-import { masteryFrom, nextDay, parsePastDays } from '../sql-core/truck/repetition';
+import { masteryFrom, nextDay, parsePastDays, practiceOrders } from '../sql-core/truck/repetition';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
 import { TalkBox } from './TalkBox';
@@ -58,16 +58,66 @@ function write(key: string, value: unknown): void {
   }
 }
 
-/** The finished days and today. Today must come after the last finished day, or a new one starts. */
-function loadProgress(): { past: DayLog[]; day: DayLog } {
+/**
+ * A practice run (GAME_DESIGN.md §5, the Days screen): an earlier day played again — the same
+ * orders, or the same concepts with new cases — kept apart from the real progress. It never
+ * becomes a past day and never changes mastery; leaving it goes back to today as it was.
+ */
+const PRACTICE_KEY = 'query-truck.practice';
+export type PracticeMode = 'replay' | 'fresh';
+export type Practice = { from: number; mode: PracticeMode; log: DayLog };
+
+function parsePractice(raw: string | null): Practice | null {
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw) as Partial<Practice>;
+    const log = parseDayLog(JSON.stringify(data.log));
+    if (!log || typeof data.from !== 'number' || !Number.isInteger(data.from) || data.from < 1) return null;
+    return { from: data.from, mode: data.mode === 'fresh' ? 'fresh' : 'replay', log };
+  } catch {
+    return null;
+  }
+}
+
+/** The finished days and today (or the practice run being played). */
+function loadProgress(): { past: DayLog[]; day: DayLog; today: DayLog; practice: Practice | null } {
   const past = parsePastDays(read(PAST_KEY));
   const saved = parseDayLog(read(DAY_KEY));
   const last = past[past.length - 1];
-  const day = saved && (!last || saved.date > last.date) ? saved : nextDay(past);
-  return { past, day };
+  const today = saved && (!last || saved.date > last.date) ? saved : nextDay(past);
+  const practice = parsePractice(read(PRACTICE_KEY));
+  if (practice && practice.from <= past.length + 1) {
+    // Today is kept as it was (saved once more, in case it was new), and the practice is played.
+    write(DAY_KEY, today);
+    return { past, day: practice.log, today, practice };
+  }
+  return { past, day: today, today, practice: null };
 }
 
 const saveDay = (log: DayLog) => write(DAY_KEY, log);
+
+/**
+ * Practise an earlier day (or today): `replay` brings back its very orders, `fresh` the same
+ * concepts with other cases. Played on today's date, apart from the saved days.
+ */
+export function startPractice(past: readonly DayLog[], today: DayLog, from: number, mode: PracticeMode): void {
+  const source = from <= past.length ? past[from - 1] : today;
+  const orders = mode === 'replay' ? source.orders : practiceOrders(source.orders, `${from} ${Date.now()}`);
+  write(PRACTICE_KEY, { from, mode, log: newDay(today.date, orders) } satisfies Practice);
+  skipTitleNextLoad();
+  window.location.reload();
+}
+
+/** Stop practising: back to today, exactly as it was left. */
+export function endPractice(): void {
+  try {
+    localStorage.removeItem(PRACTICE_KEY);
+  } catch {
+    // Nothing saved, nothing to remove.
+  }
+  skipTitleNextLoad();
+  window.location.reload();
+}
 
 /** Throw away today's progress and play the same day again (the page reloads to rebuild the data). */
 export function restartDay(day: DayLog): void {
@@ -101,6 +151,12 @@ const skipTitleNextLoad = () => {
 export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOpen = false) {
   const [progressOnLoad] = useState(loadProgress);
   const past = progressOnLoad.past;
+  const practice = progressOnLoad.practice;
+  // A practice run is saved under its own key, never over today.
+  const save = useCallback(
+    (log: DayLog) => (practice ? write(PRACTICE_KEY, { ...practice, log } satisfies Practice) : saveDay(log)),
+    [practice],
+  );
   const [day, setDay] = useState<DayLog>(progressOnLoad.day);
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -138,7 +194,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
       .catch((err) => setDbError(String(err)));
   }, [progressOnLoad]);
   // A fresh day is saved straight away, so a reload keeps its plan.
-  useEffect(() => saveDay(progressOnLoad.day), [progressOnLoad]);
+  useEffect(() => save(progressOnLoad.day), [progressOnLoad, save]);
 
   useEffect(() => bridge.on('front', setFront), [bridge]);
 
@@ -164,10 +220,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   const updateDay = useCallback((change: (log: DayLog) => DayLog) => {
     setDay((prev) => {
       const next = change(prev);
-      if (next !== prev) saveDay(next);
+      if (next !== prev) save(next);
       return next;
     });
-  }, []);
+  }, [save]);
   // The saved clock never goes back (only "start the day again" resets it, by replacing the log).
   useEffect(
     () => bridge.on('clock', (minutes) => updateDay((log) => (minutes > log.clock ? { ...log, clock: minutes } : log))),
@@ -404,6 +460,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     orders,
     /** The days played before today. */
     past,
+    /** The practice run being played (null: the real day). */
+    practice,
+    /** Today as saved (the real day, also while a practice run is played). */
+    today: progressOnLoad.today,
     /** Every order of the day has been served. */
     dayDone: closed,
     /** The Manager is knocking and has not been answered yet. */

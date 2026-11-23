@@ -5,7 +5,8 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { restartDay, SKIP_TITLE_KEY, startNextDay, useTruckShift } from './useTruckShift';
+import { endPractice, restartDay, SKIP_TITLE_KEY, startNextDay, startPractice, useTruckShift } from './useTruckShift';
+import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
@@ -60,6 +61,8 @@ export function TruckApp() {
   }, []);
   const [screen, setScreen] = useState<Screen>(() => (skipTitleOnce() ? 'playing' : 'title'));
   const [guideOpen, setGuideOpen] = useState(false);
+  /** The Days screen (from the pause menu): every day so far, and practice runs. */
+  const [daysOpen, setDaysOpen] = useState(false);
   /** The truck tour: which stop the camera is at (null: no tour). */
   const [tourStep, setTourStep] = useState<number | null>(null);
   /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
@@ -69,9 +72,11 @@ export function TruckApp() {
   /** The developer panel (F2): the game keeps running, with the mouse free for the panel. */
   const [devOpen, setDevOpen] = useState(false);
   const canDev = useMemo(() => devAllowed(), []);
-  const menuOpen = screen !== 'playing' || guideOpen || tourStep !== null || !ready || !dataReady;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
+  const menuOpen = screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady;
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen);
+  /** The day number shown: today's, or the day a practice run comes from. */
+  const dayNumber = practice ? practice.from : past.length + 1;
   useEffect(() => setDataReady(db !== null), [db]);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
@@ -80,13 +85,14 @@ export function TruckApp() {
     orders: orders.map((o) => ({ id: o.id, look: o.look })),
     handled: [...day.served.map((s) => s.orderId), ...day.missed],
     clock: day.clock,
-    managerDone: day.manager !== null,
-    // A different place each day (sql-core/truck/places.ts).
-    place: todaysPlace(past.length + 1).id,
+    // Practice runs are for the customers' orders: the Manager doesn't come.
+    managerDone: day.manager !== null || practice !== null,
+    // A different place each day (sql-core/truck/places.ts); a practice is where that day was.
+    place: todaysPlace(dayNumber).id,
     // `?rain` in the address: rain today whatever the weather (for testing).
     forceRain: new URLSearchParams(window.location.search).has('rain'),
   });
-  const place = todaysPlace(past.length + 1);
+  const place = todaysPlace(dayNumber);
   useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
@@ -156,7 +162,13 @@ export function TruckApp() {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
       // the mouse looks around again: the "click to look around" chip says so).
-      if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && tourStep === null) {
+      // The Days screen sits over the pause menu: Esc closes it first.
+      if (e.key === 'Escape' && daysOpen) {
+        e.preventDefault();
+        setDaysOpen(false);
+        return;
+      }
+      if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && !daysOpen && tourStep === null) {
         e.preventDefault();
         play();
         return;
@@ -208,7 +220,8 @@ export function TruckApp() {
             <ClockWidget
               clock={day.clock}
               shut={shut}
-              dayNumber={past.length + 1}
+              dayNumber={dayNumber}
+              practice={practice !== null}
               date={day.date}
               served={day.served.length}
               total={day.orders.length}
@@ -242,8 +255,9 @@ export function TruckApp() {
             dateLabel={t.dateLabel(day.date)}
             lang={lang}
             t={t}
-            onNewDay={() => startNextDay(past, day)}
-            onReplay={() => restartDay(day)}
+            practice={practice !== null}
+            onNewDay={() => (practice ? endPractice() : startNextDay(past, day))}
+            onReplay={() => (practice ? startPractice(past, today, practice.from, practice.mode) : restartDay(day))}
           />
         )}
         {ready && !consoleOpen && !menuOpen && lens && (
@@ -301,7 +315,8 @@ export function TruckApp() {
         )}
         {screen === 'title' && tourStep === null && (
           <TitleScreen
-            dayNumber={past.length + 1}
+            dayNumber={dayNumber}
+            practice={practice !== null}
             place={place}
             clock={day.clock}
             worldReady={ready}
@@ -321,16 +336,24 @@ export function TruckApp() {
             onResume={play}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
-            lens={lens}
-            onLens={() => {
-              setLens((on) => !on);
-              play();
-            }}
-            onRestart={() => restartDay(day)}
+            onDays={() => setDaysOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
             setLang={setLang}
             t={t}
+          />
+        )}
+        {daysOpen && (
+          <DaysScreen
+            past={past}
+            today={today}
+            practice={practice}
+            lang={lang}
+            t={t}
+            onRestartToday={() => restartDay(day)}
+            onPractise={(from, mode) => startPractice(past, today, from, mode)}
+            onEndPractice={endPractice}
+            onClose={() => setDaysOpen(false)}
           />
         )}
         {tourStep !== null && (
@@ -380,6 +403,8 @@ function ClockWidget(props: {
   clock: number;
   shut: boolean;
   dayNumber: number;
+  /** A practice run (Days screen): shown on the card. */
+  practice: boolean;
   date: string;
   served: number;
   total: number;
@@ -389,7 +414,7 @@ function ClockWidget(props: {
   place: string;
   t: UiText;
 }) {
-  const { clock, shut, dayNumber, date, served, total, lens, raining, place, t } = props;
+  const { clock, shut, dayNumber, practice, date, served, total, lens, raining, place, t } = props;
   const progress = Math.min(1, Math.max(0, (clock - OPENING) / (CLOSING - OPENING)));
   return (
     <div className={shut ? 'hud-clock hud-clock-shut' : 'hud-clock'} title={t.clockTitle}>
@@ -406,7 +431,10 @@ function ClockWidget(props: {
         <span style={{ width: `${progress * 100}%` }} />
       </div>
       <div className="hud-clock-bottom" title={t.dayTitle}>
-        <span>{t.dayShort(dayNumber, date)}</span>
+        <span>
+          {t.dayShort(dayNumber, date)}
+          {practice && <span className="hud-clock-practice">{t.practiceTag}</span>}
+        </span>
         <span className="hud-clock-served">
           ☕ {served}/{total}
         </span>

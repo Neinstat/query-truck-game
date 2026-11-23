@@ -162,3 +162,30 @@ export function dayProgress(past: readonly DayLog[], day: DayLog) {
     due: after[concept]!.due,
   }));
 }
+
+/** The concepts a day's orders practise, in teaching order. */
+export function dayConcepts(orders: readonly string[]): ConceptId[] {
+  const found = new Set(orders.map((id) => parseOrderId(id)?.template.concept).filter((c): c is ConceptId => c !== undefined));
+  return CONCEPTS.filter((c) => found.has(c));
+}
+
+/**
+ * Practice with the same material but different cases (GAME_DESIGN.md §5, owner's idea 23 Nov
+ * 2026: a query is learnt by doing it again and again): for each of a day's orders, another order
+ * of the same concept — another template or another variant — that the day didn't have. Where a
+ * concept has nothing else left, the same order comes back. `seed` makes each practice different.
+ */
+export function practiceOrders(source: readonly string[], seed: string): string[] {
+  const rand = seeded(hashText(`practice ${seed}`));
+  const chosen: string[] = [];
+  for (const id of source) {
+    const concept = parseOrderId(id)?.template.concept;
+    if (!concept) continue;
+    const options = TEMPLATES.filter((t) => t.concept === concept).flatMap((t) => t.variants.map((v) => orderId(t, v)));
+    const fresh = options.filter((o) => !source.includes(o) && !chosen.includes(o));
+    const unused = options.filter((o) => !chosen.includes(o));
+    const from = fresh.length > 0 ? fresh : unused.length > 0 ? unused : [id];
+    chosen.push(from[Math.floor(rand() * from.length)]);
+  }
+  return chosen;
+}

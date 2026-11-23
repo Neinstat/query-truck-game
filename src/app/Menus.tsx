@@ -80,6 +80,8 @@ function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => vo
 /** The first screen: the title, what is still loading, and the button into the day. */
 export function TitleScreen(props: {
   dayNumber: number;
+  /** A practice run is being played (from the Days screen). */
+  practice?: boolean;
   /** Where the truck parks today. */
   place: Place;
   clock: number;
@@ -94,7 +96,7 @@ export function TitleScreen(props: {
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   const started = clock > OPENING;
   return (
@@ -110,7 +112,7 @@ export function TitleScreen(props: {
         </p>
         {ready ? (
           <button className="menu-button menu-button-main" onClick={onStart} autoFocus>
-            {started ? t.titleContinue(dayNumber) : t.titleStart(dayNumber)}
+            {practice ? t.titlePractice(dayNumber) : started ? t.titleContinue(dayNumber) : t.titleStart(dayNumber)}
           </button>
         ) : (
           <div className="title-loading" role="status">
@@ -119,10 +121,10 @@ export function TitleScreen(props: {
           </div>
         )}
         <button className="menu-button" onClick={onGuide}>
-          📖 {t.howToPlay}
+          {t.howToPlay}
         </button>
         <button className="menu-button" onClick={onTour} disabled={!worldReady}>
-          🎥 {t.tourStart}
+          {t.tourStart}
         </button>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
@@ -151,59 +153,34 @@ export function PauseMenu(props: {
   onResume: () => void;
   onGuide: () => void;
   onTour: () => void;
-  /** The Data Lens is on; toggling it also carries on playing. */
-  lens: boolean;
-  onLens: () => void;
-  onRestart: () => void;
+  /** The Days screen: every day so far, practice runs, and starting today again. */
+  onDays: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, lens, onLens, onRestart, onTitle, lang, setLang, t } = props;
-  const [confirmRestart, setConfirmRestart] = useState(false);
+  const { onResume, onGuide, onTour, onDays, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
-        <h2 className="pause-title">⏸ {t.pausedTitle}</h2>
+        <h2 className="pause-title">{t.pausedTitle}</h2>
         <p className="pause-hint">{t.pausedHint}</p>
         <button className="menu-button menu-button-main" onClick={onResume} autoFocus>
           ▶ {t.resume}
         </button>
-        <button className="menu-button" onClick={onGuide}>
-          📖 {t.howToPlay}
+        <button className="menu-button" onClick={onDays}>
+          {t.daysButton}
         </button>
-        <button className="menu-button" onClick={onLens}>
-          🔍 {lens ? t.lensOff : t.lensOn} <kbd>L</kbd>
+        <button className="menu-button" onClick={onGuide}>
+          {t.howToPlay}
         </button>
         <button className="menu-button" onClick={onTour}>
-          🎥 {t.tourStart}
+          {t.tourStart}
         </button>
-        {confirmRestart ? (
-          <div className="pause-confirm">
-            <p>{t.restartConfirm}</p>
-            <button className="menu-button menu-button-danger" onClick={onRestart}>
-              ↺ {t.replayDay}
-            </button>
-            <button className="link-button" onClick={() => setConfirmRestart(false)}>
-              {t.cancelLabel}
-            </button>
-          </div>
-        ) : (
-          <button className="menu-button" onClick={() => setConfirmRestart(true)}>
-            ↺ {t.replayDay}
-          </button>
-        )}
         <button className="menu-button" onClick={onTitle}>
-          🏠 {t.toTitle}
+          {t.toTitle}
         </button>
-        <ul className="pause-controls" aria-label={t.controlsTitle}>
-          {t.controlsList.map(([key, what]) => (
-            <li key={key}>
-              <kbd>{key}</kbd> {what}
-            </li>
-          ))}
-        </ul>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
       </div>
