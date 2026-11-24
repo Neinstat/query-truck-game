@@ -30,7 +30,7 @@ The Manager's cases follow these five steps (6.7, 6.8, 6.9).
 
 **Not in 1.0** (decided 24 Nov 2026): the Skill Check, the truck shop (coins are still counted and shown) and Lunch Rush (cut in the fast plan); phone controls (only after release, and only if there is time — maybe never); teaching `INSERT`/`UPDATE`; different data per location (places are visual); final art beyond what exists; advanced topics (subqueries, CTEs, window functions).
 
-**Timeline — the fast plan** (owner, 24 Nov 2026). The owner's Claude subscription ends on **11 Dec 2026**, so everything is done before then. The owner reviews **twice a day, at 12:00 and 20:00 WIB**, and the agent runs right after each review (and once at night as a backup), so about **two iterations a day**:
+**Timeline — the fast plan** (owner, 24 Nov 2026). The owner's Claude subscription ends on **11 Dec 2026**, so everything is done before then. The owner reviews **twice a day, at 12:00 and 20:00 WIB**, and the agent starts **as soon as a pull request is merged** (plus runs at 12:30, 20:30 and 02:30 WIB as a backup). Each run builds a **batch** of up to about five light iterations in one pull request (owner, 24 Nov 2026: progress every day must be felt, not one small commit and a wait), so the dates below are the latest they should happen; earlier is better:
 
 | When | What |
 |---|---|
