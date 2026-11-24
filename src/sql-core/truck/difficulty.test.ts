@@ -3,6 +3,7 @@ import { checkAnswer } from '../checker';
 import { createCafeDatabase, type CafeDatabase } from '../db';
 import { BLANK } from '../levels';
 import { ui } from '../../i18n';
+import { CONCEPT_WEEK } from './concepts';
 import { DIFFICULTIES, inputFor, parseDifficulty, WRITE_STARTER } from './difficulty';
 import { orderId } from './orders';
 import { TEMPLATES } from './templates';
@@ -74,7 +75,8 @@ describe.each(ALL)('order %s at every difficulty', (id, template, variant) => {
   });
 
   it('grow: keeps the old rule (the template input at level 0, free typing at level 5)', () => {
-    expect(inputFor(template, variant, 'grow', 0)).toEqual(template.input(variant.params));
+    // From week 3 on, a new concept starts with free typing.
+    expect(inputFor(template, variant, 'grow', 0)).toEqual(CONCEPT_WEEK[template.concept] >= 3 ? { kind: 'free' } : template.input(variant.params));
     expect(inputFor(template, variant, 'grow', 5)).toEqual({ kind: 'free' });
   });
 });

@@ -6,7 +6,7 @@
  */
 import type { Lang } from '../feedback';
 import type { InputMode, RequestLevel } from '../levels';
-import { conceptLesson, type ConceptId } from './concepts';
+import { CONCEPT_WEEK, conceptLesson, type ConceptId } from './concepts';
 import { TEMPLATES_ID } from './locales/id/templates';
 import { templateById, type OrderTemplate, type Purchase, type TemplateText, type TemplateVariant } from './templates';
 
@@ -120,6 +120,8 @@ export function inputStage(level: number | undefined): InputStage {
  * has no "whole condition" step, so it stays at word blocks until it is typed freely.
  */
 export function stageFor(template: OrderTemplate, variant: TemplateVariant, level: number | undefined): InputStage {
+  // From week 3 a new concept starts with free typing (GAME_DESIGN.md §5).
+  if (CONCEPT_WEEK[template.concept] >= 3) return 'free';
   const stage = inputStage(level);
   return stage === 'condition' && !template.solution(variant.params).includes(' WHERE ') ? 'keyword' : stage;
 }
