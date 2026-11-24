@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONCEPTS, type ConceptId } from './concepts';
+import { CONCEPTS, CONCEPT_WEEK, type ConceptId } from './concepts';
 import { missOrder, newDay, serveOrder, type DayLog } from './day';
 import { parseOrderId } from './orders';
 import {
@@ -78,6 +78,11 @@ describe('mastery', () => {
   });
 });
 
+/** Week 1's concepts, well known and not due for a long time (so tests can focus on week 2). */
+const WEEK1_KNOWN: Mastery = Object.fromEntries(
+  CONCEPTS.filter((c) => CONCEPT_WEEK[c] === 1).map((c) => [c, { level: 5, due: '2027-06-01', practised: 9 }]),
+);
+
 describe('planning a day', () => {
   it('starts the first day with the first new concepts, in teaching order', () => {
     const ids = planDay('2026-11-01', {});
@@ -88,9 +93,10 @@ describe('planning a day', () => {
   });
 
   it('opens a day that brings new concepts with the first of them', () => {
-    for (let d = 0; d < 10; d++) expect(conceptOf(planDay(addDays('2026-11-01', d), {})[0])).toBe('where-compare');
-    const m: Mastery = { 'where-compare': { level: 1, due: '2026-11-09', practised: 1 } };
-    expect(conceptOf(planDay('2026-11-02', m)[0])).toBe('where-text');
+    for (let d = 0; d < 10; d++) expect(conceptOf(planDay(addDays('2026-11-01', d), {})[0])).toBe('select-all');
+    const m: Mastery = { 'select-all': { level: 1, due: '2026-11-09', practised: 1 } };
+    expect(conceptOf(planDay('2026-11-02', m)[0])).toBe('select-column');
+    for (let d = 0; d < 10; d++) expect(conceptOf(planDay(addDays('2026-11-01', d), WEEK1_KNOWN)[0])).toBe('where-compare');
   });
 
   it('never repeats an order within a day, and never asks for one concept too often', () => {
@@ -109,6 +115,7 @@ describe('planning a day', () => {
 
   it('brings back due concepts and introduces the next new ones', () => {
     const m: Mastery = {
+      ...WEEK1_KNOWN,
       'where-compare': { level: 4, due: '2026-11-20', practised: 5 },
       'where-text': { level: 0, due: '2026-11-04', practised: 3 },
       and: { level: 2, due: '2026-11-04', practised: 2 },
@@ -148,22 +155,25 @@ describe('days that follow', () => {
   it('starts on the first play day, then plans each next day from what was practised', () => {
     const first = nextDay([]);
     expect(first.date).toBe('2026-11-01');
-    expect(first.orders).toEqual(planDay('2026-11-01', {}));
+    expect(first.orders).toEqual(planDay('2026-11-01', {}, [], 1));
     const day1 = play(first, 3);
     const second = nextDay([day1]);
     expect(second.date).toBe('2026-11-02');
-    expect(second.orders).toEqual(planDay('2026-11-02', masteryFrom([day1]), day1.orders));
+    expect(second.orders).toEqual(planDay('2026-11-02', masteryFrom([day1]), day1.orders, 1));
     expect(second.served).toEqual([]);
     expect(second.clock).toBe(600);
   });
 
   it('keeps practising what went badly, and moves on when it went well', () => {
     const first = nextDay([]);
-    const good = concepts(nextDay([play(first, 3)]).orders);
     const bad = concepts(nextDay([play(first, 1)]).orders);
-    // After a bad day all three concepts are due again; after a good one too (1 day), but new ones join.
+    // After a bad day all of the day's concepts are due again.
     for (const c of new Set(concepts(first.orders))) expect(bad).toContain(c);
-    expect(good.some((c) => !concepts(first.orders).includes(c))).toBe(true);
+    // After five good days the week turns over and week 2's new concepts join.
+    const days: DayLog[] = [];
+    for (let n = 0; n < 5; n++) days.push(play(nextDay(days), 3));
+    expect(concepts(nextDay(days).orders).some((c) => CONCEPT_WEEK[c] === 2)).toBe(true);
+    expect(concepts(days[4].orders).every((c) => CONCEPT_WEEK[c] === 1)).toBe(true);
   });
 
   it('reads saved past days back, dropping broken ones and dates that go backwards', () => {

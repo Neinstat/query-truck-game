@@ -8,11 +8,8 @@ import { WEEKS_ID } from './locales/id/weeks';
 
 export const DAYS_PER_WEEK = 5;
 export const LAST_WEEK = 6;
-/**
- * The week of the first play day. Week 1 gets its own orders in iteration 6.2; until then the
- * game starts in week 2, where today's concepts live (6.2 sets this to 1).
- */
-export const FIRST_WEEK = 2;
+/** The week of the first play day: a new player starts in Opening Week. */
+export const FIRST_WEEK = 1;
 
 export type WeekInfo = {
   /** The week's name, e.g. "Picky Customers". */

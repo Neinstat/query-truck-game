@@ -11,7 +11,7 @@ import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-cor
 import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
 import { sound } from '../audio/sound';
-import { dayOrders, inputStage, orderLevel, type TruckOrder } from '../sql-core/truck/orders';
+import { dayOrders, orderLevel, stageFor, type TruckOrder } from '../sql-core/truck/orders';
 import { masteryFrom, nextDay, parsePastDays, practiceOrders } from '../sql-core/truck/repetition';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
 import { ConsoleOverlay } from './ConsoleOverlay';
@@ -205,7 +205,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   const order = front ? orders.find((o) => o.id === front.orderId) : undefined;
   const newConcept = order ? masteryBefore[order.concept] === undefined : false;
   /** The better the concept is known (before today), the more of the query the player writes. */
-  const stage = inputStage(order ? masteryBefore[order.concept]?.level : undefined);
+  const stage = order ? stageFor(order.template, order.variant, masteryBefore[order.concept]?.level) : 'keyword';
   const level = useMemo(() => (order ? orderLevel(order, lang, stage) : undefined), [order, lang, stage]);
   /** Where the current order is answered. */
   const orderObject = level ? objectForStation(level.station) : null;

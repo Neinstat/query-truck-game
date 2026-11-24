@@ -46,11 +46,19 @@ describe('weeks', () => {
   });
 
   it('plans only the concepts of this week and earlier weeks', () => {
-    // Before week 2 nothing is taught yet, so no orders can be planned.
-    expect(planDay('2026-11-02', {}, [], 1)).toEqual([]);
+    // Week 1 only has the three SELECT concepts.
+    for (const id of planDay('2026-11-02', {}, [], 1)) expect(CONCEPT_WEEK[parseOrderId(id)!.template.concept]).toBe(1);
     const ids = planDay('2026-11-02', {}, [], FIRST_WEEK);
     expect(ids.length).toBeGreaterThan(0);
     for (const id of ids) expect(CONCEPT_WEEK[parseOrderId(id)!.template.concept]).toBeLessThanOrEqual(FIRST_WEEK);
+  });
+
+  it('starts a new player in Opening Week, with week 1 orders only', () => {
+    expect(FIRST_WEEK).toBe(1);
+    expect(weekOfDay(1)).toEqual({ week: 1, dayInWeek: 1 });
+    const first = nextDay([]);
+    expect(first.orders.length).toBeGreaterThan(0);
+    for (const id of first.orders) expect(CONCEPT_WEEK[parseOrderId(id)!.template.concept]).toBe(1);
   });
 
   it('plans days on working days only, week after week', () => {
