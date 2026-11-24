@@ -4,6 +4,8 @@
 
 A first-person 3D game for learning SQL: you run a food truck that parks somewhere new in the city every day, and every customer at the window brings a request you answer with SQL. Built around **thinking like a Business Intelligence (BI) analyst**, in a clean low-poly look.
 
+**▶ Play it in the browser: <https://neinstat.github.io/query-truck-game/>** (the latest `main`; a work in progress)
+
 ![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
 
 ## Why this project exists
@@ -51,6 +53,7 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
 - [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap
+- [docs/AUTOMATION.md](docs/AUTOMATION.md): how the game is built — a nightly agent opens pull requests with playable previews, the owner reviews
 - [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots
 
 ## Getting started

@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Relative asset paths, so the same build works at the site root (GitHub Pages) and in a
+  // pull request preview under /pr-preview/pr-N/.
+  base: './',
   // PGlite ships its own WebAssembly files; Vite must not pre-bundle it.
   optimizeDeps: {
     exclude: ['@electric-sql/pglite'],

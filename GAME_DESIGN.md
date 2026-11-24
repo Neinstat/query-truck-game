@@ -343,6 +343,24 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 - **No click to start looking around** (owner's request): the "Click to look around" card is gone. The game captures the mouse by itself whenever play resumes — after *Start*, closing a console or a menu (just after the player's click or key, so the browser allows it). Esc is the only way to free the mouse, and it pauses the game.
 - Time also stops while any menu is open. The bridge now remembers the last value of each event, so the game, created after the app, starts paused when the title screen is up.
 
+### Phase 6 plan — six-week curriculum
+
+From 24 Nov 2026 Phase 6 is built by a **nightly agent** (see [`docs/AUTOMATION.md`](docs/AUTOMATION.md)): each night it takes the first open iteration below, builds it on its own branch and opens a pull request with a playable preview; the owner reviews, comments and merges. Iterations marked 👤 are the owner's. Owner's decision (24 Nov 2026): Phase 6 may start before the 5.3 playtest; what the playtest finds comes back as review comments and fixes.
+
+| # | Iteration | Done when… |
+|---|---|---|
+| 6.1 | **Weeks:** five working days a week (weekends skipped on the calendar), every concept belongs to a week (`week` in `concepts.ts`), the day planner only uses concepts of this week and earlier weeks, a **week card** on the first morning of a week (the week's name, what it teaches, the Manager's case to come), "Week 2 · Day 3" on the clock card and in the summary. Existing saves carry on in week 2 | Tested; a week turns over after day 5 and the week card shows; checked in the browser |
+| 6.2 | **Week 1 · Opening Week:** concepts and order templates for `SELECT *`, chosen columns and `FROM` at each object (menu board, fridge, recipe binders), lesson cards taken from Chapter 0, and **word blocks** on the truck tablet for week-1 orders (reusing `BlockInput`, with a decoy or two). A brand-new player starts in week 1 | Tested (every variant solvable with its blocks); a new save starts with week 1 blocks; checked in the browser |
+| 6.3 | **Week 3 · Daily Specials:** templates for `ORDER BY` (`ASC`/`DESC`), `LIMIT`, `DISTINCT`, aliases and computed columns (`price - cost AS margin`) from Chapter 2, including the `NULL`-first trap with `DESC`; sorted answers without ties. From week 3 a new concept starts with free typing (§5 input table) | Tested; checked in the browser |
+| 6.4 | **Week 4 · Counting the Till:** templates for `COUNT`, `SUM`, `AVG`/`ROUND`, `GROUP BY`, `HAVING` and dates (`DATE_TRUNC`, `EXTRACT`) from Chapter 3, on `sales`, so answers include today's own sales (graded on the data as it is right now) | Tested; checked in the browser |
+| 6.5 | **Week 5 · Regulars & Recipes:** templates for `JOIN … ON`, table aliases and `LEFT JOIN … IS NULL` from Chapter 4; **regulars** who come back on other days and ask "What's my usual?" (`sales` + `customers`) | Tested; checked in the browser |
+| 6.6 | **The Manager follows the week:** the daily knock picks a small guided case (1–2 questions) that uses this week's and earlier weeks' concepts, from a pool per week | Tested; every week has at least three daily cases; checked in the browser |
+| 6.7 | **End-of-week cases:** on the fifth day of weeks 2–5 the Manager brings the big case — *The Menu Audit*, *What Should We Promote?*, *The Quiet Day*, *Where Did the Regulars Go?* — moved from v1 into the guided case format, the story rewritten for the truck (no Grandma, no café) | Tested; each case solvable with its hints; checked in the browser |
+| 6.8 | **Skill Check → starting week:** a new player can take v1's adaptive Skill Check from the title screen; it sets the starting week, and the concepts of skipped weeks start at mastery level 2 so they still come back | Tested; checked in the browser |
+| 6.9 | **Week 6 · The Big Question and free mode:** days mix every concept; on the last day the Manager brings the **Analysis Case** *October Sales Dropped* (five steps, from Chapter 5); after it, days go on in an endless free mode with spaced repetition | Tested; checked in the browser |
+| 6.10 | **Indonesian and the guide:** every new text has its `id` translation (tests compare the shapes), and the staff handbook gets a page on weeks and the Skill Check | Tested; checked in the browser in both languages |
+| 6.11 👤 | **Owner playtest** from week 1 to the Analysis Case, in English and Indonesian, + fixes | The owner can go from week 1 to the Analysis Case |
+
 ## 13. Open questions
 
 - [x] Game title and truck name: **Query Truck** (21 Nov 2026). Earlier working names are gone from the game; saves under the old `sql-valley.*` keys are moved to `query-truck.*` on load
@@ -350,7 +368,7 @@ Patience & tips (4.10) and the saved, replayed day log (4.9) were already built 
 - [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
 - [ ] Locations: only visual, or does each have its own customers and data?
 - [ ] Phone controls for 3D: a virtual joystick + drag to look, or turning side by side like prototype 4.5
-- [ ] Hosting (e.g. GitHub Pages / Vercel / Netlify)
+- [ ] Hosting (e.g. GitHub Pages / Vercel / Netlify) — for now `main` and every pull request preview are on GitHub Pages (24 Nov 2026, see `docs/AUTOMATION.md`); the release host is decided in Phase 8
 - [ ] Town setting: generic and international, or with a local touch?
 
 ## History
