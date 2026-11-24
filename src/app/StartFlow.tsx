@@ -66,7 +66,8 @@ export function DifficultyPicker({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
   return (
-    <div className="menu-screen" role="dialog" aria-label={t.difficultyTitle}>
+    // On a first start the title film keeps playing behind the cards (only lightly dimmed).
+    <div className={onCancel ? 'menu-screen' : 'menu-screen intro-screen'} role="dialog" aria-label={t.difficultyTitle}>
       <div className="title-card difficulty-card">
         <h2 className="pause-title">{t.difficultyTitle}</h2>
         <p className="pause-hint">{current ? t.difficultyChange : t.difficultyIntro}</p>
@@ -115,7 +116,8 @@ export function StartFlow({ t, onChoose }: { t: UiText; onChoose: (d: Difficulty
   if (page === null) return <DifficultyPicker t={t} current={null} onChoose={onChoose} />;
   const card = pages[page];
   return (
-    <div className="menu-screen" role="dialog" aria-label={card.title}>
+    // Same look as the title screen: the card on the left, the film of the truck behind it, not blurred.
+    <div className="menu-screen title-screen" role="dialog" aria-label={card.title}>
       <div className="title-card backstory-card">
         <p className="week-card-kicker">{t.backstoryStep(page + 1, pages.length)}</p>
         <h2 className="pause-title">

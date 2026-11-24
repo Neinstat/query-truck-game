@@ -348,7 +348,7 @@ export function TruckApp() {
             }}
           />
         )}
-        {screen === 'title' && tourStep === null && (
+        {screen === 'title' && tourStep === null && !introOpen && (
           <TitleScreen
             dayNumber={dayNumber}
             practice={practice !== null}
