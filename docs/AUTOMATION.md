@@ -1,13 +1,14 @@
 # Automation
 
-Since 24 Nov 2026 the game is built by a **nightly agent**, and the owner reviews. This file is how it works and the rules the agent follows. The scheduled routine's own prompt only says to follow this file, so change the rules here.
+Since 24 Nov 2026 the game is built by a **scheduled agent**, and the owner reviews **twice a day, at 12:00 and 20:00 WIB** (the fast plan, see *Scope & goals* in `GAME_DESIGN.md`). This file is how it works and the rules the agent follows. The scheduled routine's own prompt only says to follow this file, so change the rules here.
 
 ## How it works
 
 ```
-night: the agent builds one iteration  →  pull request + preview link
-day:   the owner plays the preview, comments, merges (or asks for changes)
-next night: the agent answers the comments first, then goes on
+12:00 / 20:00 WIB  the owner plays the preview, comments or merges
+12:30 / 20:30 WIB  the agent answers the comments, or builds the next iteration
+                   →  pull request + preview link, ready for the next review
+02:30 WIB          a backup run (late reviews, red CI)
 ```
 
 | Piece | Where | What it does |
@@ -15,7 +16,8 @@ next night: the agent answers the comments first, then goes on
 | **CI** | `.github/workflows/ci.yml` | On every pull request and every push to `main`: type-check, tests, build. A red ❌ means something is broken. |
 | **Live game** | `.github/workflows/pages.yml` | Every push to `main` publishes the game to GitHub Pages: <https://neinstat.github.io/query-truck-game/> |
 | **PR preview** | `.github/workflows/pr-preview.yml` | Every pull request is published under `/pr-preview/pr-N/` and the link is commented on the pull request. It is removed when the pull request closes. |
-| **Nightly agent** | a Claude Code routine (cloud, scheduled) | Builds the next iteration of the roadmap and opens a pull request. Never merges. |
+| **Scheduled agent** | a Claude Code routine (cloud) at 12:30, 20:30 and 02:30 WIB | Builds the next iteration of the roadmap and opens a pull request. Never merges. |
+| **Reminders** | scheduled tasks in the owner's Claude desktop app, 12:00 and 20:00 | Tell the owner what is waiting for review and whether the timeline holds. |
 
 Previews and the live game share one website, so they **share saved progress** in the browser. To test from a clean start, open the preview with `?dev`, press F2 and use *Reset all progress* (it asks first).
 
@@ -24,12 +26,12 @@ Previews and the live game share one website, so they **share saved progress** i
 1. Open the pull request on GitHub (you get an email, or see the *Pull requests* tab).
 2. Read the description: what was built, how to try it, what to look at.
 3. Click the preview link in the bot's comment and play it.
-4. If it is right: **Merge pull request**. If not: write what to change as a comment (Indonesian is fine) — or *Review changes → Request changes*. The agent picks it up the next night.
-5. To start the agent right away instead of waiting for the night, run the routine by hand from claude.ai/code (Routines) or ask Claude in a session.
+4. If it is right: **Merge pull request**. If not: write what to change as a comment (Indonesian is fine) — or *Review changes → Request changes*. The agent picks it up half an hour later.
+5. To start the agent right away instead of waiting for the next run, run the routine by hand from claude.ai/code (Routines) or ask Claude in a session.
 
-## For the agent: the nightly rules
+## For the agent: the rules for every run
 
-Do exactly one unit of work per night, in this order of priority:
+Do exactly one unit of work per run, in this order of priority:
 
 1. **Feedback first.** List open pull requests whose branch starts with `night/`. If the owner left comments or requested changes that have not been answered, work on that pull request only: check out its branch, make the changes, push to the same branch, and reply to each comment saying what changed (replies to the owner may be in Indonesian). Then stop.
 2. **Wait for review.** If a `night/` pull request is open with no feedback yet, do not start a new iteration (the next one would build on unmerged work). If its CI is red, fix it. Otherwise stop and do nothing.
@@ -39,7 +41,7 @@ When building an iteration:
 
 - Start from the latest `main`. Read `CLAUDE.md`, the whole of `GAME_DESIGN.md`, and this file first. Follow `CLAUDE.md` in everything (English repo, EN-first game text with `id` translations, the SQL core / game world split, original art, every query ending with `;`).
 - Branch: `night/<iteration>-<short-name>`, e.g. `night/6.1-weeks`.
-- Make design decisions yourself, the way the existing design does, and write them into `GAME_DESIGN.md`: mark the iteration ✅ and add a short **"6.x as built"** note, as Phase 5 does. If an iteration is too big for one night, build a solid first part, split the row (6.2 → 6.2a ✅ + 6.2b) and say so in the pull request.
+- Make design decisions yourself, the way the existing design does, and write them into `GAME_DESIGN.md`: mark the iteration ✅ and add a short **"6.x as built"** note, as Phase 5 does. If an iteration is too big for one run, build a solid first part, split the row (6.2 → 6.2a ✅ + 6.2b) and say so in the pull request.
 - Add tests for new logic, in the style of the existing tests (e.g. every template variant is solvable, Indonesian text has the same shape).
 - Before opening the pull request, all of these must pass: `npm run typecheck`, `npm test`, `npm run build`. If a headless browser is available, load the built game and check that it starts with no console errors; if not, say so in the pull request.
 - Commits and the pull request in English, small and clear. **No `Co-Authored-By` line and no Claude or "Generated with" attribution** anywhere.

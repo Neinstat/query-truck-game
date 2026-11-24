@@ -68,12 +68,12 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 
 ## Status
 
-🚧 **Phase 6: the six-week curriculum**, built by a nightly agent and reviewed by the owner. **Query Truck 1.0 is planned for 31 Dec 2026** (desktop browsers, free). Phases 1–5 are done: orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
+🚧 **Phase 6: the six-week curriculum**, built by a scheduled agent and reviewed by the owner twice a day. **Query Truck 1.0 is planned for 9 Dec 2026** (desktop browsers, free). Phases 1–5 are done: orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
 - [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap
-- [docs/AUTOMATION.md](docs/AUTOMATION.md): how the game is built — a nightly agent opens pull requests with playable previews, the owner reviews
+- [docs/AUTOMATION.md](docs/AUTOMATION.md): how the game is built — a scheduled agent opens pull requests with playable previews, the owner reviews
 - [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots
 
 ## Getting started
@@ -126,7 +126,7 @@ src/
 docs/
 ├── JOURNEY.md     # the design journey, with screenshots
 ├── ASSETS.md      # which art is final and which is a placeholder
-├── AUTOMATION.md  # CI, pull request previews and the nightly agent
+├── AUTOMATION.md  # CI, pull request previews and the scheduled agent
 ├── screenshots/   # the current game, used in this README
 └── journey/       # screenshots of earlier versions
 ```
