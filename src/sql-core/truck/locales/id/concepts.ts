@@ -16,4 +16,10 @@ export const CONCEPT_NAMES_ID: Record<ConceptId, string> = {
   distinct: 'Tiap nilai sekali: DISTINCT',
   alias: 'Kolom hitungan dengan AS',
   'sort-nulls': 'Mengurutkan dan nilai kosong',
+  count: 'Menghitung baris dengan COUNT',
+  sum: 'Menjumlahkan dengan SUM',
+  'avg-round': 'Rata-rata dan ROUND',
+  'group-by': 'Satu baris per kelompok: GROUP BY',
+  having: 'Menyaring kelompok dengan HAVING',
+  dates: 'Tanggal: DATE_TRUNC dan EXTRACT',
 };
