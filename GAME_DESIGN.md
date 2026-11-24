@@ -26,25 +26,25 @@ The Manager's cases follow these five steps (6.7, 6.8, 6.9).
 
 **Names:** *v1* was the old top-down café (removed); *v2* is this game, the 3D Query Truck. The public release is **Query Truck 1.0**.
 
-**In 1.0:** the six-week curriculum with a backstory and a difficulty choice (Phase 6), badges, credits and easter eggs (Phase 7), and a release on GitHub Pages for **desktop browsers** (Phase 8).
+**In 1.0:** the six-week curriculum with a backstory and a difficulty choice (Phase 6), stars flying into XP, coins and truck upgrades from a plain start, badges, credits and easter eggs (Phase 7), and a release on GitHub Pages for **desktop browsers** (Phase 8).
 
-**Not in 1.0** (decided 24 Nov 2026): the Skill Check, the truck shop (coins are still counted and shown) and Lunch Rush (cut in the fast plan); phone controls (only after release, and only if there is time — maybe never); teaching `INSERT`/`UPDATE`; different data per location (places are visual); final art beyond what exists; advanced topics (subqueries, CTEs, window functions).
+**Not in 1.0** (decided 24 Nov 2026): the Skill Check and Lunch Rush (cut in the fast plan; the truck shop came back on 25 Nov as 7.2, at the owner's request); phone controls (only after release, and only if there is time — maybe never); teaching `INSERT`/`UPDATE`; different data per location (places are visual); final art beyond what exists; advanced topics (subqueries, CTEs, window functions).
 
 **Timeline — the fast plan** (owner, 24 Nov 2026). The owner's Claude subscription ends on **11 Dec 2026**, so everything is done before then. The owner reviews **twice a day, at 12:00 and 20:00 WIB**, and the agent starts **as soon as a pull request is merged** (plus runs at 12:30, 20:30 and 02:30 WIB as a backup). Each run builds a **batch** of up to about five light iterations in one pull request (owner, 24 Nov 2026: progress every day must be felt, not one small commit and a wait), so the dates below are the latest they should happen; earlier is better:
 
 | When | What |
 |---|---|
 | 25 Nov – 2 Dec 2026 | Phase 6, iterations 6.1–6.9 |
-| 3 Dec | Phase 7 (7.1) and Phase 8 (8.1); the owner invites 1–2 friends who don't know SQL (reminder set) |
+| 3 Dec | Phase 7 (7.1–7.3) and Phase 8 (8.1); the owner invites 1–2 friends who don't know SQL (reminder set) |
 | 4 Dec | 8.2 |
 | 5–7 Dec | 6.10 owner playtest, 6.11 friends' playtest, fixes |
 | 8 Dec | 8.3 final playtest |
 | **9 Dec 2026** | **Query Truck 1.0 released** |
 | 10 Dec | Buffer |
 
-**If we fall behind:** on 3 Dec, if Phase 6 is not done, 7.1 shrinks to credits and easter eggs (no badges). Phase 6 and Phase 8 are never cut: a finished curriculum matters more than extras. After 11 Dec the game stays live and free on GitHub Pages; only the agent and the reminders stop.
+**If we fall behind:** on 3 Dec, if Phase 6 is not done, 7.2 shrinks to paint colours and three equipment tiers, and 7.3 to credits and easter eggs (no badges). Phase 6 and Phase 8 are never cut: a finished curriculum matters more than extras. After 11 Dec the game stays live and free on GitHub Pages; only the agent and the reminders stop.
 
-**Personality:** the owner loves games full of **easter eggs** and little surprises, including credit to the developer. Hidden jokes, secret queries and small discoveries are welcome everywhere (7.1), as long as they never get in the way of learning.
+**Personality:** the owner loves games full of **easter eggs** and little surprises, including credit to the developer. Hidden jokes, secret queries and small discoveries are welcome everywhere (7.3), as long as they never get in the way of learning.
 
 ---
 
@@ -265,7 +265,7 @@ Built in phases; every phase produces something playable. Every iteration: build
 | **4. One-day prototype** ✅ | The look (✅ 3D), the 3D truck, customers with hand-written orders (week 2), the tablet, using the truck's objects, the Data Lens, sales into the database, the clock and end-of-day summary, one manager knock | The owner plays a full day and finds the concept fun |
 | **5. Order generator & repetition** 🚧 | Parameterised order templates, concept mastery + spaced repetition, patience & tips, the day log saved and replayed | Day 2, day 3… feel different but still practise what needs practice |
 | **6. Six-week curriculum** 🚧 | Chapters 0–5 become templates + manager cases, lesson cards per week, a backstory and difficulty choice, the Analysis Case in week 6 | A new player can go from week 1 to the Analysis Case, EN/ID |
-| **7. The truck grows** | Badges & streak, credits & easter eggs (the five places came early, in 5.2c; the truck shop, Lunch Rush and final art are not in 1.0) | Badges can be earned, easter eggs found, and the credits roll |
+| **7. The truck grows** | Stars into XP, coins and truck upgrades from a plain start, badges & streak, credits & easter eggs (the five places came early, in 5.2c; Lunch Rush and final art are not in 1.0) | XP grows, coins buy upgrades that visibly change the truck, and the credits roll |
 | **8. Release** | First-time polish, the release page and portfolio write-up, hosting on GitHub Pages (desktop only) | The owner approves → **Query Truck 1.0** on 9 Dec 2026 |
 
 ### Phase 4 plan — one-day prototype
@@ -415,11 +415,13 @@ From 24 Nov 2026 Phase 6 is built by a **scheduled agent** (see [`docs/AUTOMATIO
 
 ### Phase 7 plan — the truck grows
 
-Cut to one iteration in the fast plan (owner, 24 Nov 2026): the truck shop and Lunch Rush are out of 1.0. Built by the agent like Phase 6.
+Owner's requests (25 Nov 2026): a reward you can **see** for every right answer, and a truck that starts plain and is **earned** better. The feeling to aim for: grinding pays off — effort, then a visible achievement.
 
 | # | Iteration | Done when… |
 |---|---|---|
-| 7.1 | **Badges, credits and easter eggs** (owner's wish): 8–12 badges for learning milestones (first `JOIN`, a perfect week, every concept at level 3+, the Analysis Case solved, all easter eggs found…) on a badge page in the pause menu and in the summary when earned, plus a day streak 🔥 (in-game days, never punishing); **credits roll** after the Analysis Case and from the title screen — the owner as developer, and every asset from `CREDITS.md`; **6–10 easter eggs** of our own, e.g. a secret table only found through `information_schema`, a hidden query that makes the radio play a special song, a rubber duck in the cab that says something when used, a note from the developer behind the fridge, Mira's last sticky note, the Manager's own coffee order on a rare day, a cat that visits the truck. They never block learning | Tested; every badge can be earned and every easter egg found; checked in the browser |
+| 7.1 | **Stars and XP:** a right answer plays a short celebration — the order's stars (⭐–⭐⭐⭐, §10) pop out at the tablet and **fly to an XP counter in the top-left corner** of the HUD, which ticks up with a small sound (`src/audio/sound.ts`). XP = stars earned (a replay or practice run never pays twice; same rule as coins); saved, worked out from the day logs like mastery. **What XP is for is decided later** (§13); for now it only grows. Respects `prefers-reduced-motion` | Tested (XP from the logs, no double pay); checked in the browser |
+| 7.2 | **Coins and truck upgrades:** every served order pays **coins** (price-based + tip, shown flying to a coin counter beside XP), saved. **The truck starts plain and a bit worn on purpose** — a dented old coffee machine, a basic grinder, a small humming fridge, faded paint, a plain awning — so upgrades feel earned. A **shop** (pause menu, and a catalogue on the back counter) sells upgrades in tiers that visibly change the truck: **style** (paint colours and patterns, awning colours, lights, plants, a sign frame) and **equipment** (old → better → modern espresso machine, grinder, fridge with a glass door, a tablet stand, a radio, a menu screen instead of chalk). Prices grow per tier so the top tiers take a few weeks of play; a little *new!* moment when an upgrade arrives. Bought items are saved and show at every place | Tested (prices, saving, no double pay); an upgrade can be bought and shows after a reload; checked in the browser |
+| 7.3 | **Badges, credits and easter eggs** (owner's wish): 8–12 badges for learning milestones (first `JOIN`, a perfect week, every concept at level 3+, the Analysis Case solved, all easter eggs found, the first modern machine…) on a badge page in the pause menu and in the summary when earned, plus a day streak 🔥 (in-game days, never punishing); **credits roll** after the Analysis Case and from the title screen — the owner as developer, and every asset from `CREDITS.md`; **6–10 easter eggs** of our own, e.g. a secret table only found through `information_schema`, a hidden query that makes the radio play a special song, a rubber duck in the cab that says something when used, a note from the developer behind the fridge, Mira's last sticky note, the Manager's own coffee order on a rare day, a cat that visits the truck. They never block learning | Tested; every badge can be earned and every easter egg found; checked in the browser |
 
 ### Phase 8 plan — release
 
@@ -432,12 +434,13 @@ Cut to one iteration in the fast plan (owner, 24 Nov 2026): the truck shop and L
 ## 13. Open questions
 
 - [x] Game title and truck name: **Query Truck** (21 Nov 2026). Earlier working names are gone from the game; saves under the old `sql-valley.*` keys are moved to `query-truck.*` on load
+- [ ] What is XP for? (7.1; owner, 25 Nov 2026: "we'll think about it later") — ideas: player levels with a title (New Hire → Barista → Analyst), unlocking places or radio stations, a rank on the badge page
 - [x] Should `INSERT`/`UPDATE` be taught? **No** (owner, 24 Nov 2026): BI analysts rarely write them; not in 1.0
 - [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
 - [x] Locations: **only visual** in 1.0 (owner, 24 Nov 2026)
 - [x] Phone controls: **not in 1.0** (owner, 24 Nov 2026); maybe after release if there is time, maybe never. 8.1 shows phone visitors a friendly message
 - [x] Hosting: **GitHub Pages** for `main`, the pull request previews and the 1.0 release (24 Nov 2026, see `docs/AUTOMATION.md`)
-- [x] Town setting: **generic and international, with small local touches** (e.g. *kopi susu* on the menu one day); the owner's wish is lots of easter eggs and surprises (7.1)
+- [x] Town setting: **generic and international, with small local touches** (e.g. *kopi susu* on the menu one day); the owner's wish is lots of easter eggs and surprises (7.3)
 
 ## History
 
