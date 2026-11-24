@@ -18,10 +18,10 @@ A first-person 3D game for learning SQL: you run a food truck that parks somewhe
 
 ## Why this project exists
 
-- **SQLBolt** has a great, easy-to-follow learning curve, but it isn't very interactive or fun.
-- **LeetCode** is interactive, but many of its case-study problems jump too far in difficulty for beginners.
+- **SQLBolt** is interactive and easy to follow, but every lesson is the same exercise format, with nothing that feels like a game. It also stops around early intermediate level, so it never reaches real Business Intelligence (BI) cases.
+- **LeetCode** has excellent case studies, but working through them doesn't feel interactive, and they are hard to follow when you are just starting out.
 
-Query Truck sits in between: step-by-step lessons like SQLBolt, wrapped in game mechanics that make you want to keep going, and ending with the skill real data jobs need: **answering business questions with data**.
+Query Truck takes the best of both: a gentle, step-by-step path like SQLBolt, wrapped in a game that makes you want to keep going, and building up to case studies like LeetCode's, all the way to the skill real data jobs need: **answering business questions with data**.
 
 ## The concept
 
