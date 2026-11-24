@@ -5,7 +5,7 @@ Since 24 Nov 2026 the game is built by a **scheduled agent**, and the owner revi
 ## How it works
 
 ```
-the owner merges a pull request  →  the agent starts at once (a GitHub trigger)
+the owner merges a pull request or comments on one  →  the agent starts at once (GitHub triggers)
 the agent builds as many iterations as it safely can (a batch)
    →  one pull request with a review list, one section per iteration, + preview link
 the owner reviews (reminders at 12:00 and 20:00 WIB): merge, or comment
@@ -18,7 +18,7 @@ backup runs at 12:30, 20:30 and 02:30 WIB catch anything the trigger missed
 | **CI** | `.github/workflows/ci.yml` | On every pull request and every push to `main`: type-check, tests, build. A red ❌ means something is broken. |
 | **Live game** | `.github/workflows/pages.yml` | Every push to `main` publishes the game to GitHub Pages: <https://neinstat.github.io/query-truck-game/> |
 | **PR preview** | `.github/workflows/pr-preview.yml` | Every pull request is published under `/pr-preview/pr-N/` and the link is commented on the pull request. It is removed when the pull request closes. |
-| **Agent** | a Claude Code routine (cloud): starts when a pull request is merged or closed, and at 12:30, 20:30 and 02:30 WIB | Builds the next batch of iterations and opens one pull request. Never merges. |
+| **Agent** | a Claude Code routine (cloud): starts when a pull request is merged or closed, when someone comments or reviews, and at 12:30, 20:30 and 02:30 WIB | Builds the next batch of iterations and opens one pull request. Never merges. |
 | **Reminders** | scheduled tasks in the owner's Claude desktop app, 12:00 and 20:00 | Tell the owner what is waiting for review and whether the timeline holds. |
 
 Previews and the live game share one website, so they **share saved progress** in the browser. To test from a clean start, open the preview with `?dev`, press F2 and use *Reset all progress* (it asks first).
@@ -28,7 +28,7 @@ Previews and the live game share one website, so they **share saved progress** i
 1. Open the pull request when **the one review notification** comes from Claude on your phone ("Query Truck siap direview…"). If a review is forgotten for 4+ hours, the 12:00 / 20:00 check nudges you once. GitHub's own notifications are turned down to failures and mentions, so they stay quiet (see *Quiet GitHub* below).
 2. Read the **Review list** at the top: one line per iteration in this batch.
 3. Click the preview link in the bot's comment and go through each iteration's **Try it** steps.
-4. All right: **Merge pull request** — the next batch starts by itself. Something to change: write a comment that names the iteration ("6.3: …"; Indonesian is fine), then click **Comment**. The agent fixes it on its next run (at the latest 12:30, 20:30 or 02:30). Several things wrong: one comment with a list is best.
+4. All right: **Merge pull request** — the next batch starts by itself. Something to change: write a comment that names the iteration ("6.3: …"; Indonesian is fine), then click **Comment**. The agent starts on it right away. Several things wrong: one comment with a list is best.
 5. Never use **Close pull request** unless you want to throw the whole batch away.
 
 ## For the agent: the rules for every run
@@ -36,7 +36,8 @@ Previews and the live game share one website, so they **share saved progress** i
 One run = one unit of work, in this order of priority:
 
 1. **Someone else is working.** If an open **draft** pull request on a `night/` branch got a commit in the last 3 hours, another run is building it: stop at once. If it is older, that run died: check out its branch and carry on with it (step 3).
-2. **Feedback first.** If an open `night/` pull request has comments or change requests from the owner that are not answered yet, work on that pull request only: check out its branch, make the changes, push, reply to each comment saying what changed (replies to the owner may be in Indonesian), and stop.
+2. **Feedback first.** If an open `night/` pull request has comments or change requests from the owner that are not answered yet, work on that pull request only: first **convert it to a draft** (`gh pr ready --undo`, or the GitHub tools) so other runs leave it alone, then check out its branch, make the changes, push, reply to each comment saying what changed (replies to the owner may be in Indonesian), mark it **ready for review** again, and stop.
+   Comments and reviews start a run too, including your own replies and the preview bot's comments; those find nothing to do and stop at once. That is expected.
 3. **Waiting for review.** If a `night/` pull request is open, ready for review and has no new feedback, only fix it if its CI is red; otherwise stop at once (this is normal and cheap).
 4. **A batch closed without merging.** If the last closed `night/` pull request was closed without merging, read its comments: build only what the owner still wants, the way they asked. If it gives no reason, stop and say so.
 5. **Next batch.** Otherwise build the next batch (below).
