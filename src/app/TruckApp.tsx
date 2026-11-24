@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ui, useLang, type UiText } from '../i18n';
 import { orderLine } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
@@ -123,6 +123,7 @@ export function TruckApp() {
   /** Looking at the wall clock: a pop-up with the time. */
   const [lookClock, setLookClock] = useState(false);
   useEffect(() => bridge.on('lookClock', setLookClock), [bridge]);
+  const onFilmShot = useCallback((shot: string | null) => bridge.emit('filmShot', shot), [bridge]);
   // The title screen shows the truck from outside.
   useEffect(() => bridge.emit('showcase', screen === 'title'), [bridge, screen, ready]);
   useSound(bridge, { knocking, consoleOpen, dayDone, lens, paused: menuOpen });
@@ -348,7 +349,7 @@ export function TruckApp() {
             }}
           />
         )}
-        {screen === 'title' && tourStep === null && (
+        {screen === 'title' && tourStep === null && !introOpen && (
           <TitleScreen
             dayNumber={dayNumber}
             practice={practice !== null}
@@ -382,6 +383,7 @@ export function TruckApp() {
         {introOpen && screen === 'title' && (
           <StartFlow
             t={t}
+            onShot={onFilmShot}
             onChoose={(d) => {
               chooseDifficulty(d);
               setIntroOpen(false);

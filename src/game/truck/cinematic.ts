@@ -37,6 +37,16 @@ export const SHOTS: readonly Shot[] = [
   { name: 'seats', from: v(6, 3.6, -11), to: v(4, 3.3, -10.5), lookFrom: v(0.5, 0.8, -4.5), lookTo: v(0, 0.9, -4), seconds: 7 },
 ];
 
+/** Where a named shot starts in the film (s), and how long it lasts; null for an unknown name. */
+export function shotSpan(name: string): { start: number; seconds: number } | null {
+  let start = 0;
+  for (const s of SHOTS) {
+    if (s.name === name) return { start, seconds: s.seconds };
+    start += s.seconds;
+  }
+  return null;
+}
+
 export const FILM_SECONDS = SHOTS.reduce((sum, s) => sum + s.seconds, 0);
 /** How long the fade to dark and back takes at each cut (s, each way). */
 export const FADE = 0.6;

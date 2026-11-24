@@ -33,6 +33,7 @@
  *   game → app   'thunder' lightning flashed over the city (heavy rain only)
  *   game → app   'lookClock' the player is (true) or is no longer (false) looking at the wall clock
  *   app → game   'showcase' show the truck from outside, the camera slowly circling it (title screen)
+ *   app → game   'filmShot' keep the title film on one named shot (the backstory), or null to run the whole film
  *   app → game   'dev'     a developer command (the developer panel, DevPanel.tsx)
  *   game → app   'devStats' what the game is doing, twice a second while the panel asks for it
  */
@@ -110,6 +111,7 @@ type TruckEvents = {
   thunder: true;
   lookClock: boolean;
   showcase: boolean;
+  filmShot: string | null;
   dev: DevCommand;
   devStats: DevStats;
 };

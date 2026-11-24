@@ -66,7 +66,7 @@ export function DifficultyPicker({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
   return (
-    <div className="menu-screen" role="dialog" aria-label={t.difficultyTitle}>
+    <div className={onCancel ? 'menu-screen' : 'menu-screen menu-screen-film'} role="dialog" aria-label={t.difficultyTitle}>
       <div className="title-card difficulty-card">
         <h2 className="pause-title">{t.difficultyTitle}</h2>
         <p className="pause-hint">{current ? t.difficultyChange : t.difficultyIntro}</p>
@@ -97,10 +97,26 @@ export function DifficultyPicker({
   );
 }
 
+/** The film shot behind each backstory page: the truck, the places, the window, the roof. */
+const BACKSTORY_SHOTS = ['truck', 'place', 'inside', 'roof'];
+
 /** A new player's first start: a short, skippable backstory, then the difficulty choice. */
-export function StartFlow({ t, onChoose }: { t: UiText; onChoose: (d: Difficulty) => void }) {
+export function StartFlow({
+  t,
+  onChoose,
+  onShot,
+}: {
+  t: UiText;
+  onChoose: (d: Difficulty) => void;
+  /** Which shot of the title film to show behind the card (null: the whole film). */
+  onShot: (shot: string | null) => void;
+}) {
   const [page, setPage] = useState<number | null>(0);
   const pages = t.backstory;
+  useEffect(() => {
+    onShot(page === null ? 'truck' : (BACKSTORY_SHOTS[page] ?? null));
+    return () => onShot(null);
+  }, [page, onShot]);
   useEffect(() => {
     if (page === null) return;
     const onKey = (e: KeyboardEvent) => {
@@ -115,7 +131,7 @@ export function StartFlow({ t, onChoose }: { t: UiText; onChoose: (d: Difficulty
   if (page === null) return <DifficultyPicker t={t} current={null} onChoose={onChoose} />;
   const card = pages[page];
   return (
-    <div className="menu-screen" role="dialog" aria-label={card.title}>
+    <div className="menu-screen menu-screen-film" role="dialog" aria-label={card.title}>
       <div className="title-card backstory-card">
         <p className="week-card-kicker">{t.backstoryStep(page + 1, pages.length)}</p>
         <h2 className="pause-title">

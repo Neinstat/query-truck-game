@@ -24,3 +24,12 @@ describe('the title film', () => {
     expect(end.x).toBeCloseTo(s.to.x);
   });
 });
+
+import { shotSpan as _shotSpan, SHOTS as _SHOTS } from './cinematic';
+import { expect as _expect, it as _it } from 'vitest';
+
+_it('finds where a named shot starts in the film', () => {
+  _expect(_shotSpan('truck')).toEqual({ start: 0, seconds: _SHOTS[0].seconds });
+  _expect(_shotSpan('place')?.start).toBe(_SHOTS[0].seconds + _SHOTS[1].seconds + _SHOTS[2].seconds);
+  _expect(_shotSpan('nope')).toBeNull();
+});

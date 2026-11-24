@@ -18,7 +18,7 @@ import { inkColour } from './colour';
 import type { DevCommand, LensCard, TruckBridge } from './bridge';
 import { TruckQueue, type QueueCustomer } from './queue';
 import { alongPath, DineIn, stepAside, type Diner } from './dineIn';
-import { filmAt } from './cinematic';
+import { filmAt, shotSpan } from './cinematic';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
 import { buildExterior } from './exterior';
@@ -132,6 +132,8 @@ export class TruckGame {
   private lookingAtClock = false;
   /** The title screen: the camera circles the truck outside. */
   private showcase = false;
+  /** The film held on one shot (the backstory): where it starts, how long it is, and since when. */
+  private filmPin: { start: number; seconds: number; since: number } | null = null;
   /** Where the truck parks today (its customers' route comes with it). */
   private place: PlaceId = 'park';
   private steam: THREE.Object3D[] = [];
@@ -288,6 +290,10 @@ export class TruckGame {
       bridge.on('lock', () => this.lockMouse()),
       bridge.on('dev', (c) => this.devCommand(c)),
       bridge.on('showcase', (on) => (this.showcase = on)),
+      bridge.on('filmShot', (name) => {
+        const span = name ? shotSpan(name) : null;
+        this.filmPin = span ? { ...span, since: this.time } : null;
+      }),
       bridge.on('managerDone', () => {
         this.managerDone = true;
         this.knocking = false;
@@ -743,7 +749,8 @@ export class TruckGame {
     (this.veil.material as THREE.MeshBasicMaterial).opacity = 0;
     if (filming) {
       // The title film: slow shots round the world, with a fade between them (cinematic.ts).
-      const film = filmAt(this.time);
+      const pin = this.filmPin;
+      const film = filmAt(pin ? pin.start + ((this.time - pin.since) % pin.seconds) : this.time);
       this.camera.position.set(film.at.x, film.at.y, film.at.z);
       this.camera.lookAt(film.look.x, film.look.y, film.look.z);
       (this.veil.material as THREE.MeshBasicMaterial).opacity = film.dark * 0.92;
