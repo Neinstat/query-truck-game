@@ -20,5 +20,7 @@ npm-debug.log*
 .vscode/
 .idea/
 
-# Local AI-assistant tooling (editor-specific, not part of the project)
-.claude/
+# Local AI-assistant tooling (editor-specific, not part of the project),
+# except the agent's project instructions
+.claude/*
+!.claude/CLAUDE.md

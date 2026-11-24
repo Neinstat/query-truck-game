@@ -45,7 +45,7 @@ One run = one unit of work, in this order of priority:
 
 The owner wants **real progress every day**: not one small iteration and a wait, but as much as can be built well in one run.
 
-- Start from the latest `main`. Read `CLAUDE.md`, the whole of `GAME_DESIGN.md`, and this file first. Follow `CLAUDE.md` in everything (English repo, EN-first game text with `id` translations, the SQL core / game world split, original art, every query ending with `;`).
+- Start from the latest `main`. Read `.claude/CLAUDE.md`, the whole of `GAME_DESIGN.md`, and this file first. Follow `.claude/CLAUDE.md` in everything (English repo, EN-first game text with `id` translations, the SQL core / game world split, original art, every query ending with `;`).
 - **Claim the work first:** create the branch `night/<first iteration>` (e.g. `night/6.2`), make an empty commit `Start batch from 6.2`, push it, and open a **draft** pull request titled `6.2… — building`. This stops another run from building the same thing.
 - Take the open iterations of the current phase plan in `GAME_DESIGN.md` §12 **in order** (skip ✅ and 👤). When the current phase only has 👤 iterations left, the next phase may start in the same batch.
 - Build them one after another. **After each iteration:** `npm run typecheck`, `npm test` and `npm run build` must pass, then commit it as its own commit (`6.3 — <name>`), mark it ✅ with a short **"6.x as built"** note in `GAME_DESIGN.md`, and push.
