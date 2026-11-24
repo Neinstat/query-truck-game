@@ -155,12 +155,14 @@ export function PauseMenu(props: {
   onTour: () => void;
   /** The Days screen: every day so far, practice runs, and starting today again. */
   onDays: () => void;
+  /** Change the difficulty (how much of each query is written). */
+  onDifficulty: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onDays, onDifficulty, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -171,6 +173,9 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onDays}>
           {t.daysButton}
+        </button>
+        <button className="menu-button" onClick={onDifficulty}>
+          {t.difficultyButton}
         </button>
         <button className="menu-button" onClick={onGuide}>
           {t.howToPlay}
