@@ -10,11 +10,13 @@ import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
+import { WeekCard } from './WeekCard';
 import { useSound } from './useSound';
 import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
 import { sound } from '../audio/sound';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
+import { isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -72,11 +74,24 @@ export function TruckApp() {
   /** The developer panel (F2): the game keeps running, with the mouse free for the panel. */
   const [devOpen, setDevOpen] = useState(false);
   const canDev = useMemo(() => devAllowed(), []);
-  const menuOpen = screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady;
+  /** The week card of a new week's first morning: shown once, time stands still while it is up. */
+  const [weekCardOpen, setWeekCardOpen] = useState(false);
+  const weekCardChecked = useRef(false);
+  const menuOpen = screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen);
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
+  const { week, dayInWeek } = weekOfDay(dayNumber);
+  // A new week's first morning, before anything has happened: show the week card (not on reloads
+  // later in the day, and not in practice runs).
+  useEffect(() => {
+    if (weekCardChecked.current) return;
+    weekCardChecked.current = true;
+    if (!practice && isWeekStart(dayNumber) && day.clock <= OPENING && day.served.length === 0 && day.missed.length === 0) {
+      setWeekCardOpen(true);
+    }
+  }, [practice, dayNumber, day]);
   useEffect(() => setDataReady(db !== null), [db]);
   // The orders served before this page load: the game skips those customers.
   /** Closing time, or the day ended early because nobody else is coming. */
@@ -220,7 +235,8 @@ export function TruckApp() {
             <ClockWidget
               clock={day.clock}
               shut={shut}
-              dayNumber={dayNumber}
+              week={week}
+              dayInWeek={dayInWeek}
               practice={practice !== null}
               date={day.date}
               served={day.served.length}
@@ -247,8 +263,20 @@ export function TruckApp() {
             🚪 {t.knockAlert}
           </p>
         )}
+        {weekCardOpen && screen === 'playing' && ready && dataReady && (
+          <WeekCard
+            week={week}
+            lang={lang}
+            t={t}
+            onClose={() => {
+              setWeekCardOpen(false);
+              bridge.emit('lock', true);
+            }}
+          />
+        )}
         {ready && dayDone && !front && !consoleOpen && !menuOpen && (
           <DaySummary
+            weekLabel={t.weekLabel(week, dayInWeek)}
             db={db}
             day={day}
             past={past}
@@ -402,7 +430,8 @@ function skyIcon(clock: number): string {
 function ClockWidget(props: {
   clock: number;
   shut: boolean;
-  dayNumber: number;
+  week: number;
+  dayInWeek: number;
   /** A practice run (Days screen): shown on the card. */
   practice: boolean;
   date: string;
@@ -414,7 +443,7 @@ function ClockWidget(props: {
   place: string;
   t: UiText;
 }) {
-  const { clock, shut, dayNumber, practice, date, served, total, lens, raining, place, t } = props;
+  const { clock, shut, week, dayInWeek, practice, date, served, total, lens, raining, place, t } = props;
   const progress = Math.min(1, Math.max(0, (clock - OPENING) / (CLOSING - OPENING)));
   return (
     <div className={shut ? 'hud-clock hud-clock-shut' : 'hud-clock'} title={t.clockTitle}>
@@ -432,7 +461,7 @@ function ClockWidget(props: {
       </div>
       <div className="hud-clock-bottom" title={t.dayTitle}>
         <span>
-          {t.dayShort(dayNumber, date)}
+          {t.weekShort(week, dayInWeek, date)}
           {practice && <span className="hud-clock-practice">{t.practiceTag}</span>}
         </span>
         <span className="hud-clock-served">

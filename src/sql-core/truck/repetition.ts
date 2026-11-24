@@ -10,10 +10,11 @@
  * can never count twice. Each day's orders are planned from it: concepts that are due, a few new
  * ones in teaching order, and a little randomness, seeded by the date.
  */
-import { CONCEPTS, type ConceptId } from './concepts';
+import { CONCEPTS, CONCEPT_WEEK, type ConceptId } from './concepts';
 import { FIRST_PLAY_DATE, newDay, parseDayLog, type DayLog } from './day';
 import { hashText, orderId, parseOrderId, seeded } from './orders';
 import { TEMPLATES } from './templates';
+import { LAST_WEEK, nextWorkday, weekOfDay } from './weeks';
 
 export const MAX_LEVEL = 5;
 /** Days until a concept comes back, by its new level (index = level). */
@@ -69,15 +70,16 @@ export function masteryFrom(days: readonly DayLog[]): Mastery {
  * The order ids for a day: first the concepts that are due (weakest first), then up to
  * NEW_PER_DAY new concepts, then a weighted draw where weaker concepts come up more often.
  * No order is repeated within the day, and orders from `recent` days are avoided when there is
- * another variant to use.
+ * another variant to use. Only concepts of `week` and earlier weeks are used (all, by default).
  */
-export function planDay(date: string, mastery: Mastery, recent: readonly string[] = []): string[] {
+export function planDay(date: string, mastery: Mastery, recent: readonly string[] = [], week = LAST_WEEK): string[] {
   const rand = seeded(hashText(`plan ${date}`));
-  const known = CONCEPTS.filter((c) => mastery[c]);
+  const taught = CONCEPTS.filter((c) => CONCEPT_WEEK[c] <= week);
+  const known = taught.filter((c) => mastery[c]);
   const due = known
     .filter((c) => mastery[c]!.due <= date)
     .sort((a, b) => mastery[a]!.level - mastery[b]!.level || CONCEPTS.indexOf(a) - CONCEPTS.indexOf(b));
-  const fresh = CONCEPTS.filter((c) => !mastery[c]).slice(0, NEW_PER_DAY);
+  const fresh = taught.filter((c) => !mastery[c]).slice(0, NEW_PER_DAY);
 
   const slots: ConceptId[] = [];
   const count = (c: ConceptId) => slots.filter((s) => s === c).length;
@@ -122,13 +124,13 @@ function ordersLeft(concept: ConceptId, slots: readonly ConceptId[]): number {
 }
 
 /**
- * The day after the given past days (the first play day when there are none), with its orders
+ * The next working day after the given past days (the first play day when there are none), with its orders
  * planned from the mastery those days built. Yesterday's orders are avoided where possible.
  */
 export function nextDay(past: readonly DayLog[]): DayLog {
   const last = past[past.length - 1];
-  const date = last ? addDays(last.date, 1) : FIRST_PLAY_DATE;
-  return newDay(date, planDay(date, masteryFrom(past), last?.orders ?? []));
+  const date = last ? nextWorkday(last.date) : FIRST_PLAY_DATE;
+  return newDay(date, planDay(date, masteryFrom(past), last?.orders ?? [], weekOfDay(past.length + 1).week));
 }
 
 /** The saved past days, oldest first; unreadable days are dropped, and dates must keep rising. */

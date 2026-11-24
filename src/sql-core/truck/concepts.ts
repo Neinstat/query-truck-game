@@ -21,6 +21,16 @@ export const CONCEPT_NAMES: Record<ConceptId, string> = {
   'is-null': 'Empty values: IS NULL',
 };
 
+/** The week (1–6) each concept is taught in; the planner only uses concepts up to this week. */
+export const CONCEPT_WEEK: Record<ConceptId, number> = {
+  'where-compare': 2,
+  'where-text': 2,
+  and: 2,
+  in: 2,
+  like: 2,
+  'is-null': 2,
+};
+
 export const conceptName = (concept: ConceptId, lang: Lang): string =>
   (lang === 'id' ? CONCEPT_NAMES_ID[concept] : undefined) ?? CONCEPT_NAMES[concept];
 
