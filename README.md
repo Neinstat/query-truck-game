@@ -6,7 +6,15 @@ A first-person 3D game for learning SQL: you run a food truck that parks somewhe
 
 **▶ Play it in the browser: <https://neinstat.github.io/query-truck-game/>** (the latest `main`; a work in progress)
 
-![Looking out of the truck's serving window: customers queue on the park path, the one at the window asks for something under $3](docs/journey/v2-4-6-window.jpg)
+![A customer at the serving window in the City Park asks for every item that costs $5.50 or more](docs/screenshots/window-park.jpg)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/PostgreSQL-in%20the%20browser-336791?logo=postgresql&logoColor=white" alt="PostgreSQL in the browser">
+  <img src="https://img.shields.io/badge/Three.js-3D%20world-000000?logo=threedotjs&logoColor=white" alt="Three.js">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/languages-EN%20%7C%20ID-orange" alt="English and Bahasa Indonesia">
+</p>
 
 ## Why this project exists
 
@@ -34,9 +42,21 @@ You are the new hire at **Query Truck**, a coffee food truck that parks somewher
 6. **Hand over the order**, and the next customer steps up. Every order you serve becomes real rows in the `sales` table (`channel = 'truck'`), so you can query your own day.
 7. Watch the clock: the truck opens 10:00–17:00. Time stops while a console is open and speeds up when nobody is waiting. Customers get impatient (😊 → 😐 → 😠) and tip less, or leave. At closing time you get a summary of the day, with the SQL that counted your revenue.
 
-| Inside the truck | The tablet |
+## Screenshots
+
+| Title screen | The SQL tablet |
 |---|---|
-| ![The truck's interior: a red espresso machine, stock shelves, the fridge and the serving window](docs/journey/v2-4-6-interior.jpg) | ![The SQL tablet open over the 3D world](docs/journey/v2-4-6-tablet.jpg) |
+| ![The title screen: a wooden menu board with the Query Truck logo, today's place and the Start button](docs/screenshots/title.jpg) | ![The tablet: the order, a short lesson on WHERE, a fill-in-the-blank query and the graded result](docs/screenshots/tablet.jpg) |
+
+### A new place every day
+
+The truck parks somewhere different each day, each with its own scenery, crowd and weather.
+
+| Skatepark under the Overpass | Behind the School |
+|---|---|
+| ![The skatepark: ramps, rails and skaters under a concrete overpass](docs/screenshots/window-skatepark.jpg) | ![Behind the school: a basketball court in front of the school building](docs/screenshots/window-school.jpg) |
+| **Harbour Pier** | **Town Square** |
+| ![The harbour pier: wooden boards, boats and a lighthouse on the water](docs/screenshots/window-harbour.jpg) | ![The town square: market stalls and bunting around a fountain](docs/screenshots/window-square.jpg) |
 
 ## The look
 
@@ -44,11 +64,11 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 
 **The Data Lens** turns the same picture into a teal blueprint: the world dissolves pixel by pixel, and a card floats over every object with its tables, row counts and sample rows.
 
-![The Data Lens: the truck as a teal blueprint, with table cards over the customer and the tablet](docs/journey/v2-4-8-data-lens.jpg)
+![The Data Lens: the truck as a teal blueprint, with table cards over the customer and the tablet; the table the order needs is starred](docs/screenshots/data-lens.jpg)
 
 ## Status
 
-🚧 **Phase 5: order generator & repetition.** The one-day prototype (Phase 4) is done. Orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, an Esc pause menu and a how-to-play guide.
+🚧 **Phase 5: order generator & repetition.** The one-day prototype (Phase 4) is done. Orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
@@ -106,7 +126,9 @@ src/
 docs/
 ├── JOURNEY.md     # the design journey, with screenshots
 ├── ASSETS.md      # which art is final and which is a placeholder
-└── journey/       # screenshots
+├── AUTOMATION.md  # CI, pull request previews and the nightly agent
+├── screenshots/   # the current game, used in this README
+└── journey/       # screenshots of earlier versions
 ```
 
 ## Credits
