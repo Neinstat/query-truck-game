@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Lang } from './sql-core/feedback';
+import type { Difficulty } from './sql-core/truck/difficulty';
 import { STATION_NAMES, type StationId } from './sql-core/stations';
 
 export type { Lang };
@@ -128,6 +129,28 @@ const en = {
   weekShort: (week: number, day: number, date: string) =>
     `Week ${week} · Day ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Week ${week} · Day ${day}`,
+  backstoryStep: (n: number, total: number) => `${n} / ${total}`,
+  backstoryNext: 'Next',
+  backstoryDone: 'Choose how to play',
+  backstorySkip: 'Skip the story',
+  backstory: [
+    { icon: '🚚', title: 'Meet Query Truck', text: 'Query Truck is a little food truck. It sells coffee, tea, pastries and sandwiches, and everything it sells and buys is written down in a database.' },
+    { icon: '🗺️', title: 'A new spot every day', text: 'The truck never stays put. One day it is at the park, the next at the skatepark, the school, the harbour or the town square, so there are always new customers.' },
+    { icon: '🧑‍🍳', title: 'You are the new hire', text: 'You work the window. Customers tell you what they want to know, and you answer on the truck\'s tablet with SQL: the language for asking a database questions.' },
+    { icon: '🕴️', title: 'And then there is The Manager', text: 'The Manager wears a suit and is very bossy. Sometimes they knock on the back door with a business question, like "Why did sales drop?". Time to think like an analyst.' },
+  ] as { icon: string; title: string; text: string }[],
+  difficultyTitle: 'How do you want to play?',
+  difficultyIntro: 'Pick how much of each query you write. You can change it any time from the pause menu.',
+  difficultyChange: 'Change how much of each query you write. Your progress stays.',
+  difficultyNow: 'In use now',
+  difficultyCancel: 'Keep it as it is',
+  difficultyButton: 'Difficulty',
+  difficulties: {
+    cards: { name: 'Cards', forWho: 'For a quick, light review', benefit: 'Build the query from word blocks, like a puzzle. Fastest, with almost no typing.' },
+    fill: { name: 'Fill in', forWho: 'For players who know the shape', benefit: 'The query is partly written and you fill the gaps. You practise the key parts without starting from nothing.' },
+    write: { name: 'Write it yourself', forWho: 'For complete beginners who want to really learn', benefit: 'You start from SELECT * FROM and write every query. Slower at first, but writing it again and again is what builds the skill of writing SQL without help from AI. It sticks best.' },
+    grow: { name: 'Grow with me', forWho: 'Not sure? Start gently', benefit: 'Cards at first, then gaps, then free typing, as you master each topic.' },
+  } as Record<Difficulty, { name: string; forWho: string; benefit: string }>,
   weekCardKicker: (week: number) => `Week ${week} begins`,
   weekCardTeaches: 'This week you learn',
   weekCardCase: (name: string) => `On Friday The Manager brings a big case: ${name}.`,
@@ -344,6 +367,28 @@ const id: UiText = {
   weekShort: (week: number, day: number, date: string) =>
     `Minggu ${week} · Hari ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Minggu ${week} · Hari ${day}`,
+  backstoryStep: (n: number, total: number) => `${n} / ${total}`,
+  backstoryNext: 'Lanjut',
+  backstoryDone: 'Pilih cara bermain',
+  backstorySkip: 'Lewati cerita',
+  backstory: [
+    { icon: '🚚', title: 'Kenalan dengan Query Truck', text: 'Query Truck adalah food truck kecil. Truck ini menjual kopi, teh, kue, dan sandwich, dan semua yang dijual dan dibelinya dicatat di sebuah database.' },
+    { icon: '🗺️', title: 'Tempat baru setiap hari', text: 'Truck ini tidak pernah diam di satu tempat. Hari ini di taman, besok di skatepark, sekolah, pelabuhan, atau alun-alun kota, jadi selalu ada pelanggan baru.' },
+    { icon: '🧑‍🍳', title: 'Kamu karyawan baru', text: 'Kamu menjaga jendela pesanan. Pelanggan bilang apa yang ingin mereka ketahui, dan kamu menjawabnya di tablet truck dengan SQL: bahasa untuk bertanya kepada database.' },
+    { icon: '🕴️', title: 'Lalu ada The Manager', text: 'The Manager memakai jas dan sangat suka memerintah. Kadang dia mengetuk pintu belakang dengan pertanyaan bisnis, misalnya "Kenapa penjualan turun?". Saatnya berpikir seperti analis.' },
+  ],
+  difficultyTitle: 'Mau main dengan cara apa?',
+  difficultyIntro: 'Pilih seberapa banyak query yang kamu tulis sendiri. Bisa diubah kapan saja lewat menu jeda.',
+  difficultyChange: 'Ubah seberapa banyak query yang kamu tulis. Progres tetap aman.',
+  difficultyNow: 'Sedang dipakai',
+  difficultyCancel: 'Biarkan seperti ini',
+  difficultyButton: 'Tingkat kesulitan',
+  difficulties: {
+    cards: { name: 'Kartu', forWho: 'Untuk latihan cepat dan ringan', benefit: 'Susun query dari kartu kata, seperti puzzle. Paling cepat, hampir tanpa mengetik.' },
+    fill: { name: 'Isi yang kosong', forWho: 'Untuk yang sudah tahu bentuknya', benefit: 'Query sudah separuh tertulis dan kamu mengisi bagian yang kosong. Melatih bagian pentingnya tanpa mulai dari nol.' },
+    write: { name: 'Tulis sendiri', forWho: 'Untuk pemula yang ingin benar-benar belajar', benefit: 'Kamu mulai dari SELECT * FROM dan menulis setiap query sendiri. Awalnya lebih lambat, tetapi menulisnya berulang-ulang itulah yang membangun kemampuan menulis SQL tanpa bantuan AI. Paling melekat.' },
+    grow: { name: 'Tumbuh bersamaku', forWho: 'Belum yakin? Mulai pelan-pelan', benefit: 'Kartu dulu, lalu isian, lalu mengetik bebas, seiring kamu menguasai tiap topik.' },
+  },
   weekCardKicker: (week: number) => `Minggu ${week} dimulai`,
   weekCardTeaches: 'Minggu ini kamu belajar',
   weekCardCase: (name: string) => `Hari Jumat The Manager membawa kasus besar: ${name}.`,

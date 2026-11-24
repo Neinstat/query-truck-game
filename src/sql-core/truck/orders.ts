@@ -136,9 +136,10 @@ export function stagedInput(template: OrderTemplate, variant: TemplateVariant, s
 
 /**
  * The order as a level the console can run: the task, the query to complete (more of it as the
- * concept is mastered), the hints, and the concept's lesson card.
+ * concept is mastered, or the input the player's difficulty chose), the hints, and the concept's
+ * lesson card.
  */
-export function orderLevel(order: TruckOrder, lang: Lang, stage: InputStage = 'keyword'): RequestLevel {
+export function orderLevel(order: TruckOrder, lang: Lang, stage: InputStage = 'keyword', input?: InputMode): RequestLevel {
   const { template, variant } = order;
   const p = variant.params;
   const text = textFor(template, lang);
@@ -150,7 +151,7 @@ export function orderLevel(order: TruckOrder, lang: Lang, stage: InputStage = 'k
     lesson: conceptLesson(template.concept, lang),
     dialogue: [orderLine(order, lang)],
     task: text.task(p),
-    input: stagedInput(template, variant, stage),
+    input: input ?? stagedInput(template, variant, stage),
     solution: template.solution(p),
     hints: [text.hints[0](p), text.hints[1](p), text.hints[2](p)],
     success: text.success(p),

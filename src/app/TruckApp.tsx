@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ui, useLang, type UiText } from '../i18n';
 import { orderLine } from '../sql-core/truck/orders';
 import { TruckBridge, type LensCard } from '../game/truck/bridge';
@@ -11,6 +11,8 @@ import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus
 import { guideFor } from './guide';
 import { DaySummary } from './DaySummary';
 import { WeekCard } from './WeekCard';
+import { DifficultyPicker, StartFlow } from './StartFlow';
+import { useDifficulty } from './useDifficulty';
 import { useSound } from './useSound';
 import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
@@ -77,9 +79,13 @@ export function TruckApp() {
   /** The week card of a new week's first morning: shown once, time stands still while it is up. */
   const [weekCardOpen, setWeekCardOpen] = useState(false);
   const weekCardChecked = useRef(false);
-  const menuOpen = screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const [difficulty, chooseDifficulty] = useDifficulty();
+  /** A new player's backstory and difficulty choice (before the first day), and the picker in the pause menu. */
+  const [introOpen, setIntroOpen] = useState(false);
+  const [difficultyOpen, setDifficultyOpen] = useState(false);
+  const menuOpen = introOpen || difficultyOpen || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
-    useTruckShift(bridge, lang, t, menuOpen);
+    useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
@@ -117,6 +123,7 @@ export function TruckApp() {
   /** Looking at the wall clock: a pop-up with the time. */
   const [lookClock, setLookClock] = useState(false);
   useEffect(() => bridge.on('lookClock', setLookClock), [bridge]);
+  const onFilmShot = useCallback((shot: string | null) => bridge.emit('filmShot', shot), [bridge]);
   // The title screen shows the truck from outside.
   useEffect(() => bridge.emit('showcase', screen === 'title'), [bridge, screen, ready]);
   useSound(bridge, { knocking, consoleOpen, dayDone, lens, paused: menuOpen });
@@ -183,6 +190,7 @@ export function TruckApp() {
         setDaysOpen(false);
         return;
       }
+      if (difficultyOpen) return; // its own keys (Esc closes it)
       if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && !daysOpen && tourStep === null) {
         e.preventDefault();
         play();
@@ -341,7 +349,7 @@ export function TruckApp() {
             }}
           />
         )}
-        {screen === 'title' && tourStep === null && (
+        {screen === 'title' && tourStep === null && !introOpen && (
           <TitleScreen
             dayNumber={dayNumber}
             practice={practice !== null}
@@ -350,7 +358,7 @@ export function TruckApp() {
             worldReady={ready}
             dataReady={dataReady}
             dataError={dbError}
-            onStart={play}
+            onStart={() => (difficulty === null ? setIntroOpen(true) : play())}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
             lang={lang}
@@ -365,10 +373,33 @@ export function TruckApp() {
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
             onDays={() => setDaysOpen(true)}
+            onDifficulty={() => setDifficultyOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
             setLang={setLang}
             t={t}
+          />
+        )}
+        {introOpen && screen === 'title' && (
+          <StartFlow
+            t={t}
+            onShot={onFilmShot}
+            onChoose={(d) => {
+              chooseDifficulty(d);
+              setIntroOpen(false);
+              play();
+            }}
+          />
+        )}
+        {difficultyOpen && (
+          <DifficultyPicker
+            t={t}
+            current={difficulty}
+            onChoose={(d) => {
+              chooseDifficulty(d);
+              setDifficultyOpen(false);
+            }}
+            onCancel={() => setDifficultyOpen(false)}
           />
         )}
         {daysOpen && (

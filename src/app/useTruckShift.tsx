@@ -11,6 +11,7 @@ import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-cor
 import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import { starsFor } from './rewards';
 import { sound } from '../audio/sound';
+import { inputFor, type Difficulty } from '../sql-core/truck/difficulty';
 import { dayOrders, orderLevel, stageFor, type TruckOrder } from '../sql-core/truck/orders';
 import { masteryFrom, nextDay, parsePastDays, practiceOrders } from '../sql-core/truck/repetition';
 import type { FrontCustomer, TruckBridge } from '../game/truck/bridge';
@@ -96,6 +97,13 @@ function loadProgress(): { past: DayLog[]; day: DayLog; today: DayLog; practice:
 
 const saveDay = (log: DayLog) => write(DAY_KEY, log);
 
+/** True when this browser already has played days or served customers (a save from before the difficulty choice). */
+export function hasPlayedBefore(): boolean {
+  if (parsePastDays(read(PAST_KEY)).length > 0) return true;
+  const saved = parseDayLog(read(DAY_KEY));
+  return saved !== undefined && saved !== null && (saved.served.length > 0 || saved.missed.length > 0);
+}
+
 /**
  * Practise an earlier day (or today): `replay` brings back its very orders, `fresh` the same
  * concepts with other cases. Played on today's date, apart from the saved days.
@@ -148,7 +156,7 @@ const skipTitleNextLoad = () => {
 /**
  * @param menuOpen a menu (title, pause, guide) is open: time stops, like with a console.
  */
-export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOpen = false) {
+export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOpen = false, difficulty: Difficulty = 'grow') {
   const [progressOnLoad] = useState(loadProgress);
   const past = progressOnLoad.past;
   const practice = progressOnLoad.practice;
@@ -206,7 +214,13 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   const newConcept = order ? masteryBefore[order.concept] === undefined : false;
   /** The better the concept is known (before today), the more of the query the player writes. */
   const stage = order ? stageFor(order.template, order.variant, masteryBefore[order.concept]?.level) : 'keyword';
-  const level = useMemo(() => (order ? orderLevel(order, lang, stage) : undefined), [order, lang, stage]);
+  const level = useMemo(
+    () =>
+      order
+        ? orderLevel(order, lang, stage, inputFor(order.template, order.variant, difficulty, masteryBefore[order.concept]?.level))
+        : undefined,
+    [order, lang, stage, difficulty, masteryBefore],
+  );
   /** Where the current order is answered. */
   const orderObject = level ? objectForStation(level.station) : null;
 
@@ -357,7 +371,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     order && level && orderObject ? (
       // Kept mounted while the same customer orders, so a half-written query survives closing.
       <ConsoleOverlay
-        key={`order-${order.id}`}
+        key={`order-${order.id}-${difficulty}`}
         stationName={t.truckOrderTitle(t.truckThings[orderObject])}
         level={level}
         db={db}
@@ -374,7 +388,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
         doneLabel={t.truckServe}
         onClose={closeOrder}
         lessonOpen={newConcept}
-        note={stage === 'keyword' ? undefined : t.inputStageNote[stage]}
+        note={difficulty !== 'grow' || stage === 'keyword' ? undefined : t.inputStageNote[stage]}
       />
     ) : null;
 
