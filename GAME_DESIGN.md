@@ -2,11 +2,48 @@
 
 > A first-person 3D web game for learning SQL while learning to **think like a Business Intelligence (BI) analyst**. You run a coffee food truck parked in a city park; customers at the window bring requests you answer with SQL on the truck's tablet, and a bossy manager knocks on the back door with business questions.
 >
-> **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. Phase 4 (the one-day prototype) is done; **Phase 5 (order generator & repetition) is in progress.** Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
+> **Status:** 🚚 Version 2 (3D food truck) was locked in on 17 Nov 2026. Phases 1–5 are done except the owner's 5.3 playtest; **Phase 6 (the six-week curriculum) is in progress, built by a nightly agent.** Target: **released by 31 Dec 2026** (see *Scope & goals*). Version 1 (a top-down 2D café, MVP finished 16 Nov 2026) has been removed from the code; it lives in git tag `v1-cafe-mvp`. How the design got here, with screenshots: [`docs/JOURNEY.md`](docs/JOURNEY.md).
 >
 > This document is the single source of truth for design decisions. Update it whenever a new decision is made.
 >
 > **Language:** the game's main language is **English**, with **Bahasa Indonesia** as a player option for story and UI text. SQL keywords, table and column names, data values and PostgreSQL error messages always stay in English.
+
+---
+
+## Scope & goals (decided 24 Nov 2026)
+
+**Why this project exists** (owner's words, 24 Nov 2026): a **portfolio** project, **released for free**, and the owner's first project for **learning to work with AI agents** in Claude Code (an agent builds, the owner reviews — see [`docs/AUTOMATION.md`](docs/AUTOMATION.md)). After December the owner moves on to other projects, so the game must be **finished, not endless**.
+
+**What a player should get out of it:** after the six weeks they can do **junior BI analyst interview SQL** — filtering, aggregation, `JOIN`s, and a simple analysis case. At the very least, every player learns something new. Beyond syntax, the game teaches the **analyst's way of thinking** that the owner sees in BI work:
+
+1. **Start from the business question** ("sales dropped", "we sell lots of lattes").
+2. **Pick the metric** that answers it (revenue, orders, average order value, share of sales).
+3. **Find the pattern in the data** (when, what, who).
+4. **Spot the opportunity** — e.g. *what else could we sell to people who buy this one item?* (cross-selling, items bought together).
+5. **Recommend an action** and back it with evidence.
+
+The Manager's cases follow these five steps (6.7, 6.8, 6.10).
+
+**Names:** *v1* was the old top-down café (removed); *v2* is this game, the 3D Query Truck. The public release is **Query Truck 1.0**.
+
+**In 1.0:** the six-week curriculum (Phase 6), coins and a small truck shop, streak and badges, credits and easter eggs (Phase 7), and a release on GitHub Pages for **desktop browsers** (Phase 8).
+
+**Not in 1.0** (decided 24 Nov 2026): phone controls (only after release, and only if there is time — maybe never); teaching `INSERT`/`UPDATE`; different data per location (places are visual); final art beyond what exists; advanced topics (subqueries, CTEs, window functions).
+
+**Timeline** (one iteration per night, so it depends on the owner reviewing every day):
+
+| When | What |
+|---|---|
+| 25 Nov – 14 Dec 2026 | Phase 6, iterations 6.1–6.11 |
+| ~12 Dec | The owner invites 1–2 friends who don't know SQL (reminder set) |
+| 15–18 Dec | 6.12 owner playtest, 6.13 friends' playtest, fixes |
+| 15–22 Dec | Phase 7 (the agent goes on while the owner playtests) |
+| 22–30 Dec | Phase 8 |
+| **31 Dec 2026** | **Query Truck 1.0 released** |
+
+**If we fall behind:** on 14 Dec, if Phase 6 is not done, Phase 7 shrinks to 7.3 (credits and easter eggs) only. Phase 6 and Phase 8 are never cut: a finished curriculum matters more than extras.
+
+**Personality:** the owner loves games full of **easter eggs** and little surprises, including credit to the developer. Hidden jokes, secret queries and small discoveries are welcome everywhere (7.3), as long as they never get in the way of learning.
 
 ---
 
@@ -226,9 +263,9 @@ Built in phases; every phase produces something playable. Every iteration: build
 | **3. The café grows** ✅ | Chapters 2–5, cases, Analysis Case, stars/coins/upgrades, Skill Check, Rush Hour | v1 MVP done 16 Nov 2026; its SQL content is kept |
 | **4. One-day prototype** ✅ | The look (✅ 3D), the 3D truck, customers with hand-written orders (week 2), the tablet, using the truck's objects, the Data Lens, sales into the database, the clock and end-of-day summary, one manager knock | The owner plays a full day and finds the concept fun |
 | **5. Order generator & repetition** 🚧 | Parameterised order templates, concept mastery + spaced repetition, patience & tips, the day log saved and replayed | Day 2, day 3… feel different but still practise what needs practice |
-| **6. Six-week curriculum** | Chapters 0–5 become templates + manager cases, lesson cards per week, Skill Check → starting week, the Analysis Case in week 6 | A new player can go from week 1 to the Analysis Case, EN/ID |
-| **7. The truck grows & final art** | Truck upgrades, more locations (the first five came early, in 5.2c), Lunch Rush, per-day streak & badges, all final models | Coins can be spent and the truck/locations visibly change |
-| **8. Release** | Full playtest, phone controls, hosting | The owner approves → v2 done |
+| **6. Six-week curriculum** 🚧 | Chapters 0–5 become templates + manager cases, lesson cards per week, Skill Check → starting week, the Analysis Case in week 6 | A new player can go from week 1 to the Analysis Case, EN/ID |
+| **7. The truck grows** | Coins and a small truck shop, streak & badges, credits & easter eggs, Lunch Rush if there is time (the five places came early, in 5.2c; final art is not in 1.0) | Coins can be spent and the truck visibly changes; the credits roll |
+| **8. Release** | Speed and browsers, first-time polish, the release page and portfolio write-up, hosting on GitHub Pages (desktop only) | The owner approves → **Query Truck 1.0** on 31 Dec 2026 |
 
 ### Phase 4 plan — one-day prototype
 
@@ -357,22 +394,43 @@ From 24 Nov 2026 Phase 6 is built by a **nightly agent** (see [`docs/AUTOMATION.
 | 6.4 | **Week 3 · Daily Specials:** templates for `ORDER BY` (`ASC`/`DESC`), `LIMIT`, `DISTINCT`, aliases and computed columns (`price - cost AS margin`) from Chapter 2, including the `NULL`-first trap with `DESC`; sorted answers without ties. From week 3 a new concept starts with free typing (§5 input table) | Tested; checked in the browser |
 | 6.5 | **Week 4 · Counting the Till:** templates for `COUNT`, `SUM`, `AVG`/`ROUND`, `GROUP BY`, `HAVING` and dates (`DATE_TRUNC`, `EXTRACT`) from Chapter 3, on `sales`, so answers include today's own sales (graded on the data as it is right now) | Tested; checked in the browser |
 | 6.6 | **Week 5 · Regulars & Recipes:** templates for `JOIN … ON`, table aliases and `LEFT JOIN … IS NULL` from Chapter 4; **regulars** who come back on other days and ask "What's my usual?" (`sales` + `customers`) | Tested; checked in the browser |
-| 6.7 | **The Manager follows the week:** the daily knock picks a small guided case (1–2 questions) that uses this week's and earlier weeks' concepts, from a pool per week | Tested; every week has at least three daily cases; checked in the browser |
+| 6.7 | **The Manager follows the week:** the daily knock picks a small guided case (1–2 questions) that uses this week's and earlier weeks' concepts, from a pool per week. Cases follow the analyst's five steps (*Scope & goals*): the business question, the metric, the pattern, the opportunity, the action — the last question is often "so what should we do?" (a choice backed by the result). From week 5 the pool includes **cross-selling**: "Lots of people buy lattes. What else do latte buyers take?" (items in the same `order_id`, a `JOIN` of `sales` with itself) and "Which snack should we offer with it?" | Tested; every week has at least three daily cases, and at least one in weeks 4–6 ends with a recommendation; checked in the browser |
 | 6.8 | **End-of-week cases:** on the fifth day of weeks 2–5 the Manager brings the big case — *The Menu Audit*, *What Should We Promote?*, *The Quiet Day*, *Where Did the Regulars Go?* — moved from v1 into the guided case format, the story rewritten for the truck (no Grandma, no café) | Tested; each case solvable with its hints; checked in the browser |
 | 6.9 | **Skill Check → starting week:** a new player can take v1's adaptive Skill Check from the title screen; it sets the starting week, and the concepts of skipped weeks start at mastery level 2 so they still come back | Tested; checked in the browser |
 | 6.10 | **Week 6 · The Big Question and free mode:** days mix every concept; on the last day the Manager brings the **Analysis Case** *October Sales Dropped* (five steps, from Chapter 5); after it, days go on in an endless free mode with spaced repetition | Tested; checked in the browser |
 | 6.11 | **Indonesian and the guide:** every new text has its `id` translation (tests compare the shapes), and the staff handbook gets a page on weeks and the Skill Check | Tested; checked in the browser in both languages |
 | 6.12 👤 | **Owner playtest** from week 1 to the Analysis Case, in English and Indonesian, + fixes | The owner can go from week 1 to the Analysis Case |
+| 6.13 👤 | **Friends' playtest:** 1–2 friends who don't know SQL play the first week without help while the owner watches and notes where they get stuck; the fixes come back as review comments | Two beginners finish week 1 |
+
+### Phase 7 plan — the truck grows
+
+Kept small so 1.0 ships in December (*Scope & goals*). Built by the nightly agent like Phase 6.
+
+| # | Iteration | Done when… |
+|---|---|---|
+| 7.1 | **Coins and the truck shop:** coins (§10) are counted per day and saved; a shop (from the pause menu and a catalogue on the back counter) sells 6–10 cosmetic upgrades that visibly change the truck: awning colours, plants on the counter, fairy lights, a bigger chalkboard, new radio stations, a truck cat bed. Bought items are saved and shown at every place | Tested; an upgrade can be bought and shows in the truck after a reload; checked in the browser |
+| 7.2 | **Streak and badges:** a day streak 🔥 (a played day counts; missing calendar days never punish, since days are in-game) and 10–15 badges for learning milestones (first `JOIN`, a perfect week, every concept at level 3+, the Analysis Case solved, all easter eggs found…), shown on a badge page in the pause menu and in the summary when earned | Tested; checked in the browser |
+| 7.3 | **Credits and easter eggs** (owner's wish): **credits roll** after the Analysis Case and from the title screen — the owner as developer, and every asset from `CREDITS.md`; **6–10 easter eggs** of our own, e.g. a secret table only found by `SELECT * FROM information_schema.tables`, a hidden query that makes the radio play a special song, a rubber duck in the cab that says something when used, a note from the developer behind the fridge, Mira's last sticky note, the Manager's own coffee order on a rare day, a cat that visits the truck. A badge for finding them all (7.2). They never block learning | Tested; every easter egg can be found; checked in the browser |
+| 7.4 | **Lunch Rush** (only if on schedule on 18 Dec): the optional 12:00–13:00 event from §4, from week 3 | Checked in the browser |
+
+### Phase 8 plan — release
+
+| # | Iteration | Done when… |
+|---|---|---|
+| 8.1 | **Speed and browsers:** split CodeMirror and PGlite's JavaScript out of the first bundle (§11), a first load that feels quick, and a check in Chrome, Firefox, Safari and Edge on desktop; a friendly message on phones and tablets ("Query Truck is made for a computer with a keyboard and mouse") | `npm run size` shows the smaller first bundle; checked in the browser |
+| 8.2 | **First-time polish:** go through the first 15 minutes as a new player (backstory, difficulty, week 1) and fix anything unclear; a settings page (sound, language, mouse sensitivity, reset progress); an *About* page (what the game teaches, the developer, the source on GitHub) | Checked in the browser as a new player |
+| 8.3 | **Release page and portfolio write-up:** README with fresh screenshots and a short GIF, a version tag `v1.0.0`, and `docs/CASE_STUDY.md` — how the game was designed and built, including the owner's agent workflow (nightly agent, pull requests, previews), for the owner's portfolio | Reviewed by the owner |
+| 8.4 👤 | **Final playtest and release:** the owner plays it through once more, approves, and the 1.0 release is published | **Query Truck 1.0** is live |
 
 ## 13. Open questions
 
 - [x] Game title and truck name: **Query Truck** (21 Nov 2026). Earlier working names are gone from the game; saves under the old `sql-valley.*` keys are moved to `query-truck.*` on load
-- [ ] Should `INSERT`/`UPDATE` be taught in later weeks (the player records orders or restocks themselves)?
+- [x] Should `INSERT`/`UPDATE` be taught? **No** (owner, 24 Nov 2026): BI analysts rarely write them; not in 1.0
 - [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
-- [ ] Locations: only visual, or does each have its own customers and data?
-- [ ] Phone controls for 3D: a virtual joystick + drag to look, or turning side by side like prototype 4.5
-- [ ] Hosting (e.g. GitHub Pages / Vercel / Netlify) — for now `main` and every pull request preview are on GitHub Pages (24 Nov 2026, see `docs/AUTOMATION.md`); the release host is decided in Phase 8
-- [ ] Town setting: generic and international, or with a local touch?
+- [x] Locations: **only visual** in 1.0 (owner, 24 Nov 2026)
+- [x] Phone controls: **not in 1.0** (owner, 24 Nov 2026); maybe after release if there is time, maybe never. 8.1 shows phone visitors a friendly message
+- [x] Hosting: **GitHub Pages** for `main`, the pull request previews and the 1.0 release (24 Nov 2026, see `docs/AUTOMATION.md`)
+- [x] Town setting: **generic and international, with small local touches** (e.g. *kopi susu* on the menu one day); the owner's wish is lots of easter eggs and surprises (7.3)
 
 ## History
 

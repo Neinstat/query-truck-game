@@ -68,7 +68,7 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 
 ## Status
 
-🚧 **Phase 5: order generator & repetition.** The one-day prototype (Phase 4) is done. Orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
+🚧 **Phase 6: the six-week curriculum**, built by a nightly agent and reviewed by the owner. **Query Truck 1.0 is planned for 31 Dec 2026** (desktop browsers, free). Phases 1–5 are done: orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
 
 The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
 
