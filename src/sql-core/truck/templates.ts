@@ -10,6 +10,7 @@
 import type { InputMode } from '../levels';
 import type { StationId } from '../stations';
 import type { ConceptId } from './concepts';
+import { WEEK1_TEMPLATES } from './templates.week1';
 
 export type Purchase = { itemId: number; quantity: number };
 export type Params = Readonly<Record<string, string | number>>;
@@ -63,6 +64,7 @@ const CATEGORY_WORDS: Record<string, string> = {
 const word = (category: string | number) => CATEGORY_WORDS[String(category)] ?? String(category);
 
 export const TEMPLATES: readonly OrderTemplate[] = [
+  ...WEEK1_TEMPLATES,
   {
     id: 'price-under',
     concept: 'where-compare',

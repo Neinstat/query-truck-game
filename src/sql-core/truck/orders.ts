@@ -115,7 +115,16 @@ export function inputStage(level: number | undefined): InputStage {
   return level < 4 ? 'condition' : 'free';
 }
 
-/** The input for an order at a stage. Every solution is `SELECT … FROM … WHERE condition;`. */
+/**
+ * The stage an order is played at: `inputStage`, except that an order with no WHERE (week 1)
+ * has no "whole condition" step, so it stays at word blocks until it is typed freely.
+ */
+export function stageFor(template: OrderTemplate, variant: TemplateVariant, level: number | undefined): InputStage {
+  const stage = inputStage(level);
+  return stage === 'condition' && !template.solution(variant.params).includes(' WHERE ') ? 'keyword' : stage;
+}
+
+/** The input for an order at a stage. Solutions are `SELECT … FROM …;`, with `WHERE condition` from week 2. */
 export function stagedInput(template: OrderTemplate, variant: TemplateVariant, stage: InputStage): InputMode {
   const solution = template.solution(variant.params);
   if (stage === 'free') return { kind: 'free' };

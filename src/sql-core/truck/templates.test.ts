@@ -3,12 +3,13 @@ import { checkAnswer } from '../checker';
 import { createCafeDatabase, runQuery, type CafeDatabase } from '../db';
 import { BLANK } from '../levels';
 import { STATIONS, tablesInQuery } from '../stations';
-import { CONCEPTS, conceptLesson, conceptName } from './concepts';
+import { CONCEPTS, CONCEPT_WEEK, conceptLesson, conceptName } from './concepts';
 import { CONCEPT_NAMES_ID } from './locales/id/concepts';
 import { TEMPLATES_ID } from './locales/id/templates';
 import { OBJECT_STATION, objectForStation } from './objects';
-import { dayOrders, inputStage, orderFromId, orderId, orderLevel, orderLine, parseOrderId } from './orders';
+import { dayOrders, inputStage, stageFor, orderFromId, orderId, orderLevel, orderLine, parseOrderId } from './orders';
 import { TEMPLATES } from './templates';
+import { queryTokens } from './templates.week1';
 
 let db: CafeDatabase;
 beforeAll(async () => {
@@ -65,8 +66,19 @@ describe.each(ALL)('order %s', (id, template, variant) => {
     expect(result.ok && result.rows.length).toBeGreaterThan(0);
   });
 
-  it('can be solved by filling the blanks with the reference answers', async () => {
+  it('can be solved by its input: the blocks (week 1) or the blanks filled with the reference answers', async () => {
     const level = orderLevel(orderFromId(id)!, 'en');
+    if (level.input.kind === 'blocks') {
+      // Every word of the solution is among the blocks, in a scrambled order, with a decoy or two.
+      const words = queryTokens(level.solution);
+      const blocks = [...level.input.blocks];
+      expect(blocks.length).toBeGreaterThan(words.length);
+      expect(blocks.join(' ')).not.toBe(words.join(' '));
+      for (const w of words) blocks.splice(blocks.indexOf(w), 1);
+      const { verdict } = await checkAnswer(db, words.join(' '), level.solution, level.check, level.station);
+      expect(verdict).toEqual({ correct: true });
+      return;
+    }
     if (level.input.kind !== 'fill-blank') throw new Error('expected fill-blank');
     const { template: sqlTemplate, answers } = level.input;
     expect(sqlTemplate.split(BLANK).length - 1).toBe(answers.length);
@@ -78,6 +90,13 @@ describe.each(ALL)('order %s', (id, template, variant) => {
 
   it('can be solved at every input stage: the whole condition, then free typing', async () => {
     const order = orderFromId(id)!;
+    if (!template.solution(variant.params).includes(' WHERE ')) {
+      // Week 1 has no WHERE: blocks until the concept is known well, then free typing.
+      expect(stageFor(template, variant, 2)).toBe('keyword');
+      expect(orderLevel(order, 'en', 'keyword').input.kind).toBe('blocks');
+      expect(orderLevel(order, 'en', 'free').input).toEqual({ kind: 'free' });
+      return;
+    }
     const condition = orderLevel(order, 'en', 'condition');
     if (condition.input.kind !== 'fill-blank') throw new Error('expected fill-blank');
     expect(condition.input.template).toMatch(/ WHERE ___;$/);
@@ -110,6 +129,27 @@ describe.each(ALL)('order %s', (id, template, variant) => {
     const onSale = new Set(r.rows.map((row) => Number(row[0])));
     expect(variant.buys.length).toBeGreaterThan(0);
     for (const b of variant.buys) expect(onSale.has(b.itemId), `item ${b.itemId}`).toBe(true);
+  });
+});
+
+describe('week 1', () => {
+  const week1 = TEMPLATES.filter((t) => CONCEPT_WEEK[t.concept] === 1);
+
+  it('has orders for each of its three concepts, at all three objects', () => {
+    expect([...new Set(week1.map((t) => t.concept))].sort()).toEqual(['select-all', 'select-column', 'select-columns']);
+    expect([...new Set(week1.map((t) => objectForStation(t.station)))].sort()).toEqual(['fridge', 'recipe-shelf', 'tablet']);
+    for (const c of ['select-all', 'select-column', 'select-columns'] as const) {
+      expect(week1.filter((t) => t.concept === c).flatMap((t) => t.variants).length, c).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('is played with word blocks, never with a WHERE', () => {
+    for (const t of week1) {
+      for (const v of t.variants) {
+        expect(t.input(v.params).kind, t.id).toBe('blocks');
+        expect(t.solution(v.params), t.id).not.toMatch(/WHERE/);
+      }
+    }
   });
 });
 

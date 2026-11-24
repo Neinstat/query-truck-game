@@ -1,4 +1,5 @@
 import { money, type Params, type TemplateText } from '../../templates';
+import { WEEK1_TEMPLATES_ID } from './templates.week1';
 
 /**
  * Indonesian text for the order templates (keyed by template id). Values in the data and SQL
@@ -25,6 +26,7 @@ const bahan = (p: string | number) => BAHAN[String(p)] ?? String(p);
 const kapital = (s: string) => s.replace(/^./, (c) => c.toUpperCase());
 
 export const TEMPLATES_ID: Record<string, TemplateText> = {
+  ...WEEK1_TEMPLATES_ID,
   'price-under': {
     title: (p) => `Di Bawah ${money(p.max)}`,
     lines: [
