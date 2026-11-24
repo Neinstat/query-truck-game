@@ -25,7 +25,7 @@ Previews and the live game share one website, so they **share saved progress** i
 
 ## For the owner: reviewing a pull request
 
-1. Open the pull request on GitHub (a notification comes to the GitHub app and the 12:00 / 20:00 reminder).
+1. Open the pull request when **the one review notification** comes from Claude on your phone ("Query Truck siap direview…"). If a review is forgotten for 4+ hours, the 12:00 / 20:00 check nudges you once. GitHub's own notifications are turned down to failures and mentions, so they stay quiet (see *Quiet GitHub* below).
 2. Read the **Review list** at the top: one line per iteration in this batch.
 3. Click the preview link in the bot's comment and go through each iteration's **Try it** steps.
 4. All right: **Merge pull request** — the next batch starts by itself. Something to change: write a comment that names the iteration ("6.3: …"; Indonesian is fine), then click **Comment**. The agent fixes it on its next run (at the latest 12:30, 20:30 or 02:30). Several things wrong: one comment with a list is best.
@@ -59,3 +59,23 @@ The owner wants **real progress every day**: not one small iteration and a wait,
   - Then one section per iteration with **What's new** (plain words, for a player), **Try it** (steps in the preview, e.g. "open with `?dev`, F2 → *⏭ Skip to the next day* five times"), **Look at** (what most needs the owner's eye) and **Decisions I made**.
   - **Not done / checked** at the end.
 - Never merge, never push to `main`, never force-push a branch that is not your own `night/` branch, never change repository settings or secrets.
+
+### Notifying the owner
+
+The owner wants **one kind of sound: "it's time to review"**. Everything else stays silent (owner, 24 Nov 2026).
+
+- Send **one** push notification (the `PushNotification` tool, under 200 characters, plain text, in Indonesian) only when:
+  1. a batch pull request has just been **marked ready for review**;
+  2. the owner's **requested changes are done** and pushed;
+  3. you are **blocked** and only the owner can fix it (e.g. no write access).
+- **Never** notify when a run starts, finds nothing to do, waits for review, opens the draft, or fixes CI by itself.
+- Make it **meaningful**: what the player will notice, how big the review is, and the one thing to look at first. Shape: `Query Truck siap direview (PR #N): <what's new in player words>. <n> iterasi, ±<m> menit. Cek dulu: <the riskiest thing>.` For example: `Query Truck siap direview (PR #3): pemain baru sekarang mulai dari minggu 1 pakai kartu kata, plus pilih level. 3 iterasi, ±15 menit. Cek dulu: pilihan level.` For changes done: `Revisi PR #3 selesai: <what changed>. Cek lagi <iteration>.`
+- Put the same plain-words summary as the first line of the pull request description, above the Review list.
+
+### Quiet GitHub (for the owner)
+
+Claude sends the one notification that matters, so GitHub can stay quiet (24 Nov 2026):
+
+- Repository **Watch** → **Participating and @mentions** (not *All Activity*).
+- github.com/settings/notifications → **Actions** → only **failed workflows** (or off), and turn off email for anything you don't read.
+- GitHub mobile app → Settings → Notifications: keep push only for **Direct mentions** and **Review requested**.
