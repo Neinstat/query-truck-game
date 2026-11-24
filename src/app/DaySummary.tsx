@@ -16,6 +16,7 @@ const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - D
  * a real query on today's sales, shown so the summary is a small lesson too.
  */
 export function DaySummary({
+  weekLabel,
   db,
   day,
   past,
@@ -26,6 +27,8 @@ export function DaySummary({
   onReplay,
   practice = false,
 }: {
+  /** "Week 2 · Day 3" */
+  weekLabel: string;
   db: CafeDatabase | null;
   day: DayLog;
   past: readonly DayLog[];
@@ -57,7 +60,7 @@ export function DaySummary({
 
   return (
     <div className="day-summary" role="dialog" aria-label={t.summaryTitle(dateLabel)}>
-      <p className="day-summary-title">🌇 {t.summaryTitle(dateLabel)}</p>
+      <p className="day-summary-title">🌇 {t.summaryTitle(dateLabel)} <span className="day-summary-week">· {weekLabel}</span></p>
       <dl className="day-summary-stats">
         <div>
           <dt>{t.summaryServed}</dt>
