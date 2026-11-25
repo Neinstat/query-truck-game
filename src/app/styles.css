@@ -3615,3 +3615,29 @@ body {
   margin: 0.2rem 0 0;
   padding: 0.3rem 0.5rem;
 }
+
+/* Badges, easter eggs and credits (7.3) */
+.badge-item { min-height: 64px; }
+.badge-locked { opacity: 0.55; }
+.egg-toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
+  max-width: min(560px, 90vw); padding: 14px 18px; border: 2px solid var(--ink, #1c1b22);
+  border-radius: 12px; background: #fff7d6; color: #1c1b22; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer; animation: egg-pop 0.4s ease-out;
+}
+.egg-toast strong { display: block; margin-bottom: 4px; }
+.egg-toast span { font-size: 0.92rem; }
+@keyframes egg-pop { from { transform: translate(-50%, 24px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.title-duck { position: absolute; right: 18px; bottom: 14px; font-size: 1.2rem; background: none; border: 0; cursor: pointer; opacity: 0.8; padding: 4px; }
+.title-duck:hover { transform: rotate(-12deg) scale(1.2); }
+.credits-screen { overflow: hidden; background: rgba(15, 14, 22, 0.88); color: #fff; }
+.credits-roll { position: absolute; left: 0; right: 0; text-align: center; animation: credits-roll 40s linear forwards; top: 0; }
+.credits-roll section { margin-bottom: 56px; }
+.credits-roll h3 { font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7; margin: 0 0 10px; }
+.credits-roll p { margin: 4px 0; font-size: 1.15rem; }
+.credits-name { font: inherit; font-size: 1.8rem; color: inherit; background: none; border: 0; cursor: pointer; }
+.credits-close { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }
+@keyframes credits-roll { from { transform: translateY(100vh); } to { transform: translateY(-100%); } }
+@media (prefers-reduced-motion: reduce) { .credits-roll { animation: none; position: static; padding-top: 40px; overflow-y: auto; max-height: 80vh; } }
+
+.title-card { position: relative; }

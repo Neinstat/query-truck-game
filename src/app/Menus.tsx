@@ -1,3 +1,5 @@
+import { findEgg } from './eggs';
+import { konamiStep } from '../sql-core/truck/eggs';
 import { useEffect, useState } from 'react';
 import type { UiText } from '../i18n';
 import { LANGS, type Lang } from '../sql-core/feedback';
@@ -92,12 +94,24 @@ export function TitleScreen(props: {
   onStart: () => void;
   onGuide: () => void;
   onTour: () => void;
+  onCredits: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onCredits, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
+  // The old code (7.3 easter egg): typed on the title screen.
+  useEffect(() => {
+    let recent: string[] = [];
+    const onKey = (e: KeyboardEvent) => {
+      const step = konamiStep(recent, e.key);
+      recent = step.recent;
+      if (step.done) findEgg('konami');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const started = clock > OPENING;
   return (
     <div className="menu-screen title-screen">
@@ -126,8 +140,14 @@ export function TitleScreen(props: {
         <button className="menu-button" onClick={onTour} disabled={!worldReady}>
           {t.tourStart}
         </button>
+        <button className="menu-button" onClick={onCredits}>
+          {t.creditsButton}
+        </button>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
+        <button className="title-duck" onClick={() => findEgg('duck')} aria-label="🦆" title="🦆">
+          🦆
+        </button>
       </div>
     </div>
   );
@@ -159,12 +179,15 @@ export function PauseMenu(props: {
   onDifficulty: () => void;
   /** The truck shop. */
   onShop: () => void;
+  /** Badges and easter eggs. */
+  onBadges: () => void;
+  onCredits: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onBadges, onCredits, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -179,6 +202,9 @@ export function PauseMenu(props: {
         <button className="menu-button" onClick={onShop}>
           {t.shopButton}
         </button>
+        <button className="menu-button" onClick={onBadges}>
+          {t.badgesButton}
+        </button>
         <button className="menu-button" onClick={onDifficulty}>
           {t.difficultyButton}
         </button>
@@ -187,6 +213,9 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onTour}>
           {t.tourStart}
+        </button>
+        <button className="menu-button" onClick={onCredits}>
+          {t.creditsButton}
         </button>
         <button className="menu-button" onClick={onTitle}>
           {t.toTitle}

@@ -25,6 +25,11 @@ import { totalXp, dayXp } from '../sql-core/truck/xp';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
+import { BadgesScreen } from './BadgesScreen';
+import { CreditsScreen } from './CreditsScreen';
+import { useEggs, useEggToast } from './eggs';
+import { eggText, eggTitle } from '../sql-core/truck/eggs';
+import { ANALYSIS_DAY, newBadges } from '../sql-core/truck/badges';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -90,7 +95,11 @@ export function TruckApp() {
   const [introOpen, setIntroOpen] = useState(false);
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
-  const menuOpen = introOpen || difficultyOpen || shopOpen || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const [badgesOpen, setBadgesOpen] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
+  const eggs = useEggs();
+  const [eggToast, closeEggToast] = useEggToast();
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || creditsOpen || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
@@ -327,6 +336,8 @@ export function TruckApp() {
             t={t}
             practice={practice !== null}
             onNewDay={() => (practice ? endPractice() : startNextDay(past, day))}
+            badges={practice || !shut ? [] : newBadges(past, day, shop, eggs)}
+            onCredits={!practice && dayNumber === ANALYSIS_DAY && day.manager ? () => setCreditsOpen(true) : undefined}
             onReplay={() => (practice ? startPractice(past, today, practice.from, practice.mode) : restartDay(day))}
           />
         )}
@@ -395,6 +406,7 @@ export function TruckApp() {
             onStart={() => (difficulty === null ? setIntroOpen(true) : play())}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
+            onCredits={() => setCreditsOpen(true)}
             lang={lang}
             setLang={setLang}
             t={t}
@@ -409,6 +421,8 @@ export function TruckApp() {
             onDays={() => setDaysOpen(true)}
             onDifficulty={() => setDifficultyOpen(true)}
             onShop={() => setShopOpen(true)}
+            onBadges={() => setBadgesOpen(true)}
+            onCredits={() => setCreditsOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
             setLang={setLang}
@@ -428,6 +442,16 @@ export function TruckApp() {
         )}
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
+        )}
+        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
+        {creditsOpen && <CreditsScreen lang={lang} t={t} onClose={() => setCreditsOpen(false)} />}
+        {eggToast && (
+          <div className="egg-toast" role="status" onClick={closeEggToast}>
+            <strong>
+              {t.eggToast} {eggTitle(eggToast, lang)}
+            </strong>
+            <span>{eggText(eggToast, lang)}</span>
+          </div>
         )}
         {difficultyOpen && (
           <DifficultyPicker
