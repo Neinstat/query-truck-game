@@ -3,7 +3,7 @@ import { CONCEPTS, CONCEPT_WEEK } from './concepts';
 import { WEEKS_ID } from './locales/id/weeks';
 import { nextDay, planDay } from './repetition';
 import { parseOrderId } from './orders';
-import { DAYS_PER_WEEK, FIRST_WEEK, isWeekStart, LAST_WEEK, nextWorkday, WEEKS, weekInfo, weekOfDay } from './weeks';
+import { DAYS_PER_WEEK, FIRST_WEEK, isFreeMode, isWeekStart, LAST_WEEK, nextWorkday, WEEKS, weekInfo, weekOfDay } from './weeks';
 import { FIRST_PLAY_DATE, serveOrder, type DayLog } from './day';
 
 describe('weeks', () => {
@@ -75,5 +75,15 @@ describe('weeks', () => {
     }
     expect(past[5].date).toBe('2026-11-06');
     expect(past[6].date).toBe('2026-11-09'); // Friday → Monday, not Saturday
+  });
+});
+
+describe('free mode (6.9)', () => {
+  it('starts on the day after week 6 and has no more week cards', () => {
+    expect(isFreeMode(30)).toBe(false);
+    expect(isFreeMode(31)).toBe(true);
+    expect(isWeekStart(31)).toBe(false);
+    expect(isWeekStart(26)).toBe(true);
+    expect(isWeekStart(36)).toBe(false);
   });
 });

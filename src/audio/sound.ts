@@ -34,7 +34,8 @@ export type SoundEffect =
   | 'gaveUp'
   | 'lesson'
   | 'lens'
-  | 'dayEnd';
+  | 'dayEnd'
+  | 'xp';
 
 const SETTINGS_KEY = 'query-truck.sound';
 
@@ -298,6 +299,11 @@ class SoundEngine {
         // A digital sweep for the hologram.
         this.slide(300, 1600, t, 0.35, 0.06, 'sawtooth', 2600);
         this.noiseBurst(t, 0.35, 0.05, 'bandpass', 4000, 2, true);
+        break;
+      case 'xp':
+        // A tiny bright pling as a star lands on the XP counter.
+        this.tone(1318.5, t, 0.18, 0.07, 'sine');
+        this.tone(1975.5, t + 0.05, 0.25, 0.05, 'triangle');
         break;
       case 'dayEnd':
         [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, t + i * 0.12, 1.2, 0.08, 'triangle'));

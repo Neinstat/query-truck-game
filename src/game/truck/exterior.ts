@@ -12,6 +12,8 @@
 import * as THREE from 'three';
 import { block, mat } from './build';
 import { GROUND_Y, LAYOUT, TRUCK } from './world';
+import { truckLook } from './look';
+import type { Ink } from '../art/riso';
 import logoUrl from '../../assets/query-truck-logo.webp';
 
 /** Where the artwork sits in the logo picture (the rest is empty space), in pixels. */
@@ -119,13 +121,13 @@ export function buildExterior(): THREE.Group {
   block(g, 'white', [end + 0.002, BAND.bottom, front - 0.002, end + P + proud, 0.02, back + 0.002]);
 
   // The coral band and the mustard pinstripe, just proud of the paint, all the way round.
-  const band = (ink: 'red' | 'mustard', y1: number, y2: number, out: number) => {
+  const band = (ink: Ink, y1: number, y2: number, out: number) => {
     block(g, ink, [-HX - T - out, y1, front - P - out, end + P + out, y2, front - P - out + 0.004]);
     block(g, ink, [-HX - T - out, y1, back + P + out - 0.004, end + P + out, y2, back + P + out]);
     block(g, ink, [end + P + out - 0.004, y1, front - P - out + 0.004, end + P + out, y2, d.min.z]);
     block(g, ink, [end + P + out - 0.004, y1, d.max.z, end + P + out, y2, back + P + out - 0.004]);
   };
-  band('red', BAND.bottom, BAND.top, 0.01);
+  band(truckLook().paint, BAND.bottom, BAND.top, 0.01);
   band('mustard', STRIPE.bottom, STRIPE.top, 0.01);
   // The roof: a little wider than the body, with rounded edges and a vent.
   block(g, 'white', [-HX - T - 0.04, H + 0.1, front - P - 0.04, end + P + 0.04, H + 0.2, back + P + 0.04]);
@@ -296,7 +298,7 @@ function awning(g: THREE.Group, x1: number, x2: number, y: number, z: number): v
   g.add(hinge);
   for (let i = 0; i < stripes; i++) {
     const x = x1 + i * width;
-    const ink = i % 2 ? 'white' : 'teal';
+    const ink = i % 2 ? 'white' : truckLook().awning;
     block(hinge, ink, [x, 0, -depth, x + width, 0.04, 0]);
     // A scallop hanging from the front edge, one per stripe.
     const flap = new THREE.Mesh(new THREE.CircleGeometry(width / 2, 8, Math.PI, Math.PI), mat(ink));

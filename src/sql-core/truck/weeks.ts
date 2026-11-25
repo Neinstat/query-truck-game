@@ -61,8 +61,14 @@ export function weekOfDay(dayNumber: number): { week: number; dayInWeek: number 
   };
 }
 
-/** The first morning of a week: the week card shows. */
-export const isWeekStart = (dayNumber: number): boolean => weekOfDay(dayNumber).dayInWeek === 1;
+/**
+ * Free mode (6.9): once the Analysis Case of week 6 is behind the player, days go on for ever.
+ * Every concept is in the mix, there are no more week cards, and the Manager brings daily cases.
+ */
+export const isFreeMode = (dayNumber: number): boolean => dayNumber > (LAST_WEEK - FIRST_WEEK + 1) * DAYS_PER_WEEK;
+
+/** The first morning of a week: the week card shows (never in free mode). */
+export const isWeekStart = (dayNumber: number): boolean => !isFreeMode(dayNumber) && weekOfDay(dayNumber).dayInWeek === 1;
 
 /** The next date after `date` that is not a Saturday or a Sunday. */
 export function nextWorkday(date: string): string {

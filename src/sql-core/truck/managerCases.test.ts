@@ -50,7 +50,7 @@ describe('the pool of daily cases', () => {
     expect(new Set(DAILY_CASES.map((c) => c.id)).size).toBe(DAILY_CASES.length);
     for (const c of playable) {
       expect(c.steps.length).toBeGreaterThanOrEqual(1);
-      expect(c.steps.length).toBeLessThanOrEqual(c.weekly ? 3 : 2);
+      expect(c.steps.length).toBeLessThanOrEqual(c.weekly ? 5 : 2);
       for (const s of c.steps) expect(s.starter.split(BLANK).length - 1, `${c.id} starter`).toBe(1);
     }
   });
@@ -59,13 +59,14 @@ describe('the pool of daily cases', () => {
 describe('the big case of the week (6.8)', () => {
   const weekly = DAILY_CASES.filter((c) => c.weekly);
 
-  it('has one for each of weeks 2–5, named as the week card says, ending with a recommendation', () => {
-    expect(weekly.map((c) => c.week).sort()).toEqual([2, 3, 4, 5]);
+  it('has one for each of weeks 2–6, named as the week card says, ending with a recommendation', () => {
+    expect(weekly.map((c) => c.week).sort()).toEqual([2, 3, 4, 5, 6]);
     for (const c of weekly) {
       expect(c.en.title).toBe(WEEKS[c.week].managerCase);
-      expect(c.steps).toHaveLength(3);
+      // Weeks 2–5: three questions; week 6 is the Analysis Case with the analyst's five steps.
+      expect(c.steps).toHaveLength(c.week === 6 ? 5 : 3);
       expect(c.recommends).toBe(true);
-      expect(c.steps[2].answer.kind).toBe('choice');
+      expect(c.steps[c.steps.length - 1].answer.kind).toBe('choice');
     }
   });
 
@@ -78,7 +79,8 @@ describe('the big case of the week (6.8)', () => {
       }
     }
     expect(pickDailyCase(1, '2026-11-06', 5).weekly).toBeFalsy();
-    expect(pickDailyCase(6, '2026-11-06', 5).weekly).toBeFalsy();
+    // Free mode (after week 6) passes no day of the week: only daily cases come.
+    expect(pickDailyCase(6, '2026-11-06').weekly).toBeFalsy();
   });
 
   it('is never drawn into the daily pool, and the manager talks about it at the door', () => {
