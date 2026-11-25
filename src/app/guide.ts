@@ -157,6 +157,18 @@ export const GUIDE: readonly GuidePage[] = [
       'Then open the next day: new customers, new questions, and the sky goes from morning to night once more.',
     ],
   },
+  {
+    id: 'weeks',
+    note: { text: 'Friday is the Manager\'s day. Have a coffee first.', from: '— Mira, who had this window before you' },
+    icon: '🗓️',
+    title: 'Weeks & difficulty',
+    paragraphs: [
+      'The game runs in six weeks of five working days. Each week teaches one part of SQL — week 1 reading tables, week 2 picking rows, week 3 sorting, week 4 counting, week 5 joining tables — and the orders only use what you have been taught so far, plus older things coming back.',
+      'On the fifth day of weeks 2 to 5 the Manager brings a big case of three questions. Week 6 is The Big Question: every kind of order is mixed together, and on its last day comes the Analysis Case, October Sales Dropped, in five steps: how big, what, when, why, and what to do.',
+      'After the Analysis Case the days go on in free mode: no more weeks, every concept in the mix, and the ones you know least come back most often. Play for as long as you like.',
+      'How you type your queries is your choice: Cards (word blocks), Fill in (gaps), Write it yourself, or Grow with me. Change it any time in the pause menu under Difficulty; your progress is kept.',
+    ],
+  },
 ];
 
 export const guideFor = (lang: Lang): readonly GuidePage[] => (lang === 'id' ? GUIDE_ID : GUIDE);

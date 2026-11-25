@@ -129,6 +129,9 @@ const en = {
   weekShort: (week: number, day: number, date: string) =>
     `Week ${week} · Day ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Week ${week} · Day ${day}`,
+  freeLabel: (day: number) => `Free mode · Day ${day}`,
+  freeShort: (day: number, date: string) =>
+    `Free mode · Day ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`,
   backstoryStep: (n: number, total: number) => `${n} / ${total}`,
   backstoryNext: 'Next',
   backstoryDone: 'Choose how to play',
@@ -367,6 +370,9 @@ const id: UiText = {
   weekShort: (week: number, day: number, date: string) =>
     `Minggu ${week} · Hari ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Minggu ${week} · Hari ${day}`,
+  freeLabel: (day: number) => `Mode bebas · Hari ${day}`,
+  freeShort: (day: number, date: string) =>
+    `Mode bebas · Hari ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
   backstoryStep: (n: number, total: number) => `${n} / ${total}`,
   backstoryNext: 'Lanjut',
   backstoryDone: 'Pilih cara bermain',

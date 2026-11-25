@@ -6,7 +6,7 @@ import { getSchema, type CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
 import type { Level } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
-import { weekOfDay } from '../sql-core/truck/weeks';
+import { isFreeMode, weekOfDay } from '../sql-core/truck/weeks';
 import { managerCaseFor, managerCaseIdFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
@@ -168,7 +168,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   );
   const [day, setDay] = useState<DayLog>(progressOnLoad.day);
   // The Manager's case follows the week (6.7): the day number is past days + 1 (a practice run keeps its own).
-  const { week: managerWeek, dayInWeek: managerDay } = weekOfDay(practice ? practice.from : past.length + 1);
+  const managerDayNumber = practice ? practice.from : past.length + 1;
+  const { week: managerWeek, dayInWeek: weekDay } = weekOfDay(managerDayNumber);
+  // Free mode (after week 6) never brings a big case again: only the daily pool.
+  const managerDay = isFreeMode(managerDayNumber) ? undefined : weekDay;
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);

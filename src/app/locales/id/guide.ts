@@ -132,4 +132,16 @@ export const GUIDE_ID: readonly GuidePage[] = [
       'Lalu buka hari berikutnya: pelanggan baru, pertanyaan baru, dan langit kembali berjalan dari pagi sampai malam.',
     ],
   },
+  {
+    id: 'weeks',
+    note: { text: 'Jumat itu harinya The Manager. Ngopi dulu sebelumnya.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
+    icon: '🗓️',
+    title: 'Minggu & tingkat kesulitan',
+    paragraphs: [
+      'Permainan berjalan dalam enam minggu, masing-masing lima hari kerja. Tiap minggu mengajarkan satu bagian SQL — minggu 1 membaca tabel, minggu 2 memilih baris, minggu 3 mengurutkan, minggu 4 menghitung, minggu 5 menggabungkan tabel — dan pesanan hanya memakai yang sudah diajarkan, ditambah hal lama yang kembali.',
+      'Di hari kelima minggu 2 sampai 5, The Manager membawa kasus besar berisi tiga pertanyaan. Minggu 6 adalah Pertanyaan Besar: semua jenis pesanan bercampur, dan di hari terakhirnya datang Kasus Analisis, Penjualan Oktober Turun, dalam lima langkah: seberapa besar, apa, kapan, kenapa, dan apa yang dilakukan.',
+      'Setelah Kasus Analisis, hari terus berjalan dalam mode bebas: tidak ada minggu lagi, semua konsep bercampur, dan yang paling kurang kamu kuasai paling sering kembali. Main selama kamu mau.',
+      'Cara kamu mengetik query adalah pilihanmu: Kartu (blok kata), Isi yang kosong, Tulis sendiri, atau Tumbuh bersamaku. Ubah kapan saja di menu jeda di bawah Kesulitan; kemajuanmu tetap tersimpan.',
+    ],
+  },
 ];

@@ -18,7 +18,7 @@ import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
 import { sound } from '../audio/sound';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
-import { isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
+import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -89,6 +89,8 @@ export function TruckApp() {
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
+  const free = isFreeMode(dayNumber);
+  const freeDay = dayNumber - 30;
   // A new week's first morning, before anything has happened: show the week card (not on reloads
   // later in the day, and not in practice runs).
   useEffect(() => {
@@ -245,6 +247,7 @@ export function TruckApp() {
               shut={shut}
               week={week}
               dayInWeek={dayInWeek}
+              freeDay={free ? freeDay : null}
               practice={practice !== null}
               date={day.date}
               served={day.served.length}
@@ -284,7 +287,7 @@ export function TruckApp() {
         )}
         {ready && dayDone && !front && !consoleOpen && !menuOpen && (
           <DaySummary
-            weekLabel={t.weekLabel(week, dayInWeek)}
+            weekLabel={free ? t.freeLabel(freeDay) : t.weekLabel(week, dayInWeek)}
             db={db}
             day={day}
             past={past}
@@ -463,6 +466,8 @@ function ClockWidget(props: {
   shut: boolean;
   week: number;
   dayInWeek: number;
+  /** Free mode: the number of this day after week 6, otherwise null. */
+  freeDay: number | null;
   /** A practice run (Days screen): shown on the card. */
   practice: boolean;
   date: string;
@@ -474,7 +479,7 @@ function ClockWidget(props: {
   place: string;
   t: UiText;
 }) {
-  const { clock, shut, week, dayInWeek, practice, date, served, total, lens, raining, place, t } = props;
+  const { clock, shut, week, dayInWeek, freeDay, practice, date, served, total, lens, raining, place, t } = props;
   const progress = Math.min(1, Math.max(0, (clock - OPENING) / (CLOSING - OPENING)));
   return (
     <div className={shut ? 'hud-clock hud-clock-shut' : 'hud-clock'} title={t.clockTitle}>
@@ -492,7 +497,7 @@ function ClockWidget(props: {
       </div>
       <div className="hud-clock-bottom" title={t.dayTitle}>
         <span>
-          {t.weekShort(week, dayInWeek, date)}
+          {freeDay !== null ? t.freeShort(freeDay, date) : t.weekShort(week, dayInWeek, date)}
           {practice && <span className="hud-clock-practice">{t.practiceTag}</span>}
         </span>
         <span className="hud-clock-served">

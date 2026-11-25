@@ -453,4 +453,205 @@ export const WEEKLY_CASES: DailyCase[] = [
       },
     ],
   },
+  // ───────────── Week 6 · The Analysis Case ─────────────
+  {
+    id: 'october-dropped',
+    week: 6,
+    weekly: true,
+    recommends: true,
+    en: {
+      title: 'October Sales Dropped',
+      ask: 'Head office sent me a number I do not like: October is well below September. Find out how big the drop is, what fell, when, and why. Then tell me what we do. Five questions. Take the whole day if you must.',
+      task: 'The Analysis Case: five questions that follow the analyst\'s steps. Fill the blank, run each query, and answer from the result. The last answer is a recommendation.',
+      success:
+        'The milk. A supplier that saves us 25 cents a litre cost us a fifth of our sales. I will call Meadow Dairy myself. Hm. You did what an analyst does: question, metric, pattern, cause, action. Good work.',
+    },
+    idText: {
+      title: 'Penjualan Oktober Turun',
+      ask: 'Kantor pusat mengirim angka yang tidak saya suka: Oktober jauh di bawah September. Cari tahu seberapa besar turunnya, apa yang turun, kapan, dan kenapa. Lalu bilang apa yang kita lakukan. Lima pertanyaan. Pakai seharian kalau perlu.',
+      task: 'Kasus Analisis: lima pertanyaan yang mengikuti langkah seorang analis. Isi bagian kosong, jalankan tiap query, dan jawab dari hasilnya. Jawaban terakhir adalah rekomendasi.',
+      success:
+        'Susunya. Pemasok yang menghemat 25 sen per liter malah membuat kita kehilangan seperlima penjualan. Saya sendiri yang akan menelepon Meadow Dairy. Hm. Kamu melakukan apa yang dilakukan seorang analis: pertanyaan, metrik, pola, penyebab, tindakan. Kerja bagus.',
+    },
+    steps: [
+      {
+        starter:
+          "SELECT DATE_TRUNC('month', sold_at) AS month,\n       SUM(quantity * unit_price) AS revenue\nFROM sales\nWHERE sold_at >= '2026-09-01' AND sold_at < '2026-11-01'\nGROUP BY ___\nORDER BY month;",
+        fill: 'month',
+        solution:
+          "SELECT DATE_TRUNC('month', sold_at) AS month, SUM(quantity * unit_price) AS revenue FROM sales WHERE sold_at >= '2026-09-01' AND sold_at < '2026-11-01' GROUP BY month ORDER BY month;",
+        answer: {
+          kind: 'number',
+          sql: "SELECT ROUND(100.0 * (SUM(CASE WHEN sold_at < '2026-10-01' THEN quantity * unit_price ELSE 0 END) - SUM(CASE WHEN sold_at >= '2026-10-01' THEN quantity * unit_price ELSE 0 END)) / SUM(CASE WHEN sold_at < '2026-10-01' THEN quantity * unit_price ELSE 0 END), 2) FROM sales WHERE sold_at >= '2026-09-01' AND sold_at < '2026-11-01';",
+          tolerance: 0.5,
+        },
+        en: {
+          prompt: 'By what percentage did revenue fall from September to October? (Just the number, without the % sign.)',
+          goal: 'Step one is the business question: how big is the problem? Total revenue per month, then the percentage change: (September − October) ÷ September × 100.',
+          read: 'Two rows: September and October. Work out the drop by hand: (September − October) ÷ September × 100.',
+          hints: [
+            'The blank is the column to group by: the month you just made with DATE_TRUNC, which has the alias month.',
+            'Replace ___ with month and press Run. Then take the two revenue numbers and work out the percentage.',
+          ],
+          reply: 'Hm. That is a real drop. What fell?',
+        },
+        id: {
+          prompt: 'Berapa persen pendapatan turun dari September ke Oktober? (Angkanya saja, tanpa tanda %.)',
+          goal: 'Langkah satu adalah pertanyaan bisnisnya: seberapa besar masalahnya? Total pendapatan per bulan, lalu perubahan persennya: (September − Oktober) ÷ September × 100.',
+          read: 'Dua baris: September dan Oktober. Hitung turunnya sendiri: (September − Oktober) ÷ September × 100.',
+          hints: [
+            'Bagian kosong itu kolom untuk mengelompokkan: bulan yang baru kamu buat dengan DATE_TRUNC, aliasnya month.',
+            'Ganti ___ dengan month lalu tekan Jalankan. Lalu ambil dua angka pendapatan dan hitung persentasenya.',
+          ],
+          reply: 'Hm. Itu penurunan yang nyata. Apa yang turun?',
+        },
+      },
+      {
+        starter:
+          "SELECT m.name,\n       DATE_TRUNC('month', s.sold_at) AS month,\n       SUM(s.quantity * s.unit_price) AS revenue\nFROM sales s\nJOIN menu_items m ON m.item_id = s.item_id\nWHERE m.name IN ('Latte', 'Cappuccino', 'Flat White')\n  AND s.sold_at >= '2026-09-01' AND s.sold_at < '2026-11-01'\nGROUP BY m.name, ___\nORDER BY m.name, month;",
+        fill: 'month',
+        solution:
+          "SELECT m.name, DATE_TRUNC('month', s.sold_at) AS month, SUM(s.quantity * s.unit_price) AS revenue FROM sales s JOIN menu_items m ON m.item_id = s.item_id WHERE m.name IN ('Latte', 'Cappuccino', 'Flat White') AND s.sold_at >= '2026-09-01' AND s.sold_at < '2026-11-01' GROUP BY m.name, month ORDER BY m.name, month;",
+        answer: {
+          kind: 'choice-sql',
+          choicesSql: "SELECT name FROM menu_items WHERE name IN ('Latte', 'Cappuccino', 'Flat White') ORDER BY name;",
+          correctSql: "SELECT name FROM menu_items WHERE name = 'Latte';",
+        },
+        en: {
+          prompt: 'Three milk drinks look worst. Which of them lost the most revenue?',
+          goal: 'The metric by item: join sales to menu_items for the names, and group by item and month so you can compare September with October for each.',
+          read: 'For each drink compare its September row with its October row: the biggest gap is the one that lost the most.',
+          hints: [
+            'The blank is the second thing to group by, next to the name: the month.',
+            'Replace ___ with month and press Run. Then subtract each drink\'s October revenue from its September revenue.',
+          ],
+          reply: 'Hm. All milk drinks. Interesting. When did it happen?',
+        },
+        id: {
+          prompt: 'Tiga minuman susu tampak paling parah. Mana yang paling banyak kehilangan pendapatan?',
+          goal: 'Metrik per item: gabungkan sales dengan menu_items untuk nama, dan kelompokkan per item dan bulan agar kamu bisa membandingkan September dengan Oktober untuk tiap item.',
+          read: 'Untuk tiap minuman, bandingkan baris September dengan baris Oktobernya: selisih terbesar adalah yang paling banyak kehilangan.',
+          hints: [
+            'Bagian kosong itu hal kedua untuk dikelompokkan, di samping nama: bulannya.',
+            'Ganti ___ dengan month lalu tekan Jalankan. Lalu kurangi pendapatan Oktober tiap minuman dari pendapatan Septembernya.',
+          ],
+          reply: 'Hm. Semuanya minuman susu. Menarik. Kapan itu terjadi?',
+        },
+      },
+      {
+        starter:
+          "SELECT EXTRACT(HOUR FROM sold_at) AS hour,\n       DATE_TRUNC('month', sold_at) AS month,\n       SUM(quantity * unit_price) AS revenue\nFROM sales\nWHERE sold_at >= '2026-09-01' AND sold_at < '2026-11-01'\nGROUP BY hour, ___\nORDER BY hour, month;",
+        fill: 'month',
+        solution:
+          "SELECT EXTRACT(HOUR FROM sold_at) AS hour, DATE_TRUNC('month', sold_at) AS month, SUM(quantity * unit_price) AS revenue FROM sales WHERE sold_at >= '2026-09-01' AND sold_at < '2026-11-01' GROUP BY hour, month ORDER BY hour, month;",
+        answer: {
+          kind: 'choice',
+          choices: ['In the morning, before noon', 'Around lunch, 12:00 to 14:00', 'In the late afternoon'],
+          choicesId: ['Di pagi hari, sebelum siang', 'Sekitar makan siang, 12:00 sampai 14:00', 'Di sore hari'],
+          correct: 0,
+        },
+        en: {
+          prompt: 'When during the day did the sales fall?',
+          goal: 'Step three is the pattern: when. Group by the hour of the day and by month, then compare September with October hour by hour.',
+          read: 'Hours 7 to 11 fall hard from September to October; around noon October is even higher. The drop sits in the morning.',
+          hints: [
+            'The blank is the second group, the one that tells September from October: the month.',
+            'Replace ___ with month and press Run. Compare the two rows of each hour.',
+          ],
+          reply: 'Hm. Mornings. So something is wrong with our mornings. Why?',
+        },
+        id: {
+          prompt: 'Kapan dalam sehari penjualan turun?',
+          goal: 'Langkah tiga adalah pola: kapan. Kelompokkan per jam dalam sehari dan per bulan, lalu bandingkan September dengan Oktober jam demi jam.',
+          read: 'Jam 7 sampai 11 turun tajam dari September ke Oktober; sekitar siang Oktober malah lebih tinggi. Penurunannya ada di pagi hari.',
+          hints: [
+            'Bagian kosong itu kelompok kedua, yang membedakan September dari Oktober: bulannya.',
+            'Ganti ___ dengan month lalu tekan Jalankan. Bandingkan dua baris tiap jam.',
+          ],
+          reply: 'Hm. Pagi hari. Jadi ada yang salah dengan pagi kita. Kenapa?',
+        },
+      },
+      {
+        starter:
+          "SELECT s.name,\n       s.delivery_time,\n       COUNT(i.sold_out_at) AS days_ran_out\nFROM inventory i\nJOIN suppliers s ON s.supplier_id = i.supplier_id\nWHERE i.ingredient = 'milk'\nGROUP BY s.name, ___\nORDER BY s.delivery_time;",
+        fill: 's.delivery_time',
+        solution:
+          "SELECT s.name, s.delivery_time, COUNT(i.sold_out_at) AS days_ran_out FROM inventory i JOIN suppliers s ON s.supplier_id = i.supplier_id WHERE i.ingredient = 'milk' GROUP BY s.name, s.delivery_time ORDER BY s.delivery_time;",
+        answer: {
+          kind: 'choice',
+          choices: [
+            'Customers got tired of coffee',
+            'The new milk supplier delivers at noon, so the milk runs out in the mornings',
+            'We raised our prices in October',
+          ],
+          choicesId: [
+            'Pelanggan bosan dengan kopi',
+            'Pemasok susu yang baru mengantar jam 12 siang, jadi susu habis di pagi hari',
+            'Kita menaikkan harga di bulan Oktober',
+          ],
+          correct: 1,
+        },
+        en: {
+          prompt: 'What is the most likely cause?',
+          goal: 'Look in the storeroom: inventory says on which days the milk ran out, suppliers says who delivers and when. Join them and count the days with a sold_out_at for each supplier.',
+          read: 'One supplier has 0 days out of milk; the other, which delivers at noon, has 24. The mornings run dry before the delivery arrives.',
+          hints: [
+            'The blank is the other column in the SELECT that is not a total: when the supplier delivers.',
+            'Replace ___ with s.delivery_time and press Run.',
+          ],
+          reply: 'Hm. So it is the delivery. One last question: what do we do?',
+        },
+        id: {
+          prompt: 'Apa penyebab yang paling mungkin?',
+          goal: 'Lihat gudang: inventory mencatat di hari mana susu habis, suppliers mencatat siapa yang mengantar dan kapan. Gabungkan keduanya dan hitung hari yang punya sold_out_at untuk tiap pemasok.',
+          read: 'Satu pemasok punya 0 hari kehabisan susu; yang lain, yang mengantar jam 12 siang, punya 24. Pagi hari kering sebelum pengiriman tiba.',
+          hints: [
+            'Bagian kosong itu kolom lain di SELECT yang bukan total: kapan pemasok mengantar.',
+            'Ganti ___ dengan s.delivery_time lalu tekan Jalankan.',
+          ],
+          reply: 'Hm. Jadi ini soal pengiriman. Satu pertanyaan terakhir: apa yang kita lakukan?',
+        },
+      },
+      {
+        starter:
+          "SELECT name, delivery_time, price_per_unit, since\nFROM suppliers\nWHERE product = 'milk'\nORDER BY ___;",
+        fill: 'since',
+        solution: "SELECT name, delivery_time, price_per_unit, since FROM suppliers WHERE product = 'milk' ORDER BY since;",
+        answer: {
+          kind: 'choice',
+          choices: [
+            'Go back to the early supplier, even at 25 cents more a litre',
+            'Keep the cheaper supplier and sell fewer milk drinks',
+            'Raise the price of every drink',
+          ],
+          choicesId: [
+            'Kembali ke pemasok pagi, walau lebih mahal 25 sen per liter',
+            'Tetap pakai pemasok yang lebih murah dan jual lebih sedikit minuman susu',
+            'Naikkan harga setiap minuman',
+          ],
+          correct: 0,
+        },
+        en: {
+          prompt: 'So what should we do?',
+          goal: 'Step five is the action, backed by evidence. Compare the two milk suppliers: what the change saves per litre, against what it cost us in sales.',
+          read: 'The new supplier is 25 cents a litre cheaper, but it cost about 1,900 in monthly sales. Fix the cause, not the symptom.',
+          hints: [
+            'The blank is the column to sort the suppliers by, so the old one comes first: since when they deliver.',
+            'Replace ___ with since and press Run.',
+          ],
+          reply: '',
+        },
+        id: {
+          prompt: 'Jadi, apa yang sebaiknya kita lakukan?',
+          goal: 'Langkah lima adalah tindakan, didukung bukti. Bandingkan dua pemasok susu: apa yang dihemat per liter, melawan apa yang hilang dari penjualan kita.',
+          read: 'Pemasok baru lebih murah 25 sen per liter, tapi membuat kita kehilangan sekitar 1.900 penjualan per bulan. Perbaiki penyebabnya, bukan gejalanya.',
+          hints: [
+            'Bagian kosong itu kolom untuk mengurutkan pemasok agar yang lama muncul dulu: sejak kapan mereka mengantar.',
+            'Ganti ___ dengan since lalu tekan Jalankan.',
+          ],
+          reply: '',
+        },
+      },
+    ],
+  },
 ];
