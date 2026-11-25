@@ -22,4 +22,8 @@ export const CONCEPT_NAMES_ID: Record<ConceptId, string> = {
   'group-by': 'Satu baris per kelompok: GROUP BY',
   having: 'Menyaring kelompok dengan HAVING',
   dates: 'Tanggal: DATE_TRUNC dan EXTRACT',
+  join: 'Menyambung tabel: JOIN … ON',
+  'left-join': 'Menjaga semua baris: LEFT JOIN',
+  'join-group': 'JOIN, lalu GROUP BY',
+  regulars: 'Pelanggan tetap: tiga tabel bersama',
 };
