@@ -120,9 +120,10 @@ export function AboutScreen({ lang, t, onClose }: { lang: Lang; t: UiText; onClo
   );
 }
 
-/** A phone or tablet without a keyboard: say so kindly (8.1); "Try anyway" hides it. */
+/** A phone or tablet (no hover): the game plays with touch controls (8.1b); `?touch` in the address tests it on a computer. */
 export function isTouchOnly(): boolean {
   try {
+    if (new URLSearchParams(window.location.search).has('touch')) return true;
     return window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(hover: hover)').matches;
   } catch {
     return false;

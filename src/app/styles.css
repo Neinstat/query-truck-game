@@ -3644,3 +3644,16 @@ a.menu-button { text-align: center; text-decoration: none; }
 .about-credit h3 { margin: 4px 0 2px; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }
 .about-credit p { margin: 0; font-size: 0.9rem; }
 .credits-name { font: inherit; font-weight: 700; text-decoration: underline; background: none; border: 0; color: inherit; cursor: pointer; padding: 0; }
+
+/* Touch controls (8.1b) */
+.touch-layer { position: absolute; inset: 0; z-index: 30; pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+.touch-stick { pointer-events: auto; position: absolute; left: max(24px, env(safe-area-inset-left)); bottom: 14px; width: 112px; height: 112px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); border: 3px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; touch-action: none; }
+.touch-knob { width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, 0.75); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+.touch-button { pointer-events: auto; position: absolute; border: 3px solid #4a2412; border-radius: 16px; background: #f2c14e; color: #4a2412; font: 700 1.1rem inherit; font-family: inherit; box-shadow: 0 4px 0 #2f150a; touch-action: manipulation; }
+.touch-use { right: max(24px, env(safe-area-inset-right)); bottom: 36px; width: 104px; height: 64px; }
+.touch-lens { right: max(24px, env(safe-area-inset-right)); bottom: 120px; width: 56px; height: 52px; }
+@media (max-height: 520px) {
+  .title-card { padding: 0.8rem 1rem; gap: 6px; }
+  .title-card .menu-button { padding: 0.4rem 0.8rem; font-size: 1rem; }
+  .title-logo { max-height: 22vh; width: auto; }
+}

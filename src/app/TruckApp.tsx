@@ -25,6 +25,7 @@ import { totalXp, dayXp } from '../sql-core/truck/xp';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
+import { TouchControls } from './TouchControls';
 import { AboutScreen, isTouchOnly, PhoneNotice, SettingsScreen } from './InfoScreens';
 import { BadgesScreen } from './BadgesScreen';
 import { useEggs, useEggToast } from './eggs';
@@ -98,7 +99,9 @@ export function TruckApp() {
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [phoneNotice, setPhoneNotice] = useState(isTouchOnly);
+  const touchMode = useMemo(isTouchOnly, []);
+  const [phoneNotice, setPhoneNotice] = useState(touchMode);
+  useEffect(() => bridge.emit('touch', touchMode), [bridge, touchMode, ready]);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
   const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
@@ -446,6 +449,9 @@ export function TruckApp() {
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
         )}
         {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
+        {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
+          <TouchControls bridge={bridge} t={t} canvasParent={parentRef.current} onLens={() => setLens((on) => !on)} />
+        )}
         {settingsOpen && <SettingsScreen lang={lang} setLang={setLang} t={t} onClose={() => setSettingsOpen(false)} onDifficulty={difficulty === null ? undefined : () => setDifficultyOpen(true)} onAbout={() => setAboutOpen(true)} />}
         {aboutOpen && <AboutScreen lang={lang} t={t} onClose={() => setAboutOpen(false)} />}
         {phoneNotice && <PhoneNotice t={t} onDismiss={() => setPhoneNotice(false)} />}

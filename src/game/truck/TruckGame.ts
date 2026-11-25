@@ -64,6 +64,7 @@ const RAIN_SKY = new THREE.Color(0.5, 0.55, 0.62);
 /** Sharp on high-density screens, but never more than 2× (light on the GPU). */
 const MAX_PIXEL_RATIO = 2;
 const MOUSE_SENSITIVITY = 0.0024;
+const TOUCH_SENSITIVITY = 0.005;
 /** The camera's field of view: normally, zoomed in during the truck tour, and for the guide's pictures. */
 const FOV = 70;
 const TOUR_FOV = 50;
@@ -157,6 +158,8 @@ export class TruckGame {
   private dragging = false;
   private paused = false;
   private aimed: InteractableId | null = null;
+  /** A touch screen: no mouse capture; the on-screen controls drive the view. */
+  private touch = false;
 
   private queue = new TruckQueue();
   private customers = new Map<QueueCustomer, CustomerModel>();
@@ -293,6 +296,21 @@ export class TruckGame {
       bridge.on('snapshotRequest', () => this.bridge.emit('snapshots', this.snapshots())),
       // Back to playing from a menu: capture the mouse again (called from a click, so allowed).
       bridge.on('lock', () => this.lockMouse()),
+      bridge.on('touch', (on) => {
+        this.touch = on;
+        if (on) this.bridge.emit('locked', true);
+      }),
+      bridge.on('touchMove', ({ x, y }) => {
+        // The stick's push (−1…1) becomes the same four keys the keyboard uses.
+        this.keys = { forward: y < -0.3, back: y > 0.3, left: x < -0.3, right: x > 0.3 };
+      }),
+      bridge.on('touchLook', ({ dx, dy }) => {
+        if (this.paused || this.panelOpen) return;
+        const speed = TOUCH_SENSITIVITY * getLook();
+        this.yaw -= dx * speed;
+        this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - dy * speed));
+      }),
+      bridge.on('touchUse', () => this.use()),
       bridge.on('dev', (c) => this.devCommand(c)),
       bridge.on('showcase', (on) => (this.showcase = on)),
       bridge.on('filmShot', (name) => {
@@ -307,6 +325,7 @@ export class TruckGame {
     // The app may have stopped time before the game existed (e.g. the title screen is open).
     this.paused = bridge.last('pause') ?? false;
     this.lensOn = bridge.last('lens') ?? false;
+    this.touch = bridge.last('touch') ?? false;
     this.loop(performance.now());
   }
 
@@ -381,7 +400,7 @@ export class TruckGame {
       }
     };
     const onDown = (e: MouseEvent) => {
-      if (this.paused || this.panelOpen) return;
+      if (this.touch || this.paused || this.panelOpen) return;
       if (document.pointerLockElement === canvas) {
         this.use();
         return;
@@ -434,6 +453,10 @@ export class TruckGame {
    * embedded preview); then dragging still looks around and "click to look around" shows.
    */
   private lockMouse(): void {
+    if (this.touch) {
+      this.bridge.emit('locked', true);
+      return;
+    }
     if (this.lockUnavailable || document.pointerLockElement === this.renderer.domElement) return;
     const failed = (error?: unknown) => {
       const name = error instanceof Error || error instanceof DOMException ? error.name : '';
