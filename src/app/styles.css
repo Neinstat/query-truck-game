@@ -3639,7 +3639,7 @@ body {
 a.menu-button { text-align: center; text-decoration: none; }
 
 /* Menu cards always fit the screen and scroll inside themselves (8.1). */
-.title-card { max-height: calc(100vh - 32px); overflow-y: auto; }
+.title-card { max-height: 100%; overflow-y: auto; }
 .title-card .menu-button { flex-shrink: 0; }
 .about-credit h3 { margin: 4px 0 2px; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }
 .about-credit p { margin: 0; font-size: 0.9rem; }
