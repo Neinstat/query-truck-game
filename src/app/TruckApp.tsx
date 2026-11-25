@@ -16,8 +16,10 @@ import { useDifficulty } from './useDifficulty';
 import { useSound } from './useSound';
 import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
-import { sound } from '../audio/sound';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
+import { XpCounter } from './XpCounter';
+import { totalXp, dayXp } from '../sql-core/truck/xp';
+import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 
 /** Every table in the truck, for the Data Lens cards. */
@@ -89,6 +91,8 @@ export function TruckApp() {
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
+  // XP: the stars of all finished days plus today's; a practice run pays nothing (7.1).
+  const xp = totalXp(past) + (practice ? 0 : dayXp(day));
   const free = isFreeMode(dayNumber);
   const freeDay = dayNumber - 30;
   // A new week's first morning, before anything has happened: show the week card (not on reloads
@@ -257,6 +261,7 @@ export function TruckApp() {
               place={`${place.icon} ${place.name[lang]}`}
               t={t}
             />
+            <XpCounter xp={xp} label={t.xpLabel} onTick={() => sound.play('xp')} />
             <button
               className="hud-menu"
               onMouseDown={(e) => e.preventDefault()}

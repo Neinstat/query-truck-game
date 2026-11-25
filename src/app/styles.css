@@ -3500,3 +3500,75 @@ body {
     padding-left: 6vw;
   }
 }
+
+/* XP counter (7.1, 25 Nov 2026): under the clock card; stars fly to it from the middle of the screen. */
+.hud-xp {
+  position: absolute;
+  top: 126px;
+  left: 14px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 999px;
+  background: rgba(244, 234, 213, 0.94);
+  color: #25304f;
+  box-shadow: 3px 3px 0 #25304f;
+  pointer-events: none;
+  font-weight: 700;
+}
+.hud-xp-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+.hud-xp-value {
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+}
+.hud-xp-bump {
+  display: inline-block;
+  animation: xp-bump 260ms ease-out;
+}
+@keyframes xp-bump {
+  50% {
+    transform: scale(1.5) rotate(-12deg);
+  }
+}
+.xp-fly {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 58%;
+  font-size: 2rem;
+  pointer-events: none;
+  opacity: 0;
+  animation-name: xp-fly;
+  animation-timing-function: cubic-bezier(0.5, -0.2, 0.7, 1);
+  animation-fill-mode: both;
+}
+@keyframes xp-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -30px) scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    left: 48px;
+    top: 142px;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xp-fly {
+    display: none;
+  }
+  .hud-xp-bump {
+    animation: none;
+  }
+}
