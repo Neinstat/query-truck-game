@@ -427,6 +427,7 @@ From 24 Nov 2026 Phase 6 is built by a **scheduled agent** (see [`docs/AUTOMATIO
 **7.1 as built (25 Nov 2026):**
 - `src/sql-core/truck/xp.ts` (tested): XP = the stars of every served order plus the stars of each Manager case, worked out from the day logs (`dayXp`, `totalXp`), so nothing extra is saved and the same order never pays twice. Practice runs are not in the past days, so they pay nothing (the counter shows the real total, unchanged during practice).
 - **XP counter** (`XpCounter.tsx`) under the clock card, top left. When the total goes up, up to six ⭐ pop out in the middle of the screen, fly to the counter one after another, and the number ticks up as each lands, with a small *pling* (`sound.play('xp')`). `prefers-reduced-motion`: the number just changes, no flight.
+- **Owner feedback (25 Nov 2026) — fixed:** the stars got stuck and the number never ticked, because every re-render (the clock) restarted the effect and cancelled the flight; the stars now land on the counter's own star (its on-screen position is measured), and when a menu opens (Esc, the shop…) the flight ends at once and the number is simply right.
 - Decision: the flight starts from the middle of the screen (the tablet closes when an order is handed over), and one star flies per XP point, capped at six so a big total is not a long wait. What XP is for stays open (§13).
 
 **6.9 as built (25 Nov 2026):**

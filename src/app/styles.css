@@ -3559,8 +3559,8 @@ body {
   }
   100% {
     opacity: 1;
-    left: 48px;
-    top: var(--ty, 142px);
+    left: var(--tx, 36px);
+    top: var(--ty, 143px);
     transform: translate(-50%, -50%) scale(0.6);
   }
 }

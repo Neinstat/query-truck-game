@@ -281,8 +281,8 @@ export function TruckApp() {
               place={`${place.icon} ${place.name[lang]}`}
               t={t}
             />
-            <XpCounter xp={xp} label={t.xpLabel} onTick={() => sound.play('xp')} />
-            <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} onTick={() => sound.play('xp')} />
+            <XpCounter xp={xp} label={t.xpLabel} paused={menuOpen} onTick={() => sound.play('xp')} />
+            <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} paused={menuOpen} onTick={() => sound.play('xp')} />
             {newItem && (
               <div className="truck-toast" role="status">
                 ✨ {t.shopNew(itemName(newItem, lang))}
