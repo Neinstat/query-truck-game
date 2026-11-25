@@ -101,6 +101,11 @@ type TruckEvents = {
   lens: boolean;
   lensCards: LensCard[];
   lock: true;
+  /** Touch screens (8.1b): the game stops using the mouse and listens to the on-screen controls. */
+  touch: boolean;
+  touchMove: { x: number; y: number };
+  touchLook: { dx: number; dy: number };
+  touchUse: true;
   lockFailed: true;
   tour: InteractableId | null;
   snapshotRequest: true;

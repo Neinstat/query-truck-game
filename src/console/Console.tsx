@@ -1,3 +1,5 @@
+import { eggForQuery } from '../sql-core/truck/eggs';
+import { findEgg } from '../app/eggs';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { CafeDatabase } from '../sql-core/db';
 import { checkAnswer, type CheckOutcome } from '../sql-core/checker';
@@ -45,6 +47,8 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
     if (running) return;
     setRunning(true);
     try {
+      const egg = eggForQuery(sql);
+      if (egg) findEgg(egg);
       const next = await checkAnswer(db, sql, level.solution, level.check, level.station);
       setOutcome(next);
       setCrash(null);

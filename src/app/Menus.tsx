@@ -1,3 +1,5 @@
+import { findEgg } from './eggs';
+import { konamiStep } from '../sql-core/truck/eggs';
 import { useEffect, useState } from 'react';
 import type { UiText } from '../i18n';
 import { LANGS, type Lang } from '../sql-core/feedback';
@@ -8,7 +10,7 @@ import type { Place } from '../sql-core/truck/places';
 import { Logo } from './Logo';
 
 /** Sound on/off, the main volume, and music, ambience and effects on their own (saved). */
-function SoundControl({ t }: { t: UiText }) {
+export function SoundControl({ t }: { t: UiText }) {
   const [, redraw] = useState(0);
   const [open, setOpen] = useState(false);
   useEffect(() => sound.subscribe(() => redraw((n) => n + 1)), []);
@@ -60,7 +62,7 @@ function SoundControl({ t }: { t: UiText }) {
  * pause menu (Esc), and the how-to-play guide. Time stops in the truck while any of them is open.
  */
 
-function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; t: UiText }) {
+export function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; t: UiText }) {
   return (
     <div className="lang-switch menu-lang" role="group" aria-label={t.language}>
       {LANGS.map((code) => (
@@ -92,12 +94,24 @@ export function TitleScreen(props: {
   onStart: () => void;
   onGuide: () => void;
   onTour: () => void;
+  onSettings: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onSettings, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
+  // The old code (7.3 easter egg): typed on the title screen.
+  useEffect(() => {
+    let recent: string[] = [];
+    const onKey = (e: KeyboardEvent) => {
+      const step = konamiStep(recent, e.key);
+      recent = step.recent;
+      if (step.done) findEgg('konami');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const started = clock > OPENING;
   return (
     <div className="menu-screen title-screen">
@@ -126,8 +140,14 @@ export function TitleScreen(props: {
         <button className="menu-button" onClick={onTour} disabled={!worldReady}>
           {t.tourStart}
         </button>
+        <button className="menu-button" onClick={onSettings}>
+          {t.settingsButton}
+        </button>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
+        <button className="title-duck" onClick={() => findEgg('duck')} aria-label="🦆" title="🦆">
+          🦆
+        </button>
       </div>
     </div>
   );
@@ -155,16 +175,17 @@ export function PauseMenu(props: {
   onTour: () => void;
   /** The Days screen: every day so far, practice runs, and starting today again. */
   onDays: () => void;
-  /** Change the difficulty (how much of each query is written). */
-  onDifficulty: () => void;
   /** The truck shop. */
   onShop: () => void;
+  /** Badges and easter eggs. */
+  onBadges: () => void;
+  onSettings: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onDays, onShop, onBadges, onSettings, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -179,14 +200,17 @@ export function PauseMenu(props: {
         <button className="menu-button" onClick={onShop}>
           {t.shopButton}
         </button>
-        <button className="menu-button" onClick={onDifficulty}>
-          {t.difficultyButton}
+        <button className="menu-button" onClick={onBadges}>
+          {t.badgesButton}
         </button>
         <button className="menu-button" onClick={onGuide}>
           {t.howToPlay}
         </button>
         <button className="menu-button" onClick={onTour}>
           {t.tourStart}
+        </button>
+        <button className="menu-button" onClick={onSettings}>
+          {t.settingsButton}
         </button>
         <button className="menu-button" onClick={onTitle}>
           {t.toTitle}

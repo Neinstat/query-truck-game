@@ -10,6 +10,7 @@
  * ghost with no duties, change the
  * place, end, restart or skip the day, and wipe all progress.
  */
+import { savedKeys } from './progress';
 import { useEffect, useMemo, useState } from 'react';
 import type { DevCommand, DevStats, TruckBridge } from '../game/truck/bridge';
 import type { DayLog } from '../sql-core/truck/day';
@@ -34,15 +35,6 @@ export function devAllowed(): boolean {
   }
 }
 
-/** Every key the game saves in this browser (wiped by "Reset all progress"). */
-function savedKeys(): string[] {
-  try {
-    return Object.keys(localStorage).filter((k) => k.startsWith('query-truck.') || k.startsWith('sql-valley.'));
-  } catch {
-    return [];
-  }
-}
-
 type Props = {
   bridge: TruckBridge;
   day: DayLog;
@@ -52,10 +44,11 @@ type Props = {
   onServe: () => void;
   onRestart: () => void;
   onNextDay: () => void;
+  onNextWeek: () => void;
   onClose: () => void;
 };
 
-export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onClose }: Props) {
+export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onNextWeek, onClose }: Props) {
   const [stats, setStats] = useState<DevStats | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [tab, setTab] = useState<'play' | 'state' | 'perf'>('play');
@@ -167,6 +160,7 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
           <div className="dev-row">
             <button onClick={onRestart}>↺ Restart this day</button>
             <button onClick={onNextDay}>⏭ Skip to the next day</button>
+            <button onClick={onNextWeek}>⏭⏭ Skip to the next week</button>
           </div>
           <div className="dev-row">
             {confirmReset ? (

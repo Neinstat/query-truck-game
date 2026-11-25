@@ -6,7 +6,7 @@ import { getSchema, type CafeDatabase } from '../sql-core/db';
 import type { Lang } from '../sql-core/feedback';
 import type { Level } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
-import { isFreeMode, weekOfDay } from '../sql-core/truck/weeks';
+import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { managerCaseFor, managerCaseIdFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
 import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
@@ -140,6 +140,22 @@ export function startNextDay(past: readonly DayLog[], day: DayLog): void {
   const done = [...past, day];
   write(PAST_KEY, done);
   saveDay(nextDay(done));
+  skipTitleNextLoad();
+  window.location.reload();
+}
+
+/** Developer panel: skip every day up to the first day of the next week (in free mode, five days). */
+export function startNextWeek(past: readonly DayLog[], day: DayLog): void {
+  let done = [...past, day];
+  for (let i = 0; i < 5; i++) {
+    const next = nextDay(done);
+    if (isWeekStart(done.length + 1) || i === 4) {
+      saveDay(next);
+      break;
+    }
+    done = [...done, next];
+  }
+  write(PAST_KEY, done);
   skipTitleNextLoad();
   window.location.reload();
 }

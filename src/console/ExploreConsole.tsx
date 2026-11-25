@@ -1,3 +1,5 @@
+import { eggForQuery } from '../sql-core/truck/eggs';
+import { findEgg } from '../app/eggs';
 import { useEffect, useMemo, useState } from 'react';
 import type { CafeDatabase, QueryResult } from '../sql-core/db';
 import { runQuery } from '../sql-core/db';
@@ -52,6 +54,8 @@ export function ExploreConsole({ db, station, schema, lang, t, table }: Props) {
     if (running) return;
     setRunning(true);
     try {
+      const egg = eggForQuery(text);
+      if (egg) findEgg(egg);
       setResult(await runQuery(db, text, station));
     } finally {
       setRunning(false);

@@ -5,6 +5,7 @@ import type { Lang } from '../sql-core/feedback';
 import { conceptName } from '../sql-core/truck/concepts';
 import { revenueSql, type DayLog } from '../sql-core/truck/day';
 import { dayProgress, MAX_LEVEL } from '../sql-core/truck/repetition';
+import { BADGES, badgeName } from '../sql-core/truck/badges';
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
@@ -26,6 +27,8 @@ export function DaySummary({
   onNewDay,
   onReplay,
   practice = false,
+  badges = [],
+  onCredits,
 }: {
   /** "Week 2 · Day 3" */
   weekLabel: string;
@@ -39,6 +42,10 @@ export function DaySummary({
   onReplay: () => void;
   /** A practice run (Days screen): nothing here is kept, and the buttons go back or practise again. */
   practice?: boolean;
+  /** Ids of the badges this day brought (7.3). */
+  badges?: readonly string[];
+  /** Roll the credits (offered after the Analysis Case). */
+  onCredits?: () => void;
 }) {
   const progress = dayProgress(past, day);
   const sql = revenueSql(day.date);
@@ -114,6 +121,23 @@ export function DaySummary({
           </ul>
         </>
       )}
+      {!practice && badges.length > 0 && (
+        <>
+          <p className="day-summary-label">🏅 {t.summaryBadges}</p>
+          <ul className="day-summary-concepts">
+            {badges.map((id) => {
+              const b = BADGES.find((x) => x.id === id);
+              return b ? (
+                <li key={id}>
+                  <span className="concept-name">
+                    {b.icon} {badgeName(b, lang)}
+                  </span>
+                </li>
+              ) : null;
+            })}
+          </ul>
+        </>
+      )}
       <p className="day-summary-label">{t.summaryQuery}</p>
       <pre className="day-summary-sql">
         <code>{sql}</code>
@@ -123,6 +147,11 @@ export function DaySummary({
         <button className="primary-button" onClick={onNewDay}>
           {practice ? t.daysBack(dayAfter(past)) : t.newDay}
         </button>
+        {onCredits && (
+          <button className="link-button" onClick={onCredits}>
+            {t.creditsRoll}
+          </button>
+        )}
         <button className="link-button" onClick={onReplay}>
           {practice ? t.practiceAgain : t.replayDay}
         </button>
