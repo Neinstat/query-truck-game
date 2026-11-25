@@ -140,6 +140,8 @@ describe('the Data Lens', () => {
     for (const template of TEMPLATES) {
       const object = objectForStation(template.station);
       const onCards = LENS_SPOTS.filter((s) => s.object === object).flatMap((s) => s.tables);
+      // The customer at the window carries the `customers` card, and the tablet opens it (TruckGame).
+      if (object === 'tablet') onCards.push('customers');
       for (const v of template.variants) {
         for (const table of tablesInQuery(template.solution(v.params))) expect(onCards, `${template.id}: ${table}`).toContain(table);
       }

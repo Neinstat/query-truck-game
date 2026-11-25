@@ -1,16 +1,16 @@
 /**
  * The SQL concepts customers' orders practise (GAME_DESIGN.md §5). Each order template has one
  * concept; the player's mastery of each concept decides which orders come back on which day.
- * Weeks 1–4 so far; Phase 6 adds the other weeks.
+ * Weeks 1–5 so far; Phase 6 adds the other weeks.
  */
 import type { Lang } from '../feedback';
 import { getChapters, type Level } from '../levels';
 import { CONCEPT_NAMES_ID } from './locales/id/concepts';
 
-export type ConceptId = 'select-all' | 'select-column' | 'select-columns' | 'where-compare' | 'where-text' | 'and' | 'in' | 'like' | 'is-null' | 'order-by' | 'limit' | 'distinct' | 'alias' | 'sort-nulls' | 'count' | 'sum' | 'avg-round' | 'group-by' | 'having' | 'dates';
+export type ConceptId = 'select-all' | 'select-column' | 'select-columns' | 'where-compare' | 'where-text' | 'and' | 'in' | 'like' | 'is-null' | 'order-by' | 'limit' | 'distinct' | 'alias' | 'sort-nulls' | 'count' | 'sum' | 'avg-round' | 'group-by' | 'having' | 'dates' | 'join' | 'left-join' | 'join-group' | 'regulars';
 
 /** In teaching order: new concepts are introduced in this order, a few per day. */
-export const CONCEPTS: readonly ConceptId[] = ['select-all', 'select-column', 'select-columns', 'where-compare', 'where-text', 'and', 'in', 'like', 'is-null', 'order-by', 'limit', 'distinct', 'alias', 'sort-nulls', 'count', 'sum', 'avg-round', 'group-by', 'having', 'dates'];
+export const CONCEPTS: readonly ConceptId[] = ['select-all', 'select-column', 'select-columns', 'where-compare', 'where-text', 'and', 'in', 'like', 'is-null', 'order-by', 'limit', 'distinct', 'alias', 'sort-nulls', 'count', 'sum', 'avg-round', 'group-by', 'having', 'dates', 'join', 'left-join', 'join-group', 'regulars'];
 
 export const CONCEPT_NAMES: Record<ConceptId, string> = {
   'select-all': 'Everything in a table: SELECT *',
@@ -33,6 +33,10 @@ export const CONCEPT_NAMES: Record<ConceptId, string> = {
   'group-by': 'One row per group: GROUP BY',
   having: 'Filtering groups with HAVING',
   dates: 'Dates: DATE_TRUNC and EXTRACT',
+  join: 'Connecting tables: JOIN … ON',
+  'left-join': 'Keeping every row: LEFT JOIN',
+  'join-group': 'JOIN, then GROUP BY',
+  regulars: 'Regulars: three tables together',
 };
 
 /** The week (1–6) each concept is taught in; the planner only uses concepts up to this week. */
@@ -57,6 +61,10 @@ export const CONCEPT_WEEK: Record<ConceptId, number> = {
   'group-by': 4,
   having: 4,
   dates: 4,
+  join: 5,
+  'left-join': 5,
+  'join-group': 5,
+  regulars: 5,
 };
 
 export const conceptName = (concept: ConceptId, lang: Lang): string =>
@@ -84,6 +92,10 @@ const LESSON_FROM: Record<ConceptId, string> = {
   'group-by': 'ch3-4',
   having: 'ch3-6',
   dates: 'ch3-5',
+  join: 'ch4-1',
+  'left-join': 'ch4-2',
+  'join-group': 'ch4-3',
+  regulars: 'ch4-3',
 };
 
 /** The lesson card for a concept, in the player's language. */
