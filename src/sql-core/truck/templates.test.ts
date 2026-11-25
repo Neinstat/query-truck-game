@@ -90,6 +90,12 @@ describe.each(ALL)('order %s', (id, template, variant) => {
 
   it('can be solved at every input stage: the whole condition, then free typing', async () => {
     const order = orderFromId(id)!;
+    if (CONCEPT_WEEK[template.concept] >= 3) {
+      // From week 3 a concept starts with free typing; the gaps are still there for Fill in.
+      expect(stageFor(template, variant, 0)).toBe('free');
+      expect(orderLevel(order, 'en', 'free').input).toEqual({ kind: 'free' });
+      return;
+    }
     if (!template.solution(variant.params).includes(' WHERE ')) {
       // Week 1 has no WHERE: blocks until the concept is known well, then free typing.
       expect(stageFor(template, variant, 2)).toBe('keyword');
@@ -105,6 +111,18 @@ describe.each(ALL)('order %s', (id, template, variant) => {
     expect(sql).toBe(condition.solution);
     expect((await checkAnswer(db, sql, condition.solution, condition.check, condition.station)).verdict).toEqual({ correct: true });
     expect(orderLevel(order, 'en', 'free').input).toEqual({ kind: 'free' });
+  });
+
+  it('has no ties in its sort column, so there is one right order', async () => {
+    const sql = template.solution(variant.params);
+    const by = /ORDER BY (\w+)/.exec(sql)?.[1];
+    if (!by) return;
+    const result = await runQuery(db, sql);
+    if (!result.ok) throw new Error('query failed');
+    const col = result.columns.indexOf(by);
+    expect(col, `${id} selects its sort column`).toBeGreaterThanOrEqual(0);
+    const values = result.rows.map((r) => r[col]);
+    expect(new Set(values).size, id).toBe(values.length);
   });
 
   it('ends its SQL with a semicolon and has three hints and a lesson, in both languages', () => {

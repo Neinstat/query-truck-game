@@ -120,7 +120,7 @@ describe('planning a day', () => {
       'where-text': { level: 0, due: '2026-11-04', practised: 3 },
       and: { level: 2, due: '2026-11-04', practised: 2 },
     };
-    const used = concepts(planDay('2026-11-04', m));
+    const used = concepts(planDay('2026-11-04', m, [], 2));
     expect(used).toContain('where-text');
     expect(used).toContain('and');
     // The next three new concepts come in.
@@ -134,7 +134,7 @@ describe('planning a day', () => {
     let like = 0;
     let other = 0;
     for (let d = 0; d < 40; d++) {
-      for (const c of concepts(planDay(addDays('2026-11-01', d), m))) c === 'like' ? like++ : other++;
+      for (const c of concepts(planDay(addDays('2026-11-01', d), m, [], 2))) c === 'like' ? like++ : other++;
     }
     // `like` is one concept of six but gets far more than a sixth of the orders.
     expect(like / (like + other)).toBeGreaterThan(0.3);
