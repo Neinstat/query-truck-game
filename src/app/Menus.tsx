@@ -94,14 +94,12 @@ export function TitleScreen(props: {
   onStart: () => void;
   onGuide: () => void;
   onTour: () => void;
-  onCredits: () => void;
   onSettings: () => void;
-  onAbout: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onCredits, onSettings, onAbout, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onSettings, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   // The old code (7.3 easter egg): typed on the title screen.
   useEffect(() => {
@@ -145,12 +143,6 @@ export function TitleScreen(props: {
         <button className="menu-button" onClick={onSettings}>
           {t.settingsButton}
         </button>
-        <button className="menu-button" onClick={onAbout}>
-          {t.aboutButton}
-        </button>
-        <button className="menu-button" onClick={onCredits}>
-          {t.creditsButton}
-        </button>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
         <button className="title-duck" onClick={() => findEgg('duck')} aria-label="🦆" title="🦆">
@@ -183,21 +175,17 @@ export function PauseMenu(props: {
   onTour: () => void;
   /** The Days screen: every day so far, practice runs, and starting today again. */
   onDays: () => void;
-  /** Change the difficulty (how much of each query is written). */
-  onDifficulty: () => void;
   /** The truck shop. */
   onShop: () => void;
   /** Badges and easter eggs. */
   onBadges: () => void;
-  onCredits: () => void;
   onSettings: () => void;
-  onAbout: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onBadges, onCredits, onSettings, onAbout, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onDays, onShop, onBadges, onSettings, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -215,9 +203,6 @@ export function PauseMenu(props: {
         <button className="menu-button" onClick={onBadges}>
           {t.badgesButton}
         </button>
-        <button className="menu-button" onClick={onDifficulty}>
-          {t.difficultyButton}
-        </button>
         <button className="menu-button" onClick={onGuide}>
           {t.howToPlay}
         </button>
@@ -226,12 +211,6 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onSettings}>
           {t.settingsButton}
-        </button>
-        <button className="menu-button" onClick={onAbout}>
-          {t.aboutButton}
-        </button>
-        <button className="menu-button" onClick={onCredits}>
-          {t.creditsButton}
         </button>
         <button className="menu-button" onClick={onTitle}>
           {t.toTitle}

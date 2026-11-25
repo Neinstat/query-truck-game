@@ -5,7 +5,7 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { endPractice, restartDay, SKIP_TITLE_KEY, startNextDay, startPractice, useTruckShift } from './useTruckShift';
+import { endPractice, restartDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
@@ -27,7 +27,6 @@ import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
 import { AboutScreen, isTouchOnly, PhoneNotice, SettingsScreen } from './InfoScreens';
 import { BadgesScreen } from './BadgesScreen';
-import { CreditsScreen } from './CreditsScreen';
 import { useEggs, useEggToast } from './eggs';
 import { eggText, eggTitle } from '../sql-core/truck/eggs';
 import { ANALYSIS_DAY, newBadges } from '../sql-core/truck/badges';
@@ -97,13 +96,12 @@ export function TruckApp() {
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
-  const [creditsOpen, setCreditsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [phoneNotice, setPhoneNotice] = useState(isTouchOnly);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
-  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || creditsOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
@@ -341,7 +339,7 @@ export function TruckApp() {
             practice={practice !== null}
             onNewDay={() => (practice ? endPractice() : startNextDay(past, day))}
             badges={practice || !shut ? [] : newBadges(past, day, shop, eggs)}
-            onCredits={!practice && dayNumber === ANALYSIS_DAY && day.manager ? () => setCreditsOpen(true) : undefined}
+            onCredits={!practice && dayNumber === ANALYSIS_DAY && day.manager ? () => setAboutOpen(true) : undefined}
             onReplay={() => (practice ? startPractice(past, today, practice.from, practice.mode) : restartDay(day))}
           />
         )}
@@ -392,6 +390,7 @@ export function TruckApp() {
             onServe={devServe}
             onRestart={() => restartDay(day)}
             onNextDay={() => startNextDay(past, day)}
+            onNextWeek={() => startNextWeek(past, day)}
             onClose={() => {
               setDevOpen(false);
               bridge.emit('dev', { cmd: 'panel', open: false });
@@ -410,9 +409,7 @@ export function TruckApp() {
             onStart={() => (difficulty === null ? setIntroOpen(true) : play())}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
-            onCredits={() => setCreditsOpen(true)}
             onSettings={() => setSettingsOpen(true)}
-            onAbout={() => setAboutOpen(true)}
             lang={lang}
             setLang={setLang}
             t={t}
@@ -425,12 +422,9 @@ export function TruckApp() {
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
             onDays={() => setDaysOpen(true)}
-            onDifficulty={() => setDifficultyOpen(true)}
             onShop={() => setShopOpen(true)}
             onBadges={() => setBadgesOpen(true)}
-            onCredits={() => setCreditsOpen(true)}
             onSettings={() => setSettingsOpen(true)}
-            onAbout={() => setAboutOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
             setLang={setLang}
@@ -452,10 +446,9 @@ export function TruckApp() {
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
         )}
         {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
-        {settingsOpen && <SettingsScreen lang={lang} setLang={setLang} t={t} onClose={() => setSettingsOpen(false)} />}
-        {aboutOpen && <AboutScreen t={t} onClose={() => setAboutOpen(false)} />}
+        {settingsOpen && <SettingsScreen lang={lang} setLang={setLang} t={t} onClose={() => setSettingsOpen(false)} onDifficulty={difficulty === null ? undefined : () => setDifficultyOpen(true)} onAbout={() => setAboutOpen(true)} />}
+        {aboutOpen && <AboutScreen lang={lang} t={t} onClose={() => setAboutOpen(false)} />}
         {phoneNotice && <PhoneNotice t={t} onDismiss={() => setPhoneNotice(false)} />}
-        {creditsOpen && <CreditsScreen lang={lang} t={t} onClose={() => setCreditsOpen(false)} />}
         {eggToast && (
           <div className="egg-toast" role="status" onClick={closeEggToast}>
             <strong>

@@ -44,10 +44,11 @@ type Props = {
   onServe: () => void;
   onRestart: () => void;
   onNextDay: () => void;
+  onNextWeek: () => void;
   onClose: () => void;
 };
 
-export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onClose }: Props) {
+export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onNextWeek, onClose }: Props) {
   const [stats, setStats] = useState<DevStats | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [tab, setTab] = useState<'play' | 'state' | 'perf'>('play');
@@ -159,6 +160,7 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
           <div className="dev-row">
             <button onClick={onRestart}>↺ Restart this day</button>
             <button onClick={onNextDay}>⏭ Skip to the next day</button>
+            <button onClick={onNextWeek}>⏭⏭ Skip to the next week</button>
           </div>
           <div className="dev-row">
             {confirmReset ? (
