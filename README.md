@@ -68,12 +68,18 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 
 ## Status
 
-🚧 **Phase 6: the six-week curriculum**, built by a scheduled agent and reviewed by the owner twice a day. **Query Truck 1.0 is planned for 9 Dec 2026** (desktop browsers, free). Phases 1–5 are done: orders now come from templates, each SQL concept has a mastery level with spaced repetition, the input grows with mastery, and days follow one another. The game has a title screen, a days screen with practice runs, an Esc pause menu, a staff handbook, five places, rain and a truck radio.
+🚚 **Query Truck 1.0 is planned for 9 Dec 2026** (free, in desktop browsers; simplified touch controls work on phones). The game is feature-complete and in playtesting:
 
-The SQL core is complete from the first version of the game: 34 levels in six chapters (from `SELECT` to an analysis case), Mini Cases, a Skill Check and a timed mode. Phase 6 turns them into customer orders and manager questions over six in-game weeks.
+- **A six-week curriculum** with a backstory and a difficulty choice: `SELECT` and `WHERE`, sorting, counting and grouping, `JOIN`s, and a final analysis case, *October Sales Dropped*. After it the days go on in a free mode with spaced repetition.
+- **The Manager's cases** follow the BI analyst's five steps: the business question, the metric, the pattern, the opportunity, the recommendation.
+- **A truck that grows:** stars turn into XP, coins buy upgrades that change how the truck looks, and there are badges, a streak, credits and a few easter eggs.
+- **Settings and About page**, English and Bahasa Indonesia, and a first page of about 320 KB gzipped (the SQL editor and the 3D world load when needed).
+
+The SQL core has 34 levels in six chapters and thousands of automated tests: every order template variant is solvable, and Indonesian text has the same shape as English.
 
 - [GAME_DESIGN.md](GAME_DESIGN.md): the full design and roadmap
 - [docs/AUTOMATION.md](docs/AUTOMATION.md): how the game is built — a scheduled agent opens pull requests with playable previews, the owner reviews
+- [docs/CASE_STUDY.md](docs/CASE_STUDY.md): how the game was designed and built, and what working with an AI agent taught the owner
 - [docs/JOURNEY.md](docs/JOURNEY.md): how the game went from a top-down 2D café to a 3D food truck, with screenshots
 
 ## Getting started
@@ -124,6 +130,7 @@ src/
 ├── app/           # the page around the world: HUD, tablet, the shift's logic, the database worker
 └── i18n.ts        # UI text in both languages
 docs/
+├── CASE_STUDY.md  # the portfolio write-up: design, build and the agent workflow
 ├── JOURNEY.md     # the design journey, with screenshots
 ├── ASSETS.md      # which art is final and which is a placeholder
 ├── AUTOMATION.md  # CI, pull request previews and the scheduled agent

@@ -36,7 +36,7 @@ The Manager's cases follow these five steps (6.7, 6.8, 6.9).
 |---|---|
 | 25 Nov – 2 Dec 2026 | Phase 6, iterations 6.1–6.9 |
 | 3 Dec | Phase 7 (7.1–7.3) and Phase 8 (8.1); the owner invites 1–2 friends who don't know SQL (reminder set) |
-| 4 Dec | 8.2 |
+| 4 Dec | 8.2 ✅ |
 | 5–7 Dec | 6.10 owner playtest, 6.11 friends' playtest, fixes |
 | 8 Dec | 8.3 final playtest |
 | **9 Dec 2026** | **Query Truck 1.0 released** |
@@ -461,6 +461,8 @@ From 24 Nov 2026 Phase 6 is built by a **scheduled agent** (see [`docs/AUTOMATIO
 - **Owner feedback (25 Nov 2026):** menus were too tall and jumpy. Now the title menu has four buttons (Start, How to play, Truck tour, Settings), the pause menu is Resume, Days, Shop, Badges, How to play, Truck tour, Settings, Title; *Difficulty* and *About & credits* moved into Settings. Menu cards scroll inside themselves when the screen is short, and menu buttons no longer slide on hover or press (only a brightness change). The developer panel (F2) has *Skip to the next week*. Mobile: still not in 1.0 (§13); the preview link opens on a phone but shows the notice.
 - **8.1b — simplified touch controls (25 Nov 2026, owner: "simplified is fine, only the important parts"):** on a phone or tablet (no hover; `?touch` in the address tests it on a computer) the game uses `TouchControls.tsx`: drag the picture to look, an on-screen stick to walk, a *Use* button for the object in the middle of the view, a 🔍 data-lens button, and the corner *Menu* button. The game listens through new bridge events (`touch`, `touchMove`, `touchLook`, `touchUse`), with no pointer lock. The notice now only says "turn your phone sideways" and how the controls work. The tablet, word blocks and the on-screen keyboard already work by touch. Best effort, checked in an emulated phone (844×390): HUD, controls and menus show; I did not play a full order by touch, and menus scroll inside their card on short screens.
 - **8.1c as built (25 Nov 2026):** the SQL editor (CodeMirror) now loads on its own the first time a console opens (`SqlEditor.tsx` is a lazy wrapper around `SqlEditorImpl.tsx`), so the first page went from 473 KB to 323 KB gzipped; PGlite already loads in its own worker and was left alone. The built game starts in Chromium with no console errors. Not done, only a person can do it: the check in Firefox, Safari and Edge and the first-15-minutes walk-through by a real new player (both go to 6.11 / 8.3).
+
+**8.2 as built (25 Nov 2026):** the README status now describes the finished game and links the new `docs/CASE_STUDY.md` (the problem, the design decisions, the agent workflow, what worked and what was hard, numbers). Not done: a short GIF and fresh screenshots (the existing screenshots in `docs/screenshots/` are kept; the agent cannot record a GIF), and the `v1.0.0` tag — it is made at the release in 8.3, after the owner approves, so it points at the released commit.
 
 **7.3 as built (25 Nov 2026):**
 - **Badges** (`src/sql-core/truck/badges.ts`, tested): 11 badges worked out from the day logs, the shop and the eggs found (first order, three stars, perfect day, first `JOIN`, five-day streak, ten Manager days, level 3 in every concept, the Analysis Case, the modern machine, free mode, every egg). Nothing is saved, so a badge can never be lost. The **streak** counts in-game days with at least one served order and never punishes. Page: pause menu → *Badges & secrets*; the end-of-day summary lists the badges the day brought.
