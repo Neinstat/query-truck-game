@@ -146,7 +146,7 @@ export function startNextDay(past: readonly DayLog[], day: DayLog): void {
 
 /** Set before a reload into a new or restarted day: go straight back into the truck, no title. */
 export const SKIP_TITLE_KEY = 'query-truck.skip-title';
-const skipTitleNextLoad = () => {
+export const skipTitleNextLoad = () => {
   try {
     sessionStorage.setItem(SKIP_TITLE_KEY, '1');
   } catch {

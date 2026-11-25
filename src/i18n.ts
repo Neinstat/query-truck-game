@@ -129,6 +129,16 @@ const en = {
   weekShort: (week: number, day: number, date: string) =>
     `Week ${week} · Day ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Week ${week} · Day ${day}`,
+  coinsLabel: 'COINS',
+  shopButton: '🪙 Truck shop',
+  shopTitle: 'Truck shop',
+  shopIntro: 'Spend your coins on upgrades: the truck changes when you buy one. The page reloads to repaint it; your progress stays.',
+  shopSlots: { machine: 'Espresso machine', paint: 'Paint', awning: 'Awning' },
+  shopOnTruck: 'On the truck',
+  shopPutOn: 'Put on',
+  shopBuy: 'Buy',
+  shopClose: 'Back',
+  shopNew: (name: string) => `New! ${name} is on the truck.`,
   xpLabel: 'XP',
   freeLabel: (day: number) => `Free mode · Day ${day}`,
   freeShort: (day: number, date: string) =>
@@ -371,6 +381,16 @@ const id: UiText = {
   weekShort: (week: number, day: number, date: string) =>
     `Minggu ${week} · Hari ${day} · ${new Date(`${date}T12:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
   weekLabel: (week: number, day: number) => `Minggu ${week} · Hari ${day}`,
+  coinsLabel: 'KOIN',
+  shopButton: '🪙 Toko truck',
+  shopTitle: 'Toko truck',
+  shopIntro: 'Belanjakan koinmu untuk peningkatan: truck berubah saat kamu membelinya. Halaman dimuat ulang untuk mengecatnya; kemajuanmu tetap aman.',
+  shopSlots: { machine: 'Mesin espresso', paint: 'Cat', awning: 'Tenda' },
+  shopOnTruck: 'Terpasang di truck',
+  shopPutOn: 'Pasang',
+  shopBuy: 'Beli',
+  shopClose: 'Kembali',
+  shopNew: (name: string) => `Baru! ${name} terpasang di truck.`,
   xpLabel: 'XP',
   freeLabel: (day: number) => `Mode bebas · Hari ${day}`,
   freeShort: (day: number, date: string) =>

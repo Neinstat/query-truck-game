@@ -22,6 +22,7 @@ import { filmAt, shotSpan } from './cinematic';
 import { buildCustomer, buildManager, buildTruck, type CustomerModel } from './build';
 import { buildPlace } from './scenery';
 import { buildExterior } from './exterior';
+import { setTruckLook } from './look';
 import { Rain } from './rain';
 import { hashString, planShowers, rainAt, type Shower } from './weather';
 import type { PlaceId } from '../../sql-core/truck/places';
@@ -216,8 +217,11 @@ export class TruckGame {
       place?: PlaceId;
       /** Make it rain today whatever the day's weather (`?rain` in the address, for testing). */
       forceRain?: boolean;
+      /** What the player's upgrades make the truck look like (7.2). */
+      look?: { paint?: string; awning?: string; machine?: 0 | 1 | 2 };
     },
   ) {
+    setTruckLook(start.look);
     this.managerDone = start.managerDone ?? false;
     this.allOrders = start.orders;
     this.orders = start.orders.filter((o) => !start.handled.includes(o.id));

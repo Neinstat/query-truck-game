@@ -9,7 +9,20 @@ const FLIGHT = 900;
  * fly to the counter, and the number ticks up as each one lands. With reduced motion the number
  * just changes.
  */
-export function XpCounter({ xp, label, onTick }: { xp: number; label: string; onTick?: () => void }) {
+export function XpCounter({
+  xp,
+  label,
+  onTick,
+  icon = '⭐',
+  slot = 0,
+}: {
+  xp: number;
+  label: string;
+  onTick?: () => void;
+  icon?: string;
+  /** Which row under the clock card (0 = XP, 1 = coins). */
+  slot?: number;
+}) {
   const [shown, setShown] = useState(xp);
   const [flying, setFlying] = useState<{ id: number; delay: number }[]>([]);
   const target = useRef(xp);
@@ -53,16 +66,16 @@ export function XpCounter({ xp, label, onTick }: { xp: number; label: string; on
 
   return (
     <>
-      <div className="hud-xp" title={label} aria-label={`${label}: ${shown}`}>
+      <div className="hud-xp" style={{ top: 126 + slot * 40 }} title={label} aria-label={`${label}: ${shown}`}>
         <span key={bump} className={bump > 0 ? 'hud-xp-star hud-xp-bump' : 'hud-xp-star'} aria-hidden="true">
-          ⭐
+          {icon}
         </span>
         <span className="hud-xp-label">{label}</span>
         <span className="hud-xp-value">{shown}</span>
       </div>
       {flying.map((s) => (
-        <span key={s.id} className="xp-fly" style={{ animationDelay: `${s.delay}ms`, animationDuration: `${FLIGHT}ms` }} aria-hidden="true">
-          ⭐
+        <span key={s.id} className="xp-fly" style={{ animationDelay: `${s.delay}ms`, animationDuration: `${FLIGHT}ms`, ['--ty' as string]: `${142 + slot * 40}px` }} aria-hidden="true">
+          {icon}
         </span>
       ))}
     </>

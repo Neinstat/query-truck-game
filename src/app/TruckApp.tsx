@@ -18,9 +18,13 @@ import { DevPanel, devAllowed } from './DevPanel';
 import { PLACES, placeForDay } from '../sql-core/truck/places';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
 import { XpCounter } from './XpCounter';
+import { ShopScreen } from './ShopScreen';
+import { NEW_ITEM_KEY, useShop } from './useShop';
+import { dayCoins, itemName, shopItem, totalCoins } from '../sql-core/truck/shop';
 import { totalXp, dayXp } from '../sql-core/truck/xp';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
+import { skipTitleNextLoad } from './useTruckShift';
 
 /** Every table in the truck, for the Data Lens cards. */
 const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))];
@@ -85,7 +89,8 @@ export function TruckApp() {
   /** A new player's backstory and difficulty choice (before the first day), and the picker in the pause menu. */
   const [introOpen, setIntroOpen] = useState(false);
   const [difficultyOpen, setDifficultyOpen] = useState(false);
-  const menuOpen = introOpen || difficultyOpen || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const [shopOpen, setShopOpen] = useState(false);
+  const menuOpen = introOpen || difficultyOpen || shopOpen || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
@@ -93,6 +98,19 @@ export function TruckApp() {
   const { week, dayInWeek } = weekOfDay(dayNumber);
   // XP: the stars of all finished days plus today's; a practice run pays nothing (7.1).
   const xp = totalXp(past) + (practice ? 0 : dayXp(day));
+  // Coins: like XP, worked out from the days (practice pays nothing); the shop's purchases are saved.
+  const earned = totalCoins(past) + (practice ? 0 : dayCoins(day));
+  const { shop, balance, look, purchase, putOn } = useShop(earned, skipTitleNextLoad);
+  // The page that follows a purchase says what is new.
+  const [newItem] = useState(() => {
+    try {
+      const id = sessionStorage.getItem(NEW_ITEM_KEY);
+      sessionStorage.removeItem(NEW_ITEM_KEY);
+      return id ? shopItem(id) ?? null : null;
+    } catch {
+      return null;
+    }
+  });
   const free = isFreeMode(dayNumber);
   const freeDay = dayNumber - 30;
   // A new week's first morning, before anything has happened: show the week card (not on reloads
@@ -118,6 +136,8 @@ export function TruckApp() {
     place: todaysPlace(dayNumber).id,
     // `?rain` in the address: rain today whatever the weather (for testing).
     forceRain: new URLSearchParams(window.location.search).has('rain'),
+    // What the upgrades bought in the shop make the truck look like (7.2).
+    look,
   });
   const place = todaysPlace(dayNumber);
   useEffect(() => sound.setPlace(place.id), [place.id]);
@@ -196,7 +216,7 @@ export function TruckApp() {
         setDaysOpen(false);
         return;
       }
-      if (difficultyOpen) return; // its own keys (Esc closes it)
+      if (difficultyOpen || shopOpen) return; // their own keys (Esc closes them)
       if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && !daysOpen && tourStep === null) {
         e.preventDefault();
         play();
@@ -262,6 +282,12 @@ export function TruckApp() {
               t={t}
             />
             <XpCounter xp={xp} label={t.xpLabel} onTick={() => sound.play('xp')} />
+            <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} onTick={() => sound.play('xp')} />
+            {newItem && (
+              <div className="truck-toast" role="status">
+                ✨ {t.shopNew(itemName(newItem, lang))}
+              </div>
+            )}
             <button
               className="hud-menu"
               onMouseDown={(e) => e.preventDefault()}
@@ -382,6 +408,7 @@ export function TruckApp() {
             onTour={startTour}
             onDays={() => setDaysOpen(true)}
             onDifficulty={() => setDifficultyOpen(true)}
+            onShop={() => setShopOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
             setLang={setLang}
@@ -398,6 +425,9 @@ export function TruckApp() {
               play();
             }}
           />
+        )}
+        {shopOpen && (
+          <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
         )}
         {difficultyOpen && (
           <DifficultyPicker

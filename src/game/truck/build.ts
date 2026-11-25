@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import type { Ink } from '../art/riso';
 import { inkColour } from './colour';
+import { truckLook } from './look';
 import { CLOCK3D, LAYOUT, TRUCK, type Box3 } from './world';
 
 const materials = new Map<Ink, THREE.MeshLambertMaterial>();
@@ -30,6 +31,36 @@ const H = TRUCK.height;
 const T = 0.08; // wall thickness
 
 // ── The truck ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * The espresso machine on the back counter, by upgrade tier (7.2): 0 an old dented one, 1 the
+ * red one with its pressure gauge, 2 a modern chrome one with two group heads and a display.
+ */
+function espressoMachine(g: THREE.Group, c: Box3): void {
+  const tier = truckLook().machine;
+  const body = tier === 0 ? 'woodDark' : tier === 1 ? 'red' : 'white';
+  block(g, body, [c.min.x, c.min.y, c.min.z, c.max.x, c.max.y - 0.08, c.max.z]);
+  block(g, tier === 2 ? 'tealLight' : 'paperShade', [c.min.x + 0.04, c.max.y - 0.08, c.min.z + 0.04, c.max.x - 0.04, c.max.y, c.max.z - 0.04]);
+  if (tier === 0) {
+    // A dent in the side and a patch of rust-coloured tape.
+    block(g, 'redDark', [c.min.x + 0.05, c.min.y + 0.3, c.min.z - 0.012, c.min.x + 0.2, c.min.y + 0.4, c.min.z]);
+    block(g, 'inkSoft', [c.max.x - 0.2, c.max.y - 0.3, c.min.z - 0.01, c.max.x - 0.05, c.max.y - 0.2, c.min.z]);
+  } else {
+    const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12), mat(tier === 2 ? 'mustard' : 'white'));
+    gauge.rotation.x = Math.PI / 2;
+    gauge.position.set((c.min.x + c.max.x) / 2, c.max.y - 0.2, c.min.z - 0.005);
+    g.add(gauge);
+  }
+  if (tier === 2) {
+    // A glowing display strip and a steam wand.
+    block(g, 'tealLight', [c.min.x + 0.12, c.max.y - 0.3, c.min.z - 0.012, c.max.x - 0.12, c.max.y - 0.26, c.min.z]);
+    block(g, 'inkSoft', [c.max.x - 0.03, c.min.y + 0.1, c.min.z + 0.1, c.max.x + 0.02, c.max.y - 0.2, c.min.z + 0.14]);
+  }
+  for (const x of [c.min.x + 0.15, c.max.x - 0.15]) {
+    block(g, 'ink', [x - 0.05, c.min.y + 0.16, c.min.z - 0.06, x + 0.05, c.min.y + 0.22, c.min.z]);
+    block(g, 'white', [x - 0.04, c.min.y, c.min.z - 0.05, x + 0.04, c.min.y + 0.08, c.min.z + 0.03]);
+  }
+}
 
 export function buildTruck(): THREE.Group {
   const g = new THREE.Group();
@@ -137,16 +168,7 @@ export function buildTruck(): THREE.Group {
   block(g, 'wood', [bc.min.x, 0, bc.min.z, bc.max.x, bc.max.y - 0.04, bc.max.z]);
   block(g, 'white', [bc.min.x - 0.02, bc.max.y - 0.04, bc.min.z - 0.03, bc.max.x + 0.02, bc.max.y, bc.max.z]);
   const c = LAYOUT.coffeeMachine;
-  block(g, 'red', [c.min.x, c.min.y, c.min.z, c.max.x, c.max.y - 0.08, c.max.z]);
-  block(g, 'paperShade', [c.min.x + 0.04, c.max.y - 0.08, c.min.z + 0.04, c.max.x - 0.04, c.max.y, c.max.z - 0.04]);
-  const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12), mat('white'));
-  gauge.rotation.x = Math.PI / 2;
-  gauge.position.set((c.min.x + c.max.x) / 2, c.max.y - 0.2, c.min.z - 0.005);
-  g.add(gauge);
-  for (const x of [c.min.x + 0.15, c.max.x - 0.15]) {
-    block(g, 'ink', [x - 0.05, c.min.y + 0.16, c.min.z - 0.06, x + 0.05, c.min.y + 0.22, c.min.z]);
-    block(g, 'white', [x - 0.04, c.min.y, c.min.z - 0.05, x + 0.04, c.min.y + 0.08, c.min.z + 0.03]);
-  }
+  espressoMachine(g, c);
   const m = LAYOUT.menuBoard;
   block(g, 'woodDark', [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
   block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z - 0.005]);
