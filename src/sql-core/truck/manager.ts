@@ -8,6 +8,7 @@ import { applyText, type CaseLevel, type Level } from '../levels';
 import type { CafeDatabase } from '../db';
 import type { Lang } from '../feedback';
 import { MANAGER_CASE_ID, MANAGER_INTRO_ID } from './locales/id/manager';
+import { buildDailyCase, DAILY_CASES, dailyCaseById, dailyIntro, pickDailyCase } from './managerCases';
 
 export const MANAGER_CASE = 'manager-day-1';
 
@@ -42,7 +43,11 @@ export const MANAGER_INTRO: ManagerIntro = {
   open: 'Open the case 📋',
 };
 
-export const managerIntroFor = (lang: Lang): ManagerIntro => (lang === 'id' ? MANAGER_INTRO_ID : MANAGER_INTRO);
+export const managerIntroFor = (lang: Lang, caseId?: string): ManagerIntro => {
+  const daily = caseId ? dailyCaseById(caseId) : undefined;
+  if (daily && daily.steps.length > 0) return dailyIntro(daily, lang);
+  return lang === 'id' ? MANAGER_INTRO_ID : MANAGER_INTRO;
+};
 
 /** The October channels, in the order the choices are shown. */
 const CHANNELS = ['dine-in', 'takeaway', 'delivery'] as const;
@@ -158,8 +163,22 @@ export async function buildManagerCase(db: CafeDatabase, date: string): Promise<
   };
 }
 
-/** The case in the player's language (falls back to English). */
-export async function managerCaseFor(db: CafeDatabase, date: string, lang: Lang): Promise<Level> {
+/** The id of the case "Numbers. Now." (the original knock, brought from week 4 on). */
+export const NUMBERS_NOW = 'numbers-now';
+
+/**
+ * The case for today: one of the week's pool (`managerCases.ts`). Without a week it is the
+ * original three-number case.
+ */
+export async function managerCaseFor(db: CafeDatabase, date: string, lang: Lang, week?: number): Promise<Level> {
+  const daily = week === undefined ? undefined : pickDailyCase(week, date);
+  if (daily && daily.id !== NUMBERS_NOW) return buildDailyCase(db, daily, lang);
   const level = await buildManagerCase(db, date);
   return lang === 'id' ? applyText(level, MANAGER_CASE_ID) : level;
 }
+
+/** Which case the Manager brings on a day (the id the talk at the door needs). */
+export const managerCaseIdFor = (week: number, date: string): string => pickDailyCase(week, date).id;
+
+/** Every case id in the pool (for tests and tools). */
+export const managerCaseIds = (): string[] => DAILY_CASES.map((c) => c.id);
