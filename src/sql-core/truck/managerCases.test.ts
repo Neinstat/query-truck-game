@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { checkConclusion } from '../cases';
 import { createCafeDatabase, type LocalCafeDatabase } from '../db';
 import { BLANK } from '../levels';
-import { LAST_WEEK } from './weeks';
+import { LAST_WEEK, WEEKS } from './weeks';
 import { buildDailyCase, casesForWeek, DAILY_CASES, pickDailyCase } from './managerCases';
 import { managerCaseFor, managerIntroFor, NUMBERS_NOW } from './manager';
 
@@ -50,9 +50,40 @@ describe('the pool of daily cases', () => {
     expect(new Set(DAILY_CASES.map((c) => c.id)).size).toBe(DAILY_CASES.length);
     for (const c of playable) {
       expect(c.steps.length).toBeGreaterThanOrEqual(1);
-      expect(c.steps.length).toBeLessThanOrEqual(2);
+      expect(c.steps.length).toBeLessThanOrEqual(c.weekly ? 3 : 2);
       for (const s of c.steps) expect(s.starter.split(BLANK).length - 1, `${c.id} starter`).toBe(1);
     }
+  });
+});
+
+describe('the big case of the week (6.8)', () => {
+  const weekly = DAILY_CASES.filter((c) => c.weekly);
+
+  it('has one for each of weeks 2–5, named as the week card says, ending with a recommendation', () => {
+    expect(weekly.map((c) => c.week).sort()).toEqual([2, 3, 4, 5]);
+    for (const c of weekly) {
+      expect(c.en.title).toBe(WEEKS[c.week].managerCase);
+      expect(c.steps).toHaveLength(3);
+      expect(c.recommends).toBe(true);
+      expect(c.steps[2].answer.kind).toBe('choice');
+    }
+  });
+
+  it('comes on the fifth day of its week, and only then', () => {
+    for (const c of weekly) {
+      expect(pickDailyCase(c.week, '2026-11-13', 5).id).toBe(c.id);
+      for (let day = 0; day < 40; day++) {
+        expect(pickDailyCase(c.week, dateOffset(day), 1 + (day % 4)).weekly).toBeFalsy();
+        expect(pickDailyCase(c.week, dateOffset(day)).weekly).toBeFalsy();
+      }
+    }
+    expect(pickDailyCase(1, '2026-11-06', 5).weekly).toBeFalsy();
+    expect(pickDailyCase(6, '2026-11-06', 5).weekly).toBeFalsy();
+  });
+
+  it('is never drawn into the daily pool, and the manager talks about it at the door', () => {
+    for (let week = 1; week <= LAST_WEEK; week++) expect(casesForWeek(week).some((c) => c.weekly)).toBe(false);
+    for (const c of weekly) expect(managerIntroFor('en', c.id).lines[2]).toBe(c.en.ask);
   });
 });
 
@@ -139,6 +170,28 @@ describe('right answers that must not tie', () => {
       'SELECT name, price - cost AS m FROM menu_items WHERE price IS NOT NULL AND cost IS NOT NULL ORDER BY m DESC;',
     );
     expect(margins[0]).toBeGreaterThan(margins[1]);
+  });
+});
+
+describe('the big cases do not tie', () => {
+  const col = async (sql: string) => {
+    const r = await db.run(sql);
+    if (!r.ok) throw new Error(sql);
+    return r.rows.map((row) => Number(row[row.length - 1]));
+  };
+  it('has a single quietest weekday, a single best drink and a single favourite of the regulars who left', async () => {
+    const days = await col(
+      "SELECT EXTRACT(DOW FROM sold_at) AS d, COUNT(DISTINCT order_id) AS n FROM sales WHERE sold_at < '2026-11-01' GROUP BY d ORDER BY n;",
+    );
+    expect(days[0]).toBeLessThan(days[1]);
+    const drinks = await col(
+      "SELECT name, price - cost AS m FROM menu_items WHERE category IN ('coffee', 'tea') ORDER BY m DESC;",
+    );
+    expect(drinks[0]).toBeGreaterThan(drinks[1]);
+    const units = await col(
+      "SELECT m.name, SUM(s.quantity) AS u FROM sales s JOIN customers c ON c.customer_id = s.customer_id JOIN menu_items m ON m.item_id = s.item_id WHERE c.name IN ('Grace Hughes', 'Chloe Diaz', 'Lily Lopez', 'Noah Owens') GROUP BY m.name ORDER BY u DESC;",
+    );
+    expect(units[0]).toBeGreaterThan(units[1]);
   });
 });
 
