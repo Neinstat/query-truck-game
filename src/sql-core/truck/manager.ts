@@ -170,15 +170,16 @@ export const NUMBERS_NOW = 'numbers-now';
  * The case for today: one of the week's pool (`managerCases.ts`). Without a week it is the
  * original three-number case.
  */
-export async function managerCaseFor(db: CafeDatabase, date: string, lang: Lang, week?: number): Promise<Level> {
-  const daily = week === undefined ? undefined : pickDailyCase(week, date);
+export async function managerCaseFor(db: CafeDatabase, date: string, lang: Lang, week?: number, dayInWeek?: number): Promise<Level> {
+  const daily = week === undefined ? undefined : pickDailyCase(week, date, dayInWeek);
   if (daily && daily.id !== NUMBERS_NOW) return buildDailyCase(db, daily, lang);
   const level = await buildManagerCase(db, date);
   return lang === 'id' ? applyText(level, MANAGER_CASE_ID) : level;
 }
 
 /** Which case the Manager brings on a day (the id the talk at the door needs). */
-export const managerCaseIdFor = (week: number, date: string): string => pickDailyCase(week, date).id;
+export const managerCaseIdFor = (week: number, date: string, dayInWeek?: number): string =>
+  pickDailyCase(week, date, dayInWeek).id;
 
 /** Every case id in the pool (for tests and tools). */
 export const managerCaseIds = (): string[] => DAILY_CASES.map((c) => c.id);

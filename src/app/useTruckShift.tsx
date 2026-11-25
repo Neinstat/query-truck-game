@@ -168,7 +168,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   );
   const [day, setDay] = useState<DayLog>(progressOnLoad.day);
   // The Manager's case follows the week (6.7): the day number is past days + 1 (a practice run keeps its own).
-  const managerWeek = weekOfDay(practice ? practice.from : past.length + 1).week;
+  const { week: managerWeek, dayInWeek: managerDay } = weekOfDay(practice ? practice.from : past.length + 1);
   const [db, setDb] = useState<CafeDatabase | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [schema, setSchema] = useState<Table[]>([]);
@@ -290,7 +290,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
             return;
           }
           setManagerTalk(true);
-          managerCaseFor(db, day.date, lang, managerWeek)
+          managerCaseFor(db, day.date, lang, managerWeek, managerDay)
             .then(setManagerLevel)
             .catch((err) => {
               setManagerTalk(false);
@@ -302,7 +302,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
           setToast(t.stillLoading);
         } else setToast(day.manager ? t.managerGone : t.truckDoor);
       }),
-    [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang, managerLevel, managerWeek],
+    [bridge, order, orderObject, t, knocking, db, day.date, day.manager, lang, managerLevel, managerWeek, managerDay],
   );
 
   const closeManager = useCallback(() => {
@@ -498,7 +498,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
         {managerTalk && (
           <TalkBox
             speaker={t.managerName}
-            {...talkScript(managerIntroFor(lang, managerCaseIdFor(managerWeek, day.date)))}
+            {...talkScript(managerIntroFor(lang, managerCaseIdFor(managerWeek, day.date, managerDay)))}
             onDone={() => {
               setManagerTalk(false);
               setManagerOpen(true);

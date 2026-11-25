@@ -13,17 +13,18 @@ import type { CaseLevel, CaseQuestion } from '../levels';
 import type { CafeDatabase } from '../db';
 import type { Lang } from '../feedback';
 import type { ManagerIntro } from './manager';
+import { WEEKLY_CASES } from './managerCases.weekly';
 
-type StepText = { prompt: string; goal: string; read: string; hints: [string, string]; reply: string };
+export type StepText = { prompt: string; goal: string; read: string; hints: [string, string]; reply: string };
 
-type Answer =
+export type Answer =
   | { kind: 'number'; sql: string; tolerance?: number }
   /** A choice: the options come from a query (one column), the right one from another. */
   | { kind: 'choice-sql'; choicesSql: string; correctSql: string }
   /** A fixed choice (a recommendation). */
   | { kind: 'choice'; choices: string[]; correct: number; choicesId: string[] };
 
-type Step = {
+export type Step = {
   /** The query the step starts with (one `___`). */
   starter: string;
   /** What fills the blank (used by the tests, and by the last hint). */
@@ -35,7 +36,7 @@ type Step = {
   id: StepText;
 };
 
-type CaseText = { title: string; ask: string; task: string; success: string };
+export type CaseText = { title: string; ask: string; task: string; success: string };
 
 export type DailyCase = {
   /** Never renamed once released (saved days only keep the date, but tests and logs use it). */
@@ -44,6 +45,8 @@ export type DailyCase = {
   week: number;
   /** Ends with a recommendation (the analyst's fifth step). */
   recommends?: boolean;
+  /** The big case of a week's last day (6.8): brought on day 5 of its week, never drawn at random. */
+  weekly?: boolean;
   steps: Step[];
   en: CaseText;
   idText: CaseText;
@@ -52,6 +55,7 @@ export type DailyCase = {
 const HISTORY = "sold_at >= '2026-10-01' AND sold_at < '2026-11-01'";
 
 export const DAILY_CASES: DailyCase[] = [
+  ...WEEKLY_CASES,
   // The original knock, "Numbers. Now.", is built by `manager.ts` (its text lives there and in
   // `locales/id/manager.ts`): this entry only puts it in the pool, from week 4 (COUNT, SUM, GROUP BY).
   {
@@ -644,7 +648,7 @@ export const DAILY_CASES: DailyCase[] = [
 export const dailyCaseById = (id: string): DailyCase | undefined => DAILY_CASES.find((c) => c.id === id);
 
 /** The cases the Manager may bring in a week: the cases of weeks 1…week. */
-export const casesForWeek = (week: number): DailyCase[] => DAILY_CASES.filter((c) => c.week <= week);
+export const casesForWeek = (week: number): DailyCase[] => DAILY_CASES.filter((c) => c.week <= week && !c.weekly);
 
 const hash = (text: string): number => {
   let h = 2166136261;
@@ -653,11 +657,16 @@ const hash = (text: string): number => {
 };
 
 /**
- * Today's case: the same date always gives the same one. Two days in three it is one of this
+ * Today's case: on the fifth day of a week with a big case, that case; otherwise the same date always gives the same one. Two days in three it is one of this
  * week's own cases (when the week has any), otherwise any case so far — so earlier weeks come
  * back, like spaced repetition.
  */
-export function pickDailyCase(week: number, date: string): DailyCase {
+export function pickDailyCase(week: number, date: string, dayInWeek?: number): DailyCase {
+  // The fifth day of weeks 2–5: the week's big case.
+  if (dayInWeek === 5) {
+    const big = DAILY_CASES.find((c) => c.weekly && c.week === week);
+    if (big) return big;
+  }
   const all = casesForWeek(week);
   const own = all.filter((c) => c.week === week);
   const h = hash(`${week} ${date}`);
