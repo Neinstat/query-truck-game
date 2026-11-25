@@ -3,6 +3,7 @@
  * WASD to walk inside the truck, the mouse to look (pointer lock; dragging also works), and E or a
  * click to use what the crosshair is on. Talks to React only through the TruckBridge.
  */
+import { getLook } from './lookSettings';
 import * as THREE from 'three';
 import {
   arrivalTime,
@@ -374,8 +375,9 @@ export class TruckGame {
       // moving the mouse over the view.
       const free = (this.lockUnavailable && e.target === canvas) || this.freeLook;
       if (document.pointerLockElement === canvas || this.dragging || free) {
-        this.yaw -= e.movementX * MOUSE_SENSITIVITY;
-        this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * MOUSE_SENSITIVITY));
+        const speed = MOUSE_SENSITIVITY * getLook();
+        this.yaw -= e.movementX * speed;
+        this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * speed));
       }
     };
     const onDown = (e: MouseEvent) => {

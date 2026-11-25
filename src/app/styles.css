@@ -3641,3 +3641,10 @@ body {
 @media (prefers-reduced-motion: reduce) { .credits-roll { animation: none; position: static; padding-top: 40px; overflow-y: auto; max-height: 80vh; } }
 
 .title-card { position: relative; }
+
+/* Settings, about and the phone notice (8.1) */
+.settings-look { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+.settings-look input { flex: 1; }
+.settings-confirm { display: flex; flex-direction: column; gap: 8px; }
+.phone-notice { z-index: 100; background: rgba(15, 14, 22, 0.94); }
+a.menu-button { text-align: center; text-decoration: none; }

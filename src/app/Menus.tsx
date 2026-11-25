@@ -10,7 +10,7 @@ import type { Place } from '../sql-core/truck/places';
 import { Logo } from './Logo';
 
 /** Sound on/off, the main volume, and music, ambience and effects on their own (saved). */
-function SoundControl({ t }: { t: UiText }) {
+export function SoundControl({ t }: { t: UiText }) {
   const [, redraw] = useState(0);
   const [open, setOpen] = useState(false);
   useEffect(() => sound.subscribe(() => redraw((n) => n + 1)), []);
@@ -62,7 +62,7 @@ function SoundControl({ t }: { t: UiText }) {
  * pause menu (Esc), and the how-to-play guide. Time stops in the truck while any of them is open.
  */
 
-function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; t: UiText }) {
+export function LangSwitch({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; t: UiText }) {
   return (
     <div className="lang-switch menu-lang" role="group" aria-label={t.language}>
       {LANGS.map((code) => (
@@ -95,11 +95,13 @@ export function TitleScreen(props: {
   onGuide: () => void;
   onTour: () => void;
   onCredits: () => void;
+  onSettings: () => void;
+  onAbout: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onCredits, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onCredits, onSettings, onAbout, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   // The old code (7.3 easter egg): typed on the title screen.
   useEffect(() => {
@@ -139,6 +141,12 @@ export function TitleScreen(props: {
         </button>
         <button className="menu-button" onClick={onTour} disabled={!worldReady}>
           {t.tourStart}
+        </button>
+        <button className="menu-button" onClick={onSettings}>
+          {t.settingsButton}
+        </button>
+        <button className="menu-button" onClick={onAbout}>
+          {t.aboutButton}
         </button>
         <button className="menu-button" onClick={onCredits}>
           {t.creditsButton}
@@ -182,12 +190,14 @@ export function PauseMenu(props: {
   /** Badges and easter eggs. */
   onBadges: () => void;
   onCredits: () => void;
+  onSettings: () => void;
+  onAbout: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onBadges, onCredits, onTitle, lang, setLang, t } = props;
+  const { onResume, onGuide, onTour, onDays, onDifficulty, onShop, onBadges, onCredits, onSettings, onAbout, onTitle, lang, setLang, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -213,6 +223,12 @@ export function PauseMenu(props: {
         </button>
         <button className="menu-button" onClick={onTour}>
           {t.tourStart}
+        </button>
+        <button className="menu-button" onClick={onSettings}>
+          {t.settingsButton}
+        </button>
+        <button className="menu-button" onClick={onAbout}>
+          {t.aboutButton}
         </button>
         <button className="menu-button" onClick={onCredits}>
           {t.creditsButton}

@@ -10,6 +10,7 @@
  * ghost with no duties, change the
  * place, end, restart or skip the day, and wipe all progress.
  */
+import { savedKeys } from './progress';
 import { useEffect, useMemo, useState } from 'react';
 import type { DevCommand, DevStats, TruckBridge } from '../game/truck/bridge';
 import type { DayLog } from '../sql-core/truck/day';
@@ -31,15 +32,6 @@ export function devAllowed(): boolean {
     return localStorage.getItem(DEV_KEY) === '1';
   } catch {
     return false;
-  }
-}
-
-/** Every key the game saves in this browser (wiped by "Reset all progress"). */
-function savedKeys(): string[] {
-  try {
-    return Object.keys(localStorage).filter((k) => k.startsWith('query-truck.') || k.startsWith('sql-valley.'));
-  } catch {
-    return [];
   }
 }
 

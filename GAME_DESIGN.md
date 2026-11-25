@@ -455,6 +455,11 @@ From 24 Nov 2026 Phase 6 is built by a **scheduled agent** (see [`docs/AUTOMATIO
 - Free typing from the first time a week-5 concept is seen (§5); *Fill in* gives one gap each (`JOIN`, the `ON` clause, `LEFT`, `IS`, `GROUP BY` column, `DESC`, a limit).
 - The data lens test now counts the `customers` card (it follows the customer at the window, and the tablet opens it) as shown on the tablet.
 
+**8.1 as built, first part (25 Nov 2026):**
+- **Settings** (pause menu and title screen): sound, language, **mouse speed** (×0.4–×2.5, saved under `query-truck.look`, read by the 3D game on every mouse move) and **Reset all progress** (asks first; same code as the developer panel, `src/app/progress.ts`).
+- **About** page (what the game teaches, offline and private, the developer, link to the source) and a **phone/tablet notice** ("Query Truck is made for a computer") for touch-only devices, with *Try anyway*.
+- Not done yet (kept for 8.1b): the bundle split of CodeMirror and PGlite, a cross-browser check (Chrome, Firefox, Safari, Edge) and a first-15-minutes walk-through by a real new player.
+
 **7.3 as built (25 Nov 2026):**
 - **Badges** (`src/sql-core/truck/badges.ts`, tested): 11 badges worked out from the day logs, the shop and the eggs found (first order, three stars, perfect day, first `JOIN`, five-day streak, ten Manager days, level 3 in every concept, the Analysis Case, the modern machine, free mode, every egg). Nothing is saved, so a badge can never be lost. The **streak** counts in-game days with at least one served order and never punishes. Page: pause menu → *Badges & secrets*; the end-of-day summary lists the badges the day brought.
 - **Easter eggs** (`eggs.ts`, tested; found ones saved under `query-truck.eggs`): six — the rubber duck on the title screen, the old ↑↑↓↓←→←→BA code on the title screen (Mira's note), the developer's name in the credits, `information_schema` in any console, a `DROP TABLE` (the Manager panics; nothing is changed), and `SELECT 42;`. A toast shows the egg when found; the badge page keeps the note and shows a hint for the hidden ones. Not built: a 3D cat, the radio song, the Manager's coffee order (cut for time).
@@ -499,7 +504,7 @@ Owner's requests (25 Nov 2026): a reward you can **see** for every right answer,
 
 | # | Iteration | Done when… |
 |---|---|---|
-| 8.1 | **Polish for a first-time player:** go through the first 15 minutes as a new player (backstory, difficulty, week 1) and fix anything unclear; a settings page (sound, language, mouse sensitivity, reset progress); an *About* page (what the game teaches, the developer, the source on GitHub); a friendly message on phones and tablets ("Query Truck is made for a computer with a keyboard and mouse"); split CodeMirror and PGlite's JavaScript out of the first bundle (§11) if it is quick; a check in Chrome, Firefox, Safari and Edge | Checked in the browser as a new player |
+| 8.1 ◐ | **Polish for a first-time player:** go through the first 15 minutes as a new player (backstory, difficulty, week 1) and fix anything unclear; a settings page (sound, language, mouse sensitivity, reset progress); an *About* page (what the game teaches, the developer, the source on GitHub); a friendly message on phones and tablets ("Query Truck is made for a computer with a keyboard and mouse"); split CodeMirror and PGlite's JavaScript out of the first bundle (§11) if it is quick; a check in Chrome, Firefox, Safari and Edge | Checked in the browser as a new player |
 | 8.2 | **Release page and portfolio write-up:** README with fresh screenshots and a short GIF, a version tag `v1.0.0`, and `docs/CASE_STUDY.md` — how the game was designed and built, including the owner's agent workflow (scheduled agent, pull requests, previews, twice-a-day reviews), for the owner's portfolio | Reviewed by the owner |
 | 8.3 👤 | **Final playtest and release:** the owner plays it through once more, approves, and the 1.0 release is published | **Query Truck 1.0** is live |
 
