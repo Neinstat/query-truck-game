@@ -3788,3 +3788,64 @@ a.menu-button { text-align: center; text-decoration: none; }
   padding-block: 0.8rem;
   font-size: 1.15rem;
 }
+
+/* Difficulty choice: centred and big, with a difficulty meter and an example on each card. */
+.menu-screen-centre {
+  justify-content: center;
+}
+.difficulty-card {
+  width: min(78rem, calc(100% - 1rem));
+  padding: 1.8rem 2rem 1.6rem;
+}
+.difficulty-card .pause-title {
+  font-size: 2.2rem;
+}
+.difficulty-card .pause-hint {
+  font-size: 1.15rem;
+}
+.difficulty-options {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+.difficulty-option {
+  gap: 0.6rem;
+  padding: 1.1rem;
+}
+.difficulty-name {
+  font-size: 1.5rem;
+}
+.difficulty-for {
+  font-size: 1rem;
+  font-weight: 700;
+  opacity: 1;
+  color: #8a3b1d;
+}
+.difficulty-example {
+  padding: 0.5rem 0.6rem;
+  border-left: 4px solid #25304f;
+  background: #efe4c8;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.difficulty-benefit {
+  font-size: 1rem;
+}
+.difficulty-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.difficulty-meter i {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #25304f;
+  border-radius: 50%;
+  background: transparent;
+}
+.difficulty-meter i.on {
+  background: #e4573d;
+}
+.difficulty-meter b {
+  margin-left: 0.3rem;
+  font-size: 0.95rem;
+}

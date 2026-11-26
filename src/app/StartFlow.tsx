@@ -40,6 +40,14 @@ function Preview({ difficulty }: { difficulty: Difficulty }) {
   );
 }
 
+/** How hard each choice is: filled dots, and a short word (the same in both languages' numbers). */
+const METER: Record<Difficulty, { dots: number; label: string }> = {
+  cards: { dots: 1, label: '1/3' },
+  fill: { dots: 2, label: '2/3' },
+  write: { dots: 3, label: '3/3' },
+  grow: { dots: 1, label: '1→3' },
+};
+
 /** The choice of how much of each query the player writes (GAME_DESIGN.md §5). */
 export function DifficultyPicker({
   t,
@@ -66,7 +74,7 @@ export function DifficultyPicker({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
   return (
-    <div className={onCancel ? 'menu-screen' : 'menu-screen menu-screen-film'} role="dialog" aria-label={t.difficultyTitle}>
+    <div className="menu-screen menu-screen-centre" role="dialog" aria-label={t.difficultyTitle}>
       <div className="title-card difficulty-card">
         <h2 className="pause-title">{t.difficultyTitle}</h2>
         <p className="pause-hint">{current ? t.difficultyChange : t.difficultyIntro}</p>
@@ -81,7 +89,14 @@ export function DifficultyPicker({
             >
               <span className="difficulty-level">{t.difficultyLevels[d]}</span>
               <span className="difficulty-name">{t.difficulties[d].name}</span>
+              <span className="difficulty-meter" aria-label={`${t.difficultyMeter}: ${METER[d].label}`}>
+                {[1, 2, 3].map((n) => (
+                  <i key={n} className={n <= METER[d].dots ? 'on' : ''} />
+                ))}
+                <b>{METER[d].label}</b>
+              </span>
               <span className="difficulty-for">{t.difficulties[d].forWho}</span>
+              <span className="difficulty-example">{t.difficulties[d].example}</span>
               <Preview difficulty={d} />
               <span className="difficulty-benefit">{t.difficulties[d].benefit}</span>
               {current === d && <span className="difficulty-now">{t.difficultyNow}</span>}

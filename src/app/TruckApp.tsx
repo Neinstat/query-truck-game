@@ -233,11 +233,13 @@ export function TruckApp() {
   // console, the Data Lens or the guide took the mouse.
   const wasLocked = useRef(false);
   useEffect(() => {
-    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone && !devOpen) {
+    // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
+    const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
+    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone && !devOpen && !objectMenuOpen) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
