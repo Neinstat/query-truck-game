@@ -96,6 +96,27 @@ export const GUIDE_ID: readonly GuidePage[] = [
         where: 'Meja belakang, di sebelah mesin kopi',
         text: 'Bidik lalu tekan E untuk ganti stasiun: Lo-fi, Café Bossa, Pixel Pop, atau mati. Pilihanmu diingat.',
       },
+      {
+        icon: '☎️',
+        object: 'phone',
+        name: 'Telepon — toko truk',
+        where: 'Meja belakang, di kanan buku panduan',
+        text: 'Bidik lalu tekan E untuk memesan upgrade truk dengan koinmu: papan menu yang lebih bagus, tablet, tanaman, dan lainnya.',
+      },
+      {
+        icon: '📅',
+        object: 'calendar',
+        name: 'Kalender — hari-harimu',
+        where: 'Dinding belakang, di kanan rak resep',
+        text: 'Bidik lalu tekan E untuk melihat semua hari yang sudah lewat, latihan hari lama, atau mulai hari ini lagi.',
+      },
+      {
+        icon: '📌',
+        object: 'badge-board',
+        name: 'Papan pin — badge & rahasia',
+        where: 'Dinding depan, di kanan jendela layanan',
+        text: 'Bidik lalu tekan E untuk melihat badge dan rahasia yang sudah kamu temukan.',
+      },
     ],
   },
   {

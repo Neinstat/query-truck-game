@@ -2302,7 +2302,7 @@ body {
   font-style: italic;
 }
 
-/* Developer panel (F2): for building the game, not for players. */
+/* Developer panel (T): for building the game, not for players. */
 .dev-panel {
   position: absolute;
   top: 12px;
@@ -3724,3 +3724,67 @@ a.menu-button { text-align: center; text-decoration: none; }
 .difficulty-fill .difficulty-level { background: #f4dc8c; }
 .difficulty-write .difficulty-level { background: #f0a58c; }
 .difficulty-grow .difficulty-level { background: #a8cfe8; }
+
+/* Settings: a wide card, the controls as big readable key caps (dark text on light caps). */
+.title-card.settings-card {
+  width: min(44rem, 100%);
+  max-height: calc(100% - 8px);
+  overflow-y: auto;
+  gap: 14px;
+}
+.settings-card .settings-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settings-card .settings-controls {
+  padding: 0.8rem 1rem;
+  border: 3px solid var(--wood-dark);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fbecc6, #efd59c);
+  color: var(--wood-dark);
+}
+.settings-card .settings-controls h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  color: var(--wood-dark);
+}
+.settings-card .settings-controls ul {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.2rem;
+  margin: 0;
+  font-size: 1.05rem;
+}
+.settings-card .settings-controls li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.settings-card .settings-controls kbd {
+  flex: none;
+  min-width: 2.2rem;
+  padding: 0.15rem 0.6rem;
+  border: 2px solid var(--wood-dark);
+  border-bottom-width: 4px;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--wood-dark);
+  font-family: var(--code);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .settings-card .settings-controls ul {
+    grid-template-columns: 1fr;
+  }
+}
+.title-card.pause-card {
+  width: min(30rem, 100%);
+}
+.pause-card .menu-button {
+  padding-block: 0.8rem;
+  font-size: 1.15rem;
+}

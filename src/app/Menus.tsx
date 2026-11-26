@@ -173,19 +173,13 @@ export function PauseMenu(props: {
   onResume: () => void;
   onGuide: () => void;
   onTour: () => void;
-  /** The Days screen: every day so far, practice runs, and starting today again. */
-  onDays: () => void;
-  /** The truck shop. */
-  onShop: () => void;
-  /** Badges and easter eggs. */
-  onBadges: () => void;
   onSettings: () => void;
   onTitle: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onDays, onShop, onBadges, onSettings, onTitle, t } = props;
+  const { onResume, onGuide, onTour, onSettings, onTitle, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -193,17 +187,6 @@ export function PauseMenu(props: {
         <button className="menu-button menu-button-main" onClick={onResume} autoFocus>
           ▶ {t.resume}
         </button>
-        <div className="pause-row">
-          <button className="menu-button" onClick={onDays}>
-            {t.daysButton}
-          </button>
-          <button className="menu-button" onClick={onShop}>
-            {t.shopButton}
-          </button>
-          <button className="menu-button" onClick={onBadges}>
-            {t.badgesButton}
-          </button>
-        </div>
         <div className="pause-row">
           <button className="menu-button" onClick={onGuide}>
             {t.howToPlay}

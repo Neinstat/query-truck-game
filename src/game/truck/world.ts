@@ -51,6 +51,12 @@ export const LAYOUT = {
   guideBook: box(0.2, 0.95, HZ - 0.4, 0.62, 1.22, HZ - 0.06),
   /** The radio on the back counter, between the coffee machine and the guide book. */
   radio: box(-0.5, 0.95, HZ - 0.3, -0.1, 1.2, HZ - 0.08),
+  /** The desk phone on the back counter: opens the truck shop. */
+  phone: box(1.15, 0.95, HZ - 0.34, 1.5, 1.1, HZ - 0.1),
+  /** The wall calendar on the back wall, right of the recipe binders: opens the days. */
+  calendar: box(2.05, 1.35, HZ - 0.05, 2.6, 2.05, HZ),
+  /** The pinboard on the front wall, right of the window: opens badges and secrets. */
+  badgeBoard: box(1.85, 1.3, -HZ, 2.75, 2.0, -HZ + 0.05),
 } as const;
 
 /** Clock on the back wall, above the coffee machine. */
@@ -70,6 +76,9 @@ export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = 
   { id: 'back-door', box: LAYOUT.door },
   { id: 'guide-book', box: LAYOUT.guideBook },
   { id: 'radio', box: LAYOUT.radio },
+  { id: 'phone', box: LAYOUT.phone },
+  { id: 'calendar', box: LAYOUT.calendar },
+  { id: 'badge-board', box: LAYOUT.badgeBoard },
 ];
 
 /**
@@ -186,6 +195,9 @@ export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: V
   { object: 'back-door', eye: { x: 0.4, y: EYE_Y, z: 0 }, target: centre(LAYOUT.door) },
   { object: 'guide-book', eye: { x: 0.4, y: EYE_Y, z: -0.05 }, target: centre(LAYOUT.guideBook) },
   { object: 'radio', eye: { x: -0.25, y: EYE_Y, z: -0.1 }, target: centre(LAYOUT.radio) },
+  { object: 'phone', eye: { x: 1.3, y: EYE_Y, z: -0.1 }, target: centre(LAYOUT.phone) },
+  { object: 'calendar', eye: { x: 2.3, y: EYE_Y, z: -0.1 }, target: centre(LAYOUT.calendar) },
+  { object: 'badge-board', eye: { x: 2.3, y: EYE_Y, z: 0.1 }, target: centre(LAYOUT.badgeBoard) },
 ];
 
 // ── The queue in the park ───────────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ backup runs at 12:30, 20:30 and 02:30 WIB catch anything the trigger missed
 | **Agent** | a Claude Code routine (cloud): starts when a pull request is merged or closed, when someone comments or reviews, and at 12:30, 20:30 and 02:30 WIB | Builds the next batch of iterations and opens one pull request. Never merges. |
 | **Reminders** | scheduled tasks in the owner's Claude desktop app, 12:00 and 20:00 | Tell the owner what is waiting for review and whether the timeline holds. |
 
-Previews and the live game share one website, so they **share saved progress** in the browser. To test from a clean start, open the preview with `?dev`, press F2 and use *Reset all progress* (it asks first).
+Previews and the live game share one website, so they **share saved progress** in the browser. To test from a clean start, open the preview with `?dev`, press T and use *Reset all progress* (it asks first).
 
 ## For the owner: reviewing a pull request
 
@@ -59,7 +59,7 @@ The owner wants **real progress every day**: not one small iteration and a wait,
 - **Keep the description short** (owner, 26 Nov 2026): only what the owner must know or check, no filler, no repeating what the diff shows. Per iteration: one line of what changed, the Try it steps, and a Look at line only when something really needs the owner's eye. Skip *Decisions I made* unless a decision changes how the game plays. Long text is fine only for information that is important and required.
 - Description:
   - **Review list** — a checklist at the top, one line per iteration: `- [ ] 6.3 — Backstory and difficulty: <one line on what to check>`.
-  - Then one section per iteration with **What's new** (plain words, for a player), **Try it** (steps in the preview, e.g. "open with `?dev`, F2 → *⏭ Skip to the next day* five times"), **Look at** (what most needs the owner's eye) and **Decisions I made**.
+  - Then one section per iteration with **What's new** (plain words, for a player), **Try it** (steps in the preview, e.g. "open with `?dev`, T → *⏭ Skip to the next day* five times"), **Look at** (what most needs the owner's eye) and **Decisions I made**.
   - **Not done / checked** at the end.
 - Never merge, never push to `main`, never force-push a branch that is not your own `night/` branch, never change repository settings or secrets.
 

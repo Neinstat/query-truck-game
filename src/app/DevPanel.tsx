@@ -114,7 +114,7 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
     <aside className="dev-panel" aria-label="Developer panel">
       <header className="dev-header">
         <strong>🛠 Developer</strong>
-        <span className="dev-key" title="F2 panel · F3 serve · F4 +30 min · F8 next day">F2 · F3 serve · F4 +30m · F8 next day</span>
+        <span className="dev-key">T</span>
         <button className="dev-close" onClick={onClose} aria-label="Close">
           ✕
         </button>

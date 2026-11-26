@@ -121,6 +121,27 @@ export const GUIDE: readonly GuidePage[] = [
         where: 'Back counter, next to the coffee machine',
         text: 'Aim at it and press E to change the station: Lo-fi, Café Bossa, Pixel Pop, or off. It remembers your choice.',
       },
+      {
+        icon: '☎️',
+        object: 'phone',
+        name: 'Phone — the truck shop',
+        where: 'Back counter, right of the guide book',
+        text: 'Aim at it and press E to order upgrades for the truck with your coins: a better menu board, a tablet, plants and more.',
+      },
+      {
+        icon: '📅',
+        object: 'calendar',
+        name: 'Calendar — your days',
+        where: 'Back wall, right of the recipe binders',
+        text: 'Aim at it and press E to see every day so far, practise an old day, or start today again.',
+      },
+      {
+        icon: '📌',
+        object: 'badge-board',
+        name: 'Pinboard — badges & secrets',
+        where: 'Front wall, right of the serving window',
+        text: 'Aim at it and press E to see your badges and the secrets you have found.',
+      },
     ],
   },
   {
