@@ -418,6 +418,14 @@ From 24 Nov 2026 Phase 6 is built by a **scheduled agent** (see [`docs/AUTOMATIO
 - The first play day stays 1 Nov 2026 (the Manager's case fills in that date); from then on the calendar skips weekends (Mon 2 Nov – Fri 6 Nov, then Mon 9 Nov…). Mastery due dates still count plain calendar days.
 - **Week card** (`src/app/WeekCard.tsx`): on the first morning of a week, before anything has happened (not on later reloads, not in practice runs), a card shows the week's name, what it teaches and the Manager's case to come. Time stands still while it is up; Enter, Space, Esc or the button closes it. The clock card says "Week 2 · Day 3 · Nov 4" and the summary title carries "· Week 2 · Day 3".
 
+**7.5 as built (26 Nov 2026):** a **🛠 Dev** chip under the Menu chip whenever developer mode is allowed (`?dev` once, or `npm run dev`); it opens the same panel as F2. The panel has a new **Cheats** tab: +100 / +500 / +2000 coins, +10 / +50 / +250 XP, *Take back all gifts*, *Own every shop item*, *Find every easter egg* and *Day N* jumps (6, 11, 16, 21, 26, the Analysis Case day, the day after). Gifts are saved apart (`query-truck.dev-bonus`, `devBonus.ts`, tested) and added to the XP and coin totals only, so the day logs, mastery and badges stay honest; *Reset all progress* removes them. Skipped days are empty. Not added: the backstory cannot be replayed for a save with days (the first-start flow only shows for new players).
+
+**7.3b as built (26 Nov 2026):** eggs `coffee` and `hello` in `eggs.ts` (recognised by `eggForQuery`, tested). The egg fires even though `FROM coffee` fails in PostgreSQL, because the console checks the text before the result. The badge *every egg* now needs eight. Still not built: a 3D cat, the radio song.
+
+**7.2b as built (26 Nov 2026):** a **Plants** kind in the shop (`plants-none` free, `plants-herbs` 200 coins, `plants-box` 450): one herb pot on the back counter, a second pot, and a flower box on the serving-window ledge outside. `look.ts` carries `plants`; a new overlap test builds the truck with every upgrade on. Still not built: a glass-door fridge, grinder, radio and menu-screen upgrades.
+
+**7.4 as built (26 Nov 2026):** `PLAYER_LEVELS` / `levelFor` in `xp.ts` (tested, EN + ID titles): New Hire 0, Apprentice 25, Barista 70, Senior Barista 140, Data Wrangler 240, Junior Analyst 370, Analyst 530, Head of Data 720 XP (a normal day earns 20–25 XP). The HUD's XP label became *Lv N · Title*; the badge page has a line with the level and the XP left. Nothing is locked behind a level, and nothing new is saved.
+
 **7.2 as built (25 Nov 2026):**
 - `src/sql-core/truck/shop.ts` (tested): **coins** = 10 per star plus the tip (a coin per 10 cents) for each served order and 20 per star for a Manager case, worked out from the day logs like XP (no double pay, practice pays nothing). The **catalogue** has 12 items in three kinds — **espresso machine** (old dented → red → modern chrome, 600 / 1800 coins), **paint** (the band round the body: faded → coral, teal, mustard, lilac, 300–500) and **awning** (plain → teal, red, pink, 250–450). A normal day earns about 200–300 coins, so the top machine takes a couple of weeks of play. The truck **starts plain** (dented old machine, faded band, plain cream awning). Bought and worn items are saved (`query-truck.shop`); coins in hand = earned − spent.
 - **Shop** (`ShopScreen.tsx`, pause menu → *Truck shop*): items grouped by kind with price, a *Buy* or *Put on* button and a ✔ on what is on the truck; an owned item can be swapped for free. A **coin counter** sits under XP (same flying-star animation with a 🪙, `XpCounter` takes an icon and row).
@@ -508,6 +516,10 @@ Owner's requests (25 Nov 2026): a reward you can **see** for every right answer,
 
 | # | Iteration | Done when… |
 |---|---|---|
+| 7.4 ✅ | **Player levels** (answers §13's XP question): the XP counter shows *Lv 3 · Barista*; the badge page shows the level and the XP to the next one | Tested; checked in the browser |
+| 7.2b ✅ | **Plants for the truck:** a fourth shop kind (herb pots on the back counter, then a flower box on the serving window) | Tested (no flickering faces with every upgrade on); checked in the browser |
+| 7.3b ✅ | **Two more easter eggs** found by queries: the truck's motto `SELECT * FROM coffee;` and `SELECT 'Hello, world';` (eight eggs in all) | Tested; checked in the browser |
+| 7.5 ✅ | **Better developer tools** (owner's request on PR #12, 26 Nov 2026): a 🛠 Dev button on screen (no F2 on phones), a *Cheats* tab with coins and XP gifts, owning the whole shop, every easter egg, and jumping to a day (the first day of each week, the Analysis Case, free mode) | Tested; checked in the browser |
 | 8.1 ✅ | **Polish for a first-time player:** go through the first 15 minutes as a new player (backstory, difficulty, week 1) and fix anything unclear; a settings page (sound, language, mouse sensitivity, reset progress); an *About* page (what the game teaches, the developer, the source on GitHub); a friendly message on phones and tablets ("Query Truck is made for a computer with a keyboard and mouse"); split CodeMirror and PGlite's JavaScript out of the first bundle (§11) if it is quick; a check in Chrome, Firefox, Safari and Edge | Checked in the browser as a new player |
 | 8.2 | **Release page and portfolio write-up:** README with fresh screenshots and a short GIF, a version tag `v1.0.0`, and `docs/CASE_STUDY.md` — how the game was designed and built, including the owner's agent workflow (scheduled agent, pull requests, previews, twice-a-day reviews), for the owner's portfolio | Reviewed by the owner |
 | 8.3 👤 | **Final playtest and release:** the owner plays it through once more, approves, and the 1.0 release is published | **Query Truck 1.0** is live |
@@ -515,7 +527,7 @@ Owner's requests (25 Nov 2026): a reward you can **see** for every right answer,
 ## 13. Open questions
 
 - [x] Game title and truck name: **Query Truck** (21 Nov 2026). Earlier working names are gone from the game; saves under the old `sql-valley.*` keys are moved to `query-truck.*` on load
-- [ ] What is XP for? (7.1; owner, 25 Nov 2026: "we'll think about it later") — ideas: player levels with a title (New Hire → Barista → Analyst), unlocking places or radio stations, a rank on the badge page
+- [x] What is XP for? Decided by the agent on 26 Nov 2026 (7.4): **player levels with a career title**, New Hire → Barista → Analyst → Head of Data (8 levels, thresholds in `PLAYER_LEVELS`). Unlocking places or stations was left out so nothing is ever locked
 - [x] Should `INSERT`/`UPDATE` be taught? **No** (owner, 24 Nov 2026): BI analysts rarely write them; not in 1.0
 - [ ] The right length of a day (8–12 minutes) — decided by the 4.12 playtest
 - [x] Locations: **only visual** in 1.0 (owner, 24 Nov 2026)

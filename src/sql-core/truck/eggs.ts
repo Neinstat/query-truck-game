@@ -5,7 +5,7 @@
  */
 import type { Lang } from '../feedback';
 
-export type EggId = 'duck' | 'konami' | 'developer' | 'schema' | 'drop' | 'answer';
+export type EggId = 'duck' | 'konami' | 'developer' | 'schema' | 'drop' | 'answer' | 'coffee' | 'hello';
 
 export type Egg = {
   id: EggId;
@@ -35,6 +35,12 @@ export const EGGS: readonly Egg[] = [
   { id: 'answer', title: { en: 'The answer', id: 'Jawabannya' },
     text: { en: 'SELECT 42; The answer to life, the universe and everything — and, today, to one very philosophical customer.', id: 'SELECT 42; Jawaban untuk kehidupan, alam semesta dan segalanya — dan hari ini, untuk satu pelanggan yang sangat filosofis.' },
     hint: { en: 'A famous number needs no table.', id: 'Angka yang terkenal tidak butuh tabel.' } },
+  { id: 'coffee', title: { en: 'The truck\'s motto', id: 'Semboyan truck' },
+    text: { en: 'SELECT * FROM coffee; There is no such table, but the truck\'s roof sign says it, so Mira keeps a cup ready anyway. Real answer: SELECT * FROM menu_items;', id: 'SELECT * FROM coffee; Tabel itu tidak ada, tapi papan di atap truck menulisnya, jadi Mira tetap menyiapkan secangkir. Jawaban aslinya: SELECT * FROM menu_items;' },
+    hint: { en: 'Read what the truck says about itself.', id: 'Baca apa kata truck tentang dirinya.' } },
+  { id: 'hello', title: { en: 'Hello, world', id: 'Halo, dunia' },
+    text: { en: 'Every programmer\'s first line works in SQL too. The Manager, from afar: "Fine. Now back to the numbers."', id: 'Baris pertama setiap programmer juga jalan di SQL. Manajer, dari kejauhan: "Bagus. Sekarang kembali ke angka."' },
+    hint: { en: 'Greet the database like a first-time programmer.', id: 'Sapa database seperti programmer pemula.' } },
 ];
 
 export const eggById = (id: string): Egg | undefined => EGGS.find((e) => e.id === id);
@@ -48,6 +54,8 @@ export function eggForQuery(sql: string): EggId | null {
   if (text.includes('information_schema') || text.includes('pg_catalog')) return 'schema';
   if (/\b(drop|truncate)\s+(table|schema|database)\b/.test(text)) return 'drop';
   if (/^select 42\s*(as \w+)?\s*;?$/.test(text)) return 'answer';
+  if (/^select \* from coffee\s*;?$/.test(text)) return 'coffee';
+  if (/^select 'hello,? world!?'\s*(as \w+)?\s*;?$/.test(text)) return 'hello';
   return null;
 }
 

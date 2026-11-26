@@ -141,6 +141,15 @@ export function buildExterior(): THREE.Group {
   for (const x of [w.min.x - 0.12, w.max.x + 0.08]) block(g, 'inkSoft', [x, w.min.y, front - P - 0.03, x + 0.04, w.max.y + 0.12, front - P]);
   block(g, 'inkSoft', [w.min.x - 0.12, w.max.y + 0.08, front - P - 0.03, w.max.x + 0.12, w.max.y + 0.12, front - P]);
   awning(g, w.min.x - 0.25, w.max.x + 0.25, w.max.y + 0.22, front - P);
+  if (truckLook().plants === 2) {
+    // A flower box on the window ledge (7.2b).
+    const y = w.min.y - 0.03;
+    block(g, 'woodDark', [w.min.x + 0.05, y, front - P - 0.26, w.min.x + 0.65, y + 0.12, front - P - 0.06]);
+    block(g, 'grass', [w.min.x + 0.07, y + 0.12, front - P - 0.24, w.min.x + 0.63, y + 0.17, front - P - 0.08]);
+    [['red', 0.15], ['mustard', 0.3], ['pink', 0.45], ['white', 0.57]].forEach(([ink, dx], i) =>
+      block(g, ink as Ink, [w.min.x + (dx as number) - 0.035, y + 0.17, front - P - 0.19 - (i % 2) * 0.02, w.min.x + (dx as number) + 0.035, y + 0.25, front - P - 0.13 - (i % 2) * 0.02]),
+    );
+  }
 
   // ── The cab ─────────────────────────────────────────────────────────────────────────
   // A tall step-van cab, almost as high as the body, with a short nose under the windscreen.

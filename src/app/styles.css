@@ -3657,3 +3657,18 @@ a.menu-button { text-align: center; text-decoration: none; }
   .title-card .menu-button { padding: 0.4rem 0.8rem; font-size: 1rem; }
   .title-logo { max-height: 22vh; width: auto; }
 }
+
+/* A button into the developer panel (7.5): phones have no F2. Under the Menu chip, only when dev tools are allowed. */
+.hud-dev {
+  position: absolute;
+  top: 62px;
+  right: 14px;
+  z-index: 20;
+  padding: 0.3rem 0.6rem;
+  border: 2px solid #4a5878;
+  border-radius: 10px;
+  background: rgba(16, 20, 36, 0.88);
+  color: #e8ecff;
+  font: 700 12px var(--code);
+  cursor: pointer;
+}

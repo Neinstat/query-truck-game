@@ -160,6 +160,17 @@ export function startNextWeek(past: readonly DayLog[], day: DayLog): void {
   window.location.reload();
 }
 
+/** Developer panel: close the books on every day up to (not including) `target`, then open day `target`. */
+export function skipToDay(past: readonly DayLog[], day: DayLog, target: number): void {
+  let done = [...past, day];
+  if (done.length + 1 >= target) return;
+  while (done.length + 1 < target) done = [...done, nextDay(done)];
+  write(PAST_KEY, done);
+  saveDay(nextDay(done));
+  skipTitleNextLoad();
+  window.location.reload();
+}
+
 /** Set before a reload into a new or restarted day: go straight back into the truck, no title. */
 export const SKIP_TITLE_KEY = 'query-truck.skip-title';
 export const skipTitleNextLoad = () => {

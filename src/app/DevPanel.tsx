@@ -19,6 +19,12 @@ import { masteryFrom } from '../sql-core/truck/repetition';
 import { CONCEPTS } from '../sql-core/truck/concepts';
 import { PLACES, type Place } from '../sql-core/truck/places';
 import { sound } from '../audio/sound';
+import { loadBonus, saveBonus } from './devBonus';
+import { EGGS } from '../sql-core/truck/eggs';
+import { SHOP_ITEMS } from '../sql-core/truck/shop';
+import { loadEggs } from './eggs';
+import { skipTitleNextLoad } from './useTruckShift';
+import { ANALYSIS_DAY } from '../sql-core/truck/badges';
 
 const DEV_KEY = 'query-truck.dev';
 
@@ -45,13 +51,14 @@ type Props = {
   onRestart: () => void;
   onNextDay: () => void;
   onNextWeek: () => void;
+  onSkipTo: (day: number) => void;
   onClose: () => void;
 };
 
-export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onNextWeek, onClose }: Props) {
+export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestart, onNextDay, onNextWeek, onSkipTo, onClose }: Props) {
   const [stats, setStats] = useState<DevStats | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [tab, setTab] = useState<'play' | 'state' | 'perf'>('play');
+  const [tab, setTab] = useState<'play' | 'cheats' | 'state' | 'perf'>('play');
 
   // Ask the game for stats while the panel is open.
   useEffect(() => {
@@ -72,21 +79,47 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
     url.searchParams.set('place', id);
     window.location.href = url.toString();
   };
+  const [bonus] = useState(loadBonus);
+  const reload = () => {
+    skipTitleNextLoad();
+    window.location.reload();
+  };
+  const gift = (b: { xp: number; coins: number }) => {
+    saveBonus(b);
+    reload();
+  };
+  const unlockShop = () => {
+    try {
+      const shop = JSON.parse(localStorage.getItem('query-truck.shop') ?? '{}') as { owned?: string[]; equipped?: Record<string, string> };
+      localStorage.setItem('query-truck.shop', JSON.stringify({ owned: SHOP_ITEMS.map((i) => i.id), equipped: shop.equipped ?? {} }));
+    } catch {
+      // Without storage nothing is kept.
+    }
+    reload();
+  };
+  const findEggs = () => {
+    try {
+      localStorage.setItem('query-truck.eggs', JSON.stringify([...new Set([...loadEggs(), ...EGGS.map((e) => e.id)])]));
+    } catch {
+      // Without storage nothing is kept.
+    }
+    reload();
+  };
   const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
 
   return (
     <aside className="dev-panel" aria-label="Developer panel">
       <header className="dev-header">
         <strong>🛠 Developer</strong>
-        <span className="dev-key">F2</span>
+        <span className="dev-key">F2 / 🛠</span>
         <button className="dev-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
       </header>
       <nav className="dev-tabs">
-        {(['play', 'state', 'perf'] as const).map((id) => (
+        {(['play', 'cheats', 'state', 'perf'] as const).map((id) => (
           <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
-            {id === 'play' ? 'Controls' : id === 'state' ? 'State' : 'Performance'}
+            {id === 'play' ? 'Controls' : id === 'cheats' ? 'Cheats' : id === 'state' ? 'State' : 'Performance'}
           </button>
         ))}
       </nav>
@@ -184,6 +217,43 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {tab === 'cheats' && (
+        <div className="dev-body">
+          <p className="dev-note">Gifts for testing. They do not touch the real rules, are saved apart, and go away with *Reset all progress*. The page reloads after each.</p>
+          <h4>Coins · {bonus.coins} given</h4>
+          <div className="dev-row">
+            {[100, 500, 2000].map((n) => (
+              <button key={n} onClick={() => gift({ ...bonus, coins: bonus.coins + n })}>
+                +{n} 🪙
+              </button>
+            ))}
+          </div>
+          <h4>XP · {bonus.xp} given</h4>
+          <div className="dev-row">
+            {[10, 50, 250].map((n) => (
+              <button key={n} onClick={() => gift({ ...bonus, xp: bonus.xp + n })}>
+                +{n} ⭐
+              </button>
+            ))}
+            <button onClick={() => gift({ xp: 0, coins: 0 })}>Take back all gifts</button>
+          </div>
+          <h4>Shop, badges and secrets</h4>
+          <div className="dev-row">
+            <button onClick={unlockShop}>Own every shop item</button>
+            <button onClick={findEggs}>Find every easter egg</button>
+          </div>
+          <h4>Jump in the story</h4>
+          <div className="dev-row">
+            {[6, 11, 16, 21, 26, ANALYSIS_DAY, ANALYSIS_DAY + 1].map((n) => (
+              <button key={n} onClick={() => onSkipTo(n)} disabled={n <= past.length + 1}>
+                Day {n}
+              </button>
+            ))}
+          </div>
+          <p className="dev-note">Days 6, 11, 16, 21 and 26 open weeks 2–6; day {ANALYSIS_DAY} is the Analysis Case; the day after it is free mode. Skipped days count as empty (no XP, no mastery).</p>
         </div>
       )}
 

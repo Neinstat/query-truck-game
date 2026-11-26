@@ -36,6 +36,20 @@ describe('no flickering faces (z-fighting)', () => {
     expect(describeAll(visible(findOverlaps(scene)))).toEqual([]);
   });
 
+  it('in the truck with every upgrade on', async () => {
+    const { setTruckLook } = await import('./look');
+    setTruckLook({ paint: 'lilac', awning: 'pink', machine: 2, plants: 2 });
+    try {
+      const { buildTruck } = await import('./build');
+      const { buildExterior } = await import('./exterior');
+      const scene = new THREE.Scene();
+      scene.add(buildTruck(), buildExterior());
+      expect(describeAll(visible(findOverlaps(scene)))).toEqual([]);
+    } finally {
+      setTruckLook(undefined);
+    }
+  });
+
   for (const place of PLACES) {
     it(`at ${place.id}`, async () => {
       const { buildPlace } = await import('./scenery');

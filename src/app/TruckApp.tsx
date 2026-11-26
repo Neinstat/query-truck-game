@@ -5,7 +5,8 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { endPractice, restartDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
+import { loadBonus } from './devBonus';
+import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
@@ -21,7 +22,7 @@ import { XpCounter } from './XpCounter';
 import { ShopScreen } from './ShopScreen';
 import { NEW_ITEM_KEY, useShop } from './useShop';
 import { dayCoins, itemName, shopItem, totalCoins } from '../sql-core/truck/shop';
-import { totalXp, dayXp } from '../sql-core/truck/xp';
+import { totalXp, dayXp, levelFor } from '../sql-core/truck/xp';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
@@ -111,9 +112,10 @@ export function TruckApp() {
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
   // XP: the stars of all finished days plus today's; a practice run pays nothing (7.1).
-  const xp = totalXp(past) + (practice ? 0 : dayXp(day));
+  const [bonus] = useState(loadBonus);
+  const xp = totalXp(past) + (practice ? 0 : dayXp(day)) + bonus.xp;
   // Coins: like XP, worked out from the days (practice pays nothing); the shop's purchases are saved.
-  const earned = totalCoins(past) + (practice ? 0 : dayCoins(day));
+  const earned = totalCoins(past) + (practice ? 0 : dayCoins(day)) + bonus.coins;
   const { shop, balance, look, purchase, putOn } = useShop(earned, skipTitleNextLoad);
   // The page that follows a purchase says what is new.
   const [newItem] = useState(() => {
@@ -295,12 +297,25 @@ export function TruckApp() {
               place={`${place.icon} ${place.name[lang]}`}
               t={t}
             />
-            <XpCounter xp={xp} label={t.xpLabel} paused={menuOpen} onTick={() => sound.play('xp')} />
+            <XpCounter xp={xp} label={t.levelShort(levelFor(xp).level, lang === 'id' ? levelFor(xp).title.id : levelFor(xp).title.en)} paused={menuOpen} onTick={() => sound.play('xp')} />
             <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} paused={menuOpen} onTick={() => sound.play('xp')} />
             {newItem && (
               <div className="truck-toast" role="status">
                 ✨ {t.shopNew(itemName(newItem, lang))}
               </div>
+            )}
+            {canDev && !devOpen && (
+              <button
+                className="hud-dev"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setDevOpen(true);
+                  bridge.emit('dev', { cmd: 'panel', open: true });
+                }}
+                title="Developer tools (F2)"
+              >
+                🛠 Dev
+              </button>
             )}
             <button
               className="hud-menu"
@@ -394,6 +409,7 @@ export function TruckApp() {
             onRestart={() => restartDay(day)}
             onNextDay={() => startNextDay(past, day)}
             onNextWeek={() => startNextWeek(past, day)}
+            onSkipTo={(n) => skipToDay(past, day, n)}
             onClose={() => {
               setDevOpen(false);
               bridge.emit('dev', { cmd: 'panel', open: false });
@@ -448,7 +464,7 @@ export function TruckApp() {
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
         )}
-        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
+        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
           <TouchControls bridge={bridge} t={t} canvasParent={parentRef.current} onLens={() => setLens((on) => !on)} />
         )}

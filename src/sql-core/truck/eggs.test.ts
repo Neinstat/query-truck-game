@@ -13,6 +13,8 @@ describe('easter eggs', () => {
     expect(eggForQuery('drop   table menu_items;')).toBe('drop');
     expect(eggForQuery('SELECT 42;')).toBe('answer');
     expect(eggForQuery('select 42 as answer')).toBe('answer');
+    expect(eggForQuery('select * from coffee;')).toBe('coffee');
+    expect(eggForQuery("SELECT 'Hello, world';")).toBe('hello');
     expect(eggForQuery('SELECT * FROM menu_items;')).toBeNull();
     expect(eggForQuery('SELECT 421;')).toBeNull();
   });

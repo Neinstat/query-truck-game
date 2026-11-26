@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import type { UiText } from '../i18n';
 import type { Lang } from '../sql-core/feedback';
 import { BADGES, badgeHow, badgeName, earnedBadges, streak, type BadgeInput } from '../sql-core/truck/badges';
+import { levelFor } from '../sql-core/truck/xp';
 import { EGGS, eggHint, eggText, eggTitle } from '../sql-core/truck/eggs';
 
 /**
  * The badge page (7.3), opened from the pause menu: badges earned and still to earn, the day
  * streak, and the easter eggs (found ones show their note; the rest show a hint).
  */
-export function BadgesScreen({ input, lang, t, onClose }: { input: BadgeInput; lang: Lang; t: UiText; onClose: () => void }) {
+export function BadgesScreen({ input, xp, lang, t, onClose }: { input: BadgeInput; xp: number; lang: Lang; t: UiText; onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -21,11 +22,13 @@ export function BadgesScreen({ input, lang, t, onClose }: { input: BadgeInput; l
   }, [onClose]);
   const earned = new Set(earnedBadges(input));
   const run = streak(input.past);
+  const lv = levelFor(xp);
   return (
     <div className="menu-screen" role="dialog" aria-label={t.badgesTitle}>
       <div className="title-card shop-card">
         <h2 className="pause-title">{t.badgesTitle}</h2>
         <p className="pause-hint">{t.badgesIntro}</p>
+        <p className="shop-balance">{t.levelLine(lv.level, lang === 'id' ? lv.title.id : lv.title.en, xp, lv.next ? (lang === 'id' ? lv.next.id : lv.next.en) : null, lv.next ? lv.span - lv.into : 0)}</p>
         <p className="shop-balance">{run > 0 ? t.badgesStreak(run) : t.badgesNoStreak}</p>
         <section className="shop-slot">
           <h3>{t.badgesEarned(earned.size, BADGES.length)}</h3>
