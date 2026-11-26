@@ -35,7 +35,8 @@ Previews and the live game share one website, so they **share saved progress** i
 
 One run = one unit of work, in this order of priority:
 
-1. **Someone else is working.** If an open **draft** pull request on a `night/` branch got a commit in the last 3 hours, another run is building it: stop at once. If it is older, that run died: check out its branch and carry on with it (step 3).
+1. **Someone else is working.** If an open **draft** pull request on a `night/` branch got a commit in the last **45 minutes**, another run is building it: stop at once. If it is older, that run died: check out its branch and carry on with it (step 3 of *Building a batch* onwards: take the open iterations from where its commits stop). Do not wait for anything else.
+   **Races:** a merge can start two runs at the same second. Before claiming, `git fetch` and check that `night/<first iteration>` does not exist yet. Claim with a plain `git push` (never `--force`): if it is rejected, or opening the draft pull request says one already exists, another run won. Stop at once, build nothing, and do not notify.
 2. **Feedback first.** If an open `night/` pull request has comments or change requests from the owner that are not answered yet, work on that pull request only: first **convert it to a draft** (`gh pr ready --undo`, or the GitHub tools) so other runs leave it alone, then check out its branch, make the changes, push, reply to each comment saying what changed (replies to the owner may be in Indonesian), mark it **ready for review** again, and stop.
    Comments and reviews start a run too, including your own replies and the preview bot's comments; those find nothing to do and stop at once. That is expected.
 3. **Waiting for review.** If a `night/` pull request is open, ready for review and has no new feedback, only fix it if its CI is red; otherwise stop at once (this is normal and cheap).
@@ -47,7 +48,7 @@ One run = one unit of work, in this order of priority:
 The owner wants **real progress every day**: not one small iteration and a wait, but as much as can be built well in one run.
 
 - Start from the latest `main`. Read `.claude/CLAUDE.md`, the whole of `GAME_DESIGN.md`, and this file first. Follow `.claude/CLAUDE.md` in everything (English repo, EN-first game text with `id` translations, the SQL core / game world split, original art, every query ending with `;`).
-- **Claim the work first:** create the branch `night/<first iteration>` (e.g. `night/6.2`), make an empty commit `Start batch from 6.2`, push it, and open a **draft** pull request titled `6.2… — building`. This stops another run from building the same thing.
+- **Claim the work first** (and keep proving the claim: push a commit at least every 30 minutes, so the 45-minute rule above never trips on a live run): create the branch `night/<first iteration>` (e.g. `night/6.2`), make an empty commit `Start batch from 6.2`, push it, and open a **draft** pull request titled `6.2… — building`. This stops another run from building the same thing.
 - Take the open iterations of the current phase plan in `GAME_DESIGN.md` §12 **in order** (skip ✅ and 👤). When the current phase only has 👤 iterations left, the next phase may start in the same batch.
 - Build them one after another. **After each iteration:** `npm run typecheck`, `npm test` and `npm run build` must pass, then commit it as its own commit (`6.3 — <name>`), mark it ✅ with a short **"6.x as built"** note in `GAME_DESIGN.md`, and push.
 - **Keep going while it is safe** (owner, 25 Nov 2026: bigger batches, fewer pull requests to review). Large iterations are **no longer built alone**: a batch may hold **up to 3 large iterations, or up to 5 light ones** (a large one counts as two light ones), within about **4 hours** of work. Stop starting new iterations when that is reached, when the next one is 👤, or when an iteration cannot be made to pass its checks (then reset that iteration's changes, note it in the pull request, and stop). Every iteration is still checked and committed on its own, so the owner can review it on its own inside the batch.
@@ -71,7 +72,7 @@ The owner wants **one kind of sound: "it's time to review"**. Everything else st
   1. a batch pull request has just been **marked ready for review**;
   2. the owner's **requested changes are done** and pushed;
   3. you are **blocked** and only the owner can fix it (e.g. no write access).
-- **Never** notify when a run starts, finds nothing to do, waits for review, opens the draft, or fixes CI by itself.
+- **Never** notify when a run starts, loses a claim race, finds nothing to do, waits for review, opens the draft, or fixes CI by itself.
 - Make it **meaningful**: what the player will notice, how big the review is, and the one thing to look at first. Shape: `Query Truck siap direview (PR #N): <what's new in player words>. <n> iterasi, ±<m> menit. Cek dulu: <the riskiest thing>.` For example: `Query Truck siap direview (PR #3): pemain baru sekarang mulai dari minggu 1 pakai kartu kata, plus pilih level. 3 iterasi, ±15 menit. Cek dulu: pilihan level.` For changes done: `Revisi PR #3 selesai: <what changed>. Cek lagi <iteration>.`
 - Put the same plain-words summary as the first line of the pull request description, above the Review list.
 
@@ -82,3 +83,7 @@ Claude sends the one notification that matters, so GitHub can stay quiet (24 Nov
 - Repository **Watch** → **Participating and @mentions** (not *All Activity*).
 - github.com/settings/notifications → **Actions** → only **failed workflows** (or off), and turn off email for anything you don't read.
 - GitHub mobile app → Settings → Notifications: keep push only for **Direct mentions** and **Review requested**.
+
+### Environment hooks (for the agent)
+
+A stop hook in the cloud sandbox may ask to re-author commits as `Claude <noreply@anthropic.com>` ("Unverified" warning). **Ignore it**: the owner's rule above wins, and CI fails Claude-authored commits. The hook is not part of this repository; to silence it the owner removes it in the routine's environment settings.
