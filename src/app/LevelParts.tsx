@@ -1,5 +1,8 @@
 import type { Level } from '../sql-core/levels';
+import { useEffect, useState } from 'react';
+import type { CafeDatabase, QueryResult } from '../sql-core/db';
 import type { UiText } from '../i18n';
+import { ResultTable } from '../console/ResultTable';
 
 /* Pieces of a level shown in the game world's overlays. */
 
@@ -21,7 +24,23 @@ export function Hints({ hints, used, onReveal, t }: { hints: string[]; used: num
   );
 }
 
-export function Lesson({ lesson }: { lesson: NonNullable<Level['lesson']> }) {
+/** How many rows of the example's result a lesson card shows. */
+const LESSON_ROWS = 4;
+
+export function Lesson({ lesson, db, t }: { lesson: NonNullable<Level['lesson']>; db?: CafeDatabase | null; station?: Level['station']; t: UiText }) {
+  const [result, setResult] = useState<QueryResult | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setResult(null);
+    if (db && lesson.example) {
+      db.run(lesson.example)
+        .then((r) => alive && setResult(r))
+        .catch(() => undefined);
+    }
+    return () => {
+      alive = false;
+    };
+  }, [db, lesson.example]);
   return (
     <section className="lesson">
       <h3 className="lesson-title">📘 {lesson.title}</h3>
@@ -29,6 +48,12 @@ export function Lesson({ lesson }: { lesson: NonNullable<Level['lesson']> }) {
         <p key={i}>{p}</p>
       ))}
       {lesson.example && <pre className="lesson-example">{lesson.example}</pre>}
+      {result?.ok && (
+        <div className="lesson-result">
+          <p className="lesson-result-label">{t.lessonResult}</p>
+          <ResultTable columns={result.columns} rows={result.rows.slice(0, LESSON_ROWS)} rowsLabel={() => t.lessonRowsOf(Math.min(LESSON_ROWS, result.rows.length), result.rows.length)} />
+        </div>
+      )}
     </section>
   );
 }

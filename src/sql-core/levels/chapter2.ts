@@ -148,7 +148,7 @@ export const chapter2: Chapter = {
       character: 'barista',
       station: 'menu-board',
       lesson: {
-        title: 'Sorting by a calculation — and where NULLs go',
+        title: 'Sorting by a calculation, and where NULLs go',
         body: [
           'You can sort by an alias: ORDER BY margin DESC.',
           'Watch out: when sorting DESC, PostgreSQL puts NULL values first. Leave them out with IS NOT NULL (or write NULLS LAST).',

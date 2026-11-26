@@ -3967,3 +3967,13 @@ a.menu-button { text-align: center; text-decoration: none; }
 .block[draggable='true'] {
   cursor: grab;
 }
+
+.lesson-result {
+  margin-top: 10px;
+}
+
+.lesson-result-label {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

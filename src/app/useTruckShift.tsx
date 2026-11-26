@@ -421,6 +421,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
         doneLabel={t.truckServe}
         onClose={closeOrder}
         lessonOpen={newConcept}
+        lessonHidden={!newConcept}
         note={difficulty !== 'grow' || stage === 'keyword' ? undefined : t.inputStageNote[stage]}
       />
     ) : null;

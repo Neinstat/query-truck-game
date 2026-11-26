@@ -61,7 +61,7 @@ export const chapter1: Chapter = {
         title: 'Text needs quotes',
         body: [
           "Numbers are written as they are, but text values go inside single quotes: 'coffee'.",
-          "Text must match exactly — 'Coffee' with a capital C is a different value.",
+          "Text must match exactly, 'Coffee' with a capital C is a different value.",
         ],
         example: "SELECT name FROM menu_items WHERE category = 'tea';",
       },
@@ -184,7 +184,7 @@ export const chapter1: Chapter = {
       lesson: {
         title: 'Empty values: IS NULL',
         body: [
-          'NULL means "unknown" — nobody filled the value in. It is not zero and not empty text.',
+          'NULL means "unknown", nobody filled the value in. It is not zero and not empty text.',
           'You cannot find it with = NULL. Use IS NULL instead (and IS NOT NULL for the opposite).',
         ],
         example: 'SELECT name FROM menu_items WHERE description IS NULL;',
@@ -219,7 +219,7 @@ export const chapter1: Chapter = {
         body: [
           'A Mini Case has no single right query. Run as many queries as you like to investigate.',
           'When a result shows something important, pin it 📌 to your notes.',
-          'Then answer the questions. Every answer needs a pinned result as proof — analysts back every conclusion with data.',
+          'Then answer the questions. Every answer needs a pinned result as proof, analysts back every conclusion with data.',
         ],
       },
       dialogue: [

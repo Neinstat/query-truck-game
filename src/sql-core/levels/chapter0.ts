@@ -19,7 +19,7 @@ export const chapter0: Chapter = {
         title: 'Tables',
         body: [
           'A database keeps information in tables, like sheets in a spreadsheet: each row is one thing (one menu item), each column is one detail about it (name, price…).',
-          'To look at a table, pick columns with SELECT and name the table with FROM. The star * means "every column". Every query ends with a semicolon ; — it tells the database "my query is finished".',
+          'To look at a table, pick columns with SELECT and name the table with FROM. The star * means "every column". Every query ends with a semicolon ;, it tells the database "my query is finished".',
         ],
         example: 'SELECT * FROM table_name;',
       },
@@ -47,7 +47,7 @@ export const chapter0: Chapter = {
         title: 'Picking a column',
         body: [
           'Instead of *, you can write the name of the column you want.',
-          'The result then has only that column — easier to read when you need just one detail.',
+          'The result then has only that column, easier to read when you need just one detail.',
         ],
         example: 'SELECT column_name FROM table_name;',
       },

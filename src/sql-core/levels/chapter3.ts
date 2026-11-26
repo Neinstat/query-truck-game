@@ -140,7 +140,7 @@ export const chapter3: Chapter = {
         title: 'Dates: DATE_TRUNC',
         body: [
           "DATE_TRUNC('month', sold_at) cuts a date and time down to the first moment of its month.",
-          'Group by it to get one row per month — the start of every trend report.',
+          'Group by it to get one row per month, the start of every trend report.',
         ],
         example: "SELECT DATE_TRUNC('day', sold_at) AS day, COUNT(*) FROM sales GROUP BY day ORDER BY day;",
       },

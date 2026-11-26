@@ -88,7 +88,7 @@ export const chapter5: Chapter = {
         title: 'The Analysis Case: drill down',
         body: [
           'A real question, no single right query. Work from the big picture down: how much? → what? → when? → why?',
-          'Pin a result for every answer. The computer sees every table — the cause may be in another room of the café.',
+          'Pin a result for every answer. The computer sees every table, the cause may be in another room of the café.',
           'Useful tools: DATE_TRUNC and EXTRACT(HOUR FROM sold_at), JOIN with menu_items, and the storeroom tables inventory and suppliers.',
         ],
       },

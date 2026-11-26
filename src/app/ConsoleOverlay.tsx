@@ -38,6 +38,8 @@ type Props = {
   speech?: { speaker: string; lines: string[] };
   /** Start with the lesson card open (a concept the player meets for the first time). */
   lessonOpen?: boolean;
+  /** A repeat of a concept already taught: no lesson pop-up and no lesson link. */
+  lessonHidden?: boolean;
   /** A short note under the task (e.g. why the player writes more of the query this time). */
   note?: string;
 };
@@ -108,12 +110,12 @@ export function ConsoleOverlay(props: Props) {
           <span className="task-label">{t.task}</span>
           <p className="task-text">{level.task}</p>
           {props.note && <p className="task-note">{props.note}</p>}
-          {level.lesson && (
+          {level.lesson && !props.lessonHidden && (
             <button className="link-button" onClick={() => setLessonOpen((o) => !o)}>
               {lessonOpen ? t.hideLesson : t.showLesson}
             </button>
           )}
-          {lessonOpen && level.lesson && <Lesson lesson={level.lesson} />}
+          {lessonOpen && !props.lessonHidden && level.lesson && <Lesson lesson={level.lesson} db={db} t={t} />}
         </div>
 
         {/* A guided case has hints in each step. */}

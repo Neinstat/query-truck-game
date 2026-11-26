@@ -118,7 +118,7 @@ export const chapter2Id: ChapterTranslation = {
     'ch2-5': {
       title: 'Penghasil Terbesar',
       lesson: {
-        title: 'Mengurutkan hasil hitungan — dan letak NULL',
+        title: 'Mengurutkan hasil hitungan, dan letak NULL',
         body: [
           'Kamu bisa mengurutkan berdasarkan alias: ORDER BY margin DESC.',
           'Hati-hati: saat mengurutkan DESC, PostgreSQL menaruh nilai NULL paling atas. Buang dengan IS NOT NULL (atau tulis NULLS LAST).',

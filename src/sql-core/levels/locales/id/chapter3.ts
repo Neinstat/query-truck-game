@@ -108,7 +108,7 @@ export const chapter3Id: ChapterTranslation = {
         title: 'Tanggal: DATE_TRUNC',
         body: [
           "DATE_TRUNC('month', sold_at) memotong tanggal dan jam menjadi awal bulannya.",
-          'Kelompokkan berdasarkan itu untuk mendapat satu baris per bulan — awal dari setiap laporan tren.',
+          'Kelompokkan berdasarkan itu untuk mendapat satu baris per bulan, awal dari setiap laporan tren.',
         ],
       },
       dialogue: [
