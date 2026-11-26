@@ -539,6 +539,8 @@ The owner's review of the game part asked for the following; all of it is to be 
 | 9.6 | **The map and the day loop:** start at home, a map with places that unlock over time, busy places pay more, the player presses *go home* to close the day, then the summary | |
 | 9.7 | **Shop as repairs:** the truck starts shabby (paper notes → tablet → computer; a worn menu board → clean → good → modern) | |
 | 9.8 | **Interior and cockpit:** more detailed interior, fridge and stock separated, the driver's seat and cockpit | |
+| 9.9 | **Lesson cards, redesigned** (owner, 26 Nov 2026): no `--` dashes in the text; every lesson shows an **example result** of its query; a **new** concept shows the lesson as a pop-up, but a **repeat** of a concept already taught hides the lesson and shows no pop-up; tips and hints made clearer and prettier for learners | A repeated concept never pops up a lesson; every lesson has an example result |
+| 9.10 | **Tables panel, tidied** (owner, 26 Nov 2026): the schema panel shows real table-like layouts with a label above explaining each type (what `integer` means…), `time without time zone` shown short (`time`) so the columns line up, wider cards and even gaps | Names, types and labels line up; every type has a plain-words label |
 
 
 ## 13. Open questions
