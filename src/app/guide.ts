@@ -168,6 +168,17 @@ export const GUIDE: readonly GuidePage[] = [
     ],
   },
   {
+    id: 'rewards',
+    icon: '🏆',
+    title: 'XP, coins & upgrades',
+    paragraphs: [
+      'Every right answer you hand over earns stars: ⭐ for a right answer, ⭐⭐ without hints, ⭐⭐⭐ without hints and without a mistake. Stars become XP, and they pay coins too. Happy customers add a tip.',
+      'XP is your level, from New Hire up to Head of Data. It shows how far you have come as a data person, and it never goes down. When a customer pays, a note floats up: for example +30 🪙 and +3 XP.',
+      'Coins are for the truck. The phone on the back counter opens the shop: upgrades make the truck look better. Spend them when you like; you cannot lose them.',
+      'Each day is one working day at one place. The calendar on the back wall lists every day: replay an old one as practice (no XP or coins) or start today again. The pinboard on the front wall shows your badges and secrets.',
+    ],
+  },
+  {
     id: 'days',
     note: { text: 'Old questions come back. That\'s not a bug — that\'s how you get good.', from: '— Mira, who had this window before you' },
     icon: '📅',

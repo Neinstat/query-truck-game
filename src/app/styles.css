@@ -3849,3 +3849,137 @@ a.menu-button { text-align: center; text-decoration: none; }
   margin-left: 0.3rem;
   font-size: 0.95rem;
 }
+
+/* Customer mood: a bigger face with a word, and a shaking bubble when they are about to leave (9.4). */
+.order-mood {
+  gap: 0.5rem;
+}
+.order-mood-face {
+  font-size: 2rem;
+  line-height: 1;
+}
+.order-mood-word {
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.order-mood-happy .order-mood-word {
+  color: #2f7d3b;
+}
+.order-mood-okay .order-mood-word {
+  color: #a8730a;
+}
+.order-mood-annoyed .order-mood-word {
+  color: #c2321a;
+}
+.order-patience {
+  height: 10px;
+}
+.order-bubble-annoyed {
+  border-color: #c2321a;
+  box-shadow: 0 0 0 3px rgba(228, 87, 61, 0.45);
+  animation: bubble-shake 0.5s ease-in-out infinite;
+}
+@keyframes bubble-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-bubble-annoyed {
+    animation: none;
+  }
+}
+
+/* What the last customer paid: floats up in the middle of the screen (9.4). */
+.reward-toast {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  transform: translateX(-50%);
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(37, 48, 79, 0.85), 0 0 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: reward-float 2.6s ease-out forwards;
+}
+.reward-toast span {
+  font-size: 2rem;
+}
+.reward-coins {
+  color: #ffd45e;
+}
+.reward-xp {
+  color: #9be1ff;
+}
+.reward-level {
+  color: #ffffff;
+  font-size: 1.4rem !important;
+}
+@keyframes reward-float {
+  0% {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  12% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reward-toast {
+    animation: none;
+  }
+}
+
+/* The first-day goal (9.3): top middle, until the first customer is served. */
+.coach {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: min(30rem, calc(100% - 22rem));
+  padding: 0.6rem 0.9rem;
+  border: 3px solid #25304f;
+  border-radius: 12px;
+  background: rgba(255, 250, 240, 0.96);
+  color: #25304f;
+  box-shadow: 4px 4px 0 #e4573d;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.coach strong {
+  font-size: 1.05rem;
+}
+.coach-where {
+  font-weight: 800;
+  color: #b4411f;
+}
+@media (max-width: 800px) {
+  .coach {
+    top: 120px;
+    width: calc(100% - 28px);
+  }
+}
