@@ -497,7 +497,6 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     order: order as TruckOrder | undefined,
     /** Where to answer the current order, as a phrase ("at the fridge"). */
     answerWhere: orderObject ? t.truckWhere[orderObject] : null,
-    orderObject: orderObject ?? null,
     /** The tables the current order needs (highlighted by the Data Lens). */
     orderTables: level ? tablesInQuery(level.solution) : [],
     db,

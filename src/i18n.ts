@@ -44,9 +44,6 @@ const en = {
   retry: 'Try again',
   truckOrder: 'Order',
   truckOrderTitle: (thing: string) => `${thing} · order`,
-  levelUp: (n: number) => `Level up! Lv ${n}`,
-  coachNext: 'Next (Enter)',
-  coachSkip: 'Skip tips',
   truckAnswerAt: (where: string) => `Answer ${where} (aim + E)`,
   truckWhere: {
     tablet: 'on the tablet',
@@ -376,9 +373,6 @@ const id: UiText = {
   retry: 'Coba lagi',
   truckOrder: 'Pesanan',
   truckOrderTitle: (thing: string) => `${thing} · pesanan`,
-  levelUp: (n: number) => `Naik level! Lv ${n}`,
-  coachNext: 'Lanjut (Enter)',
-  coachSkip: 'Lewati tips',
   truckAnswerAt: (where: string) => `Jawab ${where} (bidik + E)`,
   truckWhere: {
     tablet: 'di tablet',
