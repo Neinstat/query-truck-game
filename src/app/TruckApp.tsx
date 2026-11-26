@@ -7,6 +7,12 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { Coach } from './Coach';
+import { DatabaseMenu } from './DatabaseMenu';
+import { Objectives } from './Objectives';
+import { RewardPop } from './RewardPop';
+import { servedReward } from './objectives';
+import { coachStep, loadCoach, saveCoach, stepsDone, type CoachStepId } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
@@ -25,6 +31,7 @@ import { ShopScreen } from './ShopScreen';
 import { NEW_ITEM_KEY, useShop } from './useShop';
 import { dayCoins, itemName, shopItem, totalCoins } from '../sql-core/truck/shop';
 import { totalXp, dayXp, levelFor } from '../sql-core/truck/xp';
+import { coinsForOrder } from '../sql-core/truck/shop';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
@@ -86,6 +93,8 @@ export function TruckApp() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   /** A new player's guide and tour (9.2): they cannot be closed early, and the first day starts after them. */
   const [onboarding, setOnboarding] = useState(false);
+  /** The first-day coach (9.3): the hints already seen (null: the coach is off). */
+  const [coachSeen, setCoachSeen] = useState<CoachStepId[] | null>(loadCoach);
   /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
@@ -102,6 +111,8 @@ export function TruckApp() {
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
+  /** The Data Lens database menu (D while the lens is on). */
+  const [dbMenuOpen, setDbMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const touchMode = useMemo(isTouchOnly, []);
@@ -109,8 +120,8 @@ export function TruckApp() {
   useEffect(() => bridge.emit('touch', touchMode), [bridge, touchMode, ready]);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
-  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || dbMenuOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe, openTable } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
@@ -162,6 +173,33 @@ export function TruckApp() {
   const place = todaysPlace(dayNumber);
   useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
+  // A customer's patience runs low: a short warning sound (9.4).
+  const wasAnnoyed = useRef(false);
+  useEffect(() => {
+    if (mood === 'annoyed' && !wasAnnoyed.current && !menuOpen) sound.play('angry');
+    wasAnnoyed.current = mood === 'annoyed';
+  }, [mood, menuOpen]);
+  const coachState = { front: front !== null, consoleOpen, lens, served: day.served.length };
+  const coachDone = coachSeen === null || practice ? [] : stepsDone(coachState);
+  useEffect(() => {
+    if (coachSeen === null || practice) return;
+    const next = [...new Set([...coachSeen, ...coachDone])];
+    if (next.length === coachSeen.length) return;
+    setCoachSeen(next);
+    saveCoach(next);
+  });
+  const coachNow = coachSeen === null || practice || menuOpen ? null : coachStep(coachState, coachSeen);
+  // The lens and rewards cards go away by themselves: they never take the mouse, so there is no button.
+  useEffect(() => {
+    if ((coachNow !== 'rewards' && coachNow !== 'lens') || coachSeen === null) return;
+    const step = coachNow;
+    const timer = window.setTimeout(() => {
+      const next = [...coachSeen, step];
+      setCoachSeen(next);
+      saveCoach(next);
+    }, step === 'lens' ? 12000 : 20000);
+    return () => window.clearTimeout(timer);
+  }, [coachNow, coachSeen]);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
   /** How hard it rains (0–1), for the clock card's icon. */
   const [rain, setRain] = useState(0);
@@ -214,6 +252,8 @@ export function TruckApp() {
       // The first guide and tour are done: into the first day.
       setOnboarding(false);
       setOnboardingPending(false);
+      saveCoach([]);
+      setCoachSeen([]);
       play();
       return;
     }
@@ -250,12 +290,12 @@ export function TruckApp() {
   const wasLocked = useRef(false);
   useEffect(() => {
     // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
-    const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
+    const objectMenuOpen = shopOpen || daysOpen || badgesOpen || dbMenuOpen;
     if (mouseLossMeansPause({ wasLocked: wasLocked.current, locked, playing: screen === 'playing', consoleOpen, lens, guideOpen, dayDone, devOpen, objectMenuOpen })) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen, dbMenuOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
@@ -267,7 +307,12 @@ export function TruckApp() {
         if (screen === 'playing') bridge.emit('lock', true);
         return;
       }
-      if (difficultyOpen || shopOpen) return; // their own keys (Esc closes them)
+      if (difficultyOpen || shopOpen || dbMenuOpen) return; // their own keys (Esc closes them)
+      if (e.code === 'KeyD' && !e.repeat && lens && screen === 'playing' && !consoleOpen && !dayDone && !menuOpen && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setDbMenuOpen(true);
+        return;
+      }
       if (badgesOpen && e.key === 'Escape') {
         e.preventDefault();
         setBadgesOpen(false);
@@ -424,7 +469,8 @@ export function TruckApp() {
           >
             {mood && patienceLeft !== null && (
               <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
-                <span aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-icon" aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-word">{mood === 'annoyed' ? t.angryAlert : t.moodLabels[mood]}</span>
                 <span className="order-patience" aria-label={t.moodLabels[mood]}>
                   <span style={{ width: `${Math.round(patienceLeft * 100)}%` }} />
                 </span>
@@ -434,6 +480,21 @@ export function TruckApp() {
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>
         )}
+        {ready && !dayDone && !menuOpen && !consoleOpen && !lens && practice === null && (
+          <Objectives day={day} orders={orders} frontId={front?.orderId ?? null} lang={lang} t={t} />
+        )}
+        {ready && practice === null && (
+          <RewardPop
+            served={day.served.length}
+            reward={() => {
+              const last = day.served[day.served.length - 1];
+              return last ? servedReward(last, xp, (x) => levelFor(x).level, coinsForOrder) : null;
+            }}
+            levelTitle={lang === 'id' ? levelFor(xp).title.id : levelFor(xp).title.en}
+            text={{ xp: t.rewardXp, coins: t.rewardCoins, levelUp: t.levelUpPop }}
+          />
+        )}
+        {coachNow && <Coach step={coachNow} lang={lang} where={answerWhere ? t.truckAnswerAt(answerWhere) : null} />}
         {overlays}
         {devOpen && (
           <DevPanel
@@ -501,6 +562,20 @@ export function TruckApp() {
         )}
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => closeToTruck(() => setShopOpen(false))} />
+        )}
+        {dbMenuOpen && (
+          <DatabaseMenu
+            tables={ALL_TABLES}
+            summaries={summaries}
+            needed={orderTables}
+            t={t}
+            onOpen={(object, table) => {
+              setDbMenuOpen(false);
+              setLens(false);
+              openTable(object, table);
+            }}
+            onClose={() => closeToTruck(() => setDbMenuOpen(false))}
+          />
         )}
         {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => closeToTruck(() => setBadgesOpen(false))} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
