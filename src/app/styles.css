@@ -3948,3 +3948,22 @@ a.menu-button { text-align: center; text-decoration: none; }
 }
 .db-table:hover:not(:disabled) { background: #fff0cf; }
 .db-where { font-size: 0.8rem; opacity: 0.7; }
+/* Drag-and-drop cards (9.5): a thin gap between placed cards lights up as a drop target. */
+.block-slot {
+  display: inline-flex;
+  align-items: center;
+}
+.block-gap {
+  display: inline-block;
+  width: 0.5rem;
+  height: 2rem;
+  border-radius: 3px;
+}
+.block-gap-on {
+  width: 1.4rem;
+  background: rgba(242, 184, 75, 0.55);
+  outline: 2px dashed #f2b84b;
+}
+.block[draggable='true'] {
+  cursor: grab;
+}

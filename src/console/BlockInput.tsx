@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import type { UiText } from '../i18n';
+import { useState } from "react";
+import { dropBlock } from "./blockMoves";
+import type { UiText } from "../i18n";
 
 type Props = {
   /** Every block offered, in display order (may include distractors). */
@@ -18,24 +19,61 @@ export function BlockInput({ blocks, onChange, t }: Props) {
   // Indexes into `blocks`, in the order the player placed them.
   const [placed, setPlaced] = useState<number[]>([]);
 
+  // Drag and drop (9.5): a gap lights up while a card is dragged over it; clicking still works.
+  const [gap, setGap] = useState<number | null>(null);
+  const drop = (e: React.DragEvent, at: number) => {
+    e.preventDefault();
+    setGap(null);
+    const block = Number(e.dataTransfer.getData("text/plain"));
+    if (Number.isInteger(block) && block >= 0 && block < blocks.length)
+      update(dropBlock(placed, block, at));
+  };
+  const dragStart = (e: React.DragEvent, block: number) => {
+    e.dataTransfer.setData("text/plain", String(block));
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const gapProps = (at: number) => ({
+    className: gap === at ? "block-gap block-gap-on" : "block-gap",
+    onDragOver: (e: React.DragEvent) => {
+      e.preventDefault();
+      setGap(at);
+    },
+    onDragLeave: () => setGap((g) => (g === at ? null : g)),
+    onDrop: (e: React.DragEvent) => drop(e, at),
+  });
+
   function update(next: number[]) {
     setPlaced(next);
-    onChange(next.map((i) => blocks[i]).join(' '));
+    onChange(next.map((i) => blocks[i]).join(" "));
   }
 
   return (
     <div className="blocks">
-      <div className="block-answer" aria-label={t.blocksAnswer}>
-        {placed.length === 0 && <span className="block-placeholder">{t.blocksEmpty}</span>}
+      <div
+        className="block-answer"
+        aria-label={t.blocksAnswer}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => drop(e, placed.length)}
+      >
+        {placed.length === 0 && (
+          <span className="block-placeholder">{t.blocksEmpty}</span>
+        )}
         {placed.map((blockIndex, position) => (
-          <button
-            key={blockIndex}
-            className="block block-placed"
-            onClick={() => update(placed.filter((_, p) => p !== position))}
-          >
-            {blocks[blockIndex]}
-          </button>
+          <span key={blockIndex} className="block-slot">
+            <span {...gapProps(position)} aria-hidden="true" />
+            <button
+              className="block block-placed"
+              draggable
+              onDragStart={(e) => dragStart(e, blockIndex)}
+              onClick={() => update(placed.filter((_, p) => p !== position))}
+            >
+              {blocks[blockIndex]}
+            </button>
+          </span>
         ))}
+        {placed.length > 0 && (
+          <span {...gapProps(placed.length)} aria-hidden="true" />
+        )}
       </div>
 
       <div className="block-tray" aria-label={t.blocksTray}>
@@ -46,6 +84,8 @@ export function BlockInput({ blocks, onChange, t }: Props) {
               key={i}
               className="block"
               disabled={used}
+              draggable={!used}
+              onDragStart={(e) => dragStart(e, i)}
               onClick={() => update([...placed, i])}
             >
               {block}
