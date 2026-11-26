@@ -3884,3 +3884,46 @@ a.menu-button { text-align: center; text-decoration: none; }
 .coach-skip {
   opacity: 0.7;
 }
+
+/* Serving feel (9.4): bigger mood icon with a word, and the floating reward note. */
+.order-mood-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+.order-mood-word {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.order-mood-annoyed .order-mood-icon {
+  animation: mood-shake 0.4s ease-in-out infinite;
+}
+@keyframes mood-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.reward-note {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translateX(-50%);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(43, 29, 25, 0.92);
+  color: #ffe9a8;
+  font-weight: 700;
+  pointer-events: none;
+  animation: reward-float 3.2s ease-out forwards;
+  z-index: 6;
+}
+@keyframes reward-float {
+  0% { opacity: 0; margin-top: 1rem; }
+  12% { opacity: 1; margin-top: 0; }
+  80% { opacity: 1; }
+  100% { opacity: 0; margin-top: -2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reward-note, .order-mood-annoyed .order-mood-icon { animation-duration: 0.01s; }
+  .reward-note { animation: none; }
+}

@@ -7,6 +7,7 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { angerStarts, rewardNote, type RewardNote } from './popups';
 import { coachDone, coachFor, loadCoach, saveCoach } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
@@ -115,6 +116,24 @@ export function TruckApp() {
   const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderObject, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
+  // Serving feel (9.4): a floating note after each customer, and an alert when one turns angry.
+  const [note, setNote] = useState<RewardNote | null>(null);
+  const servedBefore = useRef<number | null>(null);
+  useEffect(() => {
+    const n = day.served.length;
+    const was = servedBefore.current;
+    servedBefore.current = n;
+    if (was === null || n <= was || practice) return;
+    setNote(rewardNote(day.served[n - 1], xp));
+    const timer = window.setTimeout(() => setNote(null), 3200);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day.served.length]);
+  const moodBefore = useRef<string | null>(null);
+  useEffect(() => {
+    if (angerStarts(moodBefore.current, mood)) sound.play('alert');
+    moodBefore.current = mood;
+  }, [mood]);
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
@@ -453,7 +472,10 @@ export function TruckApp() {
           >
             {mood && patienceLeft !== null && (
               <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
-                <span aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-icon" aria-hidden="true">
+                  {t.moods[mood]}
+                </span>
+                <span className="order-mood-word">{t.moodLabels[mood]}</span>
                 <span className="order-patience" aria-label={t.moodLabels[mood]}>
                   <span style={{ width: `${Math.round(patienceLeft * 100)}%` }} />
                 </span>
@@ -489,6 +511,12 @@ export function TruckApp() {
                 {t.coachSkip}
               </button>
             </p>
+          </div>
+        )}
+        {note && !menuOpen && (
+          <div className="reward-note" role="status" key={day.served.length}>
+            <span>+{note.coins} 🪙</span> <span>+{note.xp} XP</span>
+            {note.levelUp !== null && <strong> {t.levelUp(note.levelUp)}</strong>}
           </div>
         )}
         {overlays}
