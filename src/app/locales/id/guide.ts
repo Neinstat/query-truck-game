@@ -26,6 +26,7 @@ export const GUIDE_ID: readonly GuidePage[] = [
       { icon: '🖱', name: 'Mouse', text: 'Melihat sekeliling. Arahkan titik di tengah layar ke sebuah benda.' },
       { icon: '👆', name: 'E atau klik', text: 'Memakai benda yang ditunjuk titik itu: tablet, kulkas, pintu…' },
       { icon: '🔍', name: 'L', text: 'Menyalakan atau mematikan Data Lens.' },
+      { icon: '❗', name: 'O', text: 'Buka pesanan hari ini: siapa yang menunggu, siapa yang selesai, siapa yang pergi, dan apa yang perlu dilatih.' },
       { icon: '⏸', name: 'Esc', text: 'Menjeda permainan dan membuka menu (Data Lens, bahasa, panduan ini…). Enter untuk lanjut.' },
     ],
   },

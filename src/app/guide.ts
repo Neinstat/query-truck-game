@@ -51,6 +51,7 @@ export const GUIDE: readonly GuidePage[] = [
       { icon: '🖱', name: 'Mouse', text: 'Look around. Aim the dot in the middle at something.' },
       { icon: '👆', name: 'E or click', text: 'Use what the dot points at: the tablet, the fridge, a door…' },
       { icon: '🔍', name: 'L', text: 'Turn the Data Lens on or off.' },
+      { icon: '❗', name: 'O', text: 'Open today’s orders: who waits, who is done, who left, and what to practise.' },
       { icon: '⏸', name: 'Esc', text: 'Pause the game and open the menu (Data Lens, language, this guide…). Enter carries on.' },
     ],
   },

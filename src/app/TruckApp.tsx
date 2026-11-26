@@ -8,6 +8,8 @@ import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
 import { RewardToast } from './RewardToast';
+import { TasksScreen } from './TasksScreen';
+import { hasOpenTask, taskRows } from './tasks';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
@@ -103,6 +105,8 @@ export function TruckApp() {
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
+  /** Today's orders list (9.4b): the O key or the ❗ button. */
+  const [tasksOpen, setTasksOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const touchMode = useMemo(isTouchOnly, []);
@@ -110,7 +114,7 @@ export function TruckApp() {
   useEffect(() => bridge.emit('touch', touchMode), [bridge, touchMode, ready]);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
-  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || tasksOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
   const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
@@ -257,12 +261,12 @@ export function TruckApp() {
   const wasLocked = useRef(false);
   useEffect(() => {
     // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
-    const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
+    const objectMenuOpen = shopOpen || daysOpen || badgesOpen || tasksOpen;
     if (mouseLossMeansPause({ wasLocked: wasLocked.current, locked, playing: screen === 'playing', consoleOpen, lens, guideOpen, dayDone, devOpen, objectMenuOpen })) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen, tasksOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
@@ -275,6 +279,17 @@ export function TruckApp() {
         return;
       }
       if (difficultyOpen || shopOpen) return; // their own keys (Esc closes them)
+      if (tasksOpen && (e.key === 'Escape' || e.code === 'KeyO')) {
+        e.preventDefault();
+        setTasksOpen(false);
+        if (screen === 'playing') bridge.emit('lock', true);
+        return;
+      }
+      if (e.code === 'KeyO' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && screen === 'playing' && !menuOpen && !consoleOpen && !dayDone) {
+        e.preventDefault();
+        setTasksOpen(true);
+        return;
+      }
       if (badgesOpen && e.key === 'Escape') {
         e.preventDefault();
         setBadgesOpen(false);
@@ -348,6 +363,14 @@ export function TruckApp() {
             />
             <XpCounter xp={xp} label={t.levelShort(levelFor(xp).level, lang === 'id' ? levelFor(xp).title.id : levelFor(xp).title.en)} paused={menuOpen} onTick={() => sound.play('xp')} />
             <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} paused={menuOpen} onTick={() => sound.play('xp')} />
+            <button
+              className={`hud-tasks${hasOpenTask(taskRows(orders.map((o) => o.id), day, front ? front.orderId : null)) ? ' hud-tasks-open' : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setTasksOpen(true)}
+              title={`${t.tasksTitle} (O)`}
+            >
+              {hasOpenTask(taskRows(orders.map((o) => o.id), day, front ? front.orderId : null)) ? '❗' : '📋'} {t.tasksButton}
+            </button>
             {newItem && (
               <div className="truck-toast" role="status">
                 ✨ {t.shopNew(itemName(newItem, lang))}
@@ -517,6 +540,17 @@ export function TruckApp() {
         )}
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => closeToTruck(() => setShopOpen(false))} />
+        )}
+        {tasksOpen && (
+          <TasksScreen
+            orders={orders}
+            day={day}
+            frontId={front ? front.orderId : null}
+            answerWhere={answerWhere}
+            lang={lang}
+            t={t}
+            onClose={() => closeToTruck(() => setTasksOpen(false))}
+          />
         )}
         {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => closeToTruck(() => setBadgesOpen(false))} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (

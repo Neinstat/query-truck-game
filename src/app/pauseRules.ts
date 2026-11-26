@@ -13,7 +13,7 @@ export type MouseLossContext = {
   guideOpen: boolean;
   dayDone: boolean;
   devOpen: boolean;
-  /** The shop, the days or the badges are open (opened from the phone, calendar or pinboard). */
+  /** The shop, the days, the badges or the orders list are open (from the phone, calendar, pinboard or the O key). */
   objectMenuOpen: boolean;
 };
 
