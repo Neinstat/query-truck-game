@@ -7,6 +7,7 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { coachDone, coachFor, loadCoach, saveCoach } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
@@ -86,6 +87,8 @@ export function TruckApp() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   /** A new player's guide and tour (9.2): they cannot be closed early, and the first day starts after them. */
   const [onboarding, setOnboarding] = useState(false);
+  /** The first-day coach (9.3): the step it is at, or null when it is done or not needed. */
+  const [coachStep, setCoachStep] = useState<number | null>(loadCoach);
   /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
@@ -110,7 +113,7 @@ export function TruckApp() {
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
   const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
+  const { front, order, answerWhere, orderObject, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
@@ -185,6 +188,30 @@ export function TruckApp() {
   useEffect(() => bridge.on('lensKey', () => setLens((on) => !on)), [bridge]);
   useEffect(() => bridge.on('lensCards', setLensCards), [bridge]);
   useEffect(() => bridge.emit('lens', lens), [bridge, lens, ready]);
+  // The coach moves on by itself when the player does what it asks, and Enter moves it on otherwise.
+  const coachSteps = coachFor(lang);
+  const coachAdvance = useCallback(() => {
+    setCoachStep((s) => {
+      if (s === null) return s;
+      const next = s + 1 < coachSteps.length ? s + 1 : null;
+      saveCoach(next ?? 'done');
+      return next;
+    });
+  }, [coachSteps.length]);
+  const coachWait = coachStep === null ? null : coachSteps[coachStep].wait;
+  useEffect(() => {
+    if (coachWait === null || menuOpen) return;
+    const facts = { customer: Boolean(front && order), aimedAtAnswer: aimed !== null && aimed === orderObject, consoleOpen, lens };
+    if (coachDone(coachWait, facts)) coachAdvance();
+  }, [coachWait, menuOpen, front, order, aimed, orderObject, consoleOpen, lens, coachAdvance]);
+  useEffect(() => {
+    if (coachWait !== 'button' || menuOpen || consoleOpen || devOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') coachAdvance();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [coachWait, menuOpen, consoleOpen, devOpen, coachAdvance]);
 
   // Into the truck (from the title, the pause menu or the guide): capture the mouse again.
   /** Close a menu opened from an object in the truck and go back to looking around. */
@@ -214,6 +241,8 @@ export function TruckApp() {
       // The first guide and tour are done: into the first day.
       setOnboarding(false);
       setOnboardingPending(false);
+      saveCoach('start');
+      setCoachStep(0);
       play();
       return;
     }
@@ -432,6 +461,34 @@ export function TruckApp() {
             )}
             <p className="order-bubble-text">{orderLine(order, lang)}</p>
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
+          </div>
+        )}
+        {ready && coachStep !== null && !menuOpen && !consoleOpen && !dayDone && !lens && (
+          <div className="coach-card" role="status">
+            <p className="coach-title">
+              <span aria-hidden="true">{coachSteps[coachStep].icon}</span> {coachSteps[coachStep].title}
+              <span className="coach-count">
+                {coachStep + 1}/{coachSteps.length}
+              </span>
+            </p>
+            <p>{coachSteps[coachStep].text}</p>
+            <p className="coach-actions">
+              {coachSteps[coachStep].wait === 'button' && (
+                <button onMouseDown={(e) => e.preventDefault()} onClick={coachAdvance}>
+                  {t.coachNext}
+                </button>
+              )}
+              <button
+                className="coach-skip"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  saveCoach('done');
+                  setCoachStep(null);
+                }}
+              >
+                {t.coachSkip}
+              </button>
+            </p>
           </div>
         )}
         {overlays}
