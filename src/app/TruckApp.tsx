@@ -21,7 +21,7 @@ import { XpCounter } from './XpCounter';
 import { ShopScreen } from './ShopScreen';
 import { NEW_ITEM_KEY, useShop } from './useShop';
 import { dayCoins, itemName, shopItem, totalCoins } from '../sql-core/truck/shop';
-import { totalXp, dayXp } from '../sql-core/truck/xp';
+import { totalXp, dayXp, levelFor } from '../sql-core/truck/xp';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
@@ -295,7 +295,7 @@ export function TruckApp() {
               place={`${place.icon} ${place.name[lang]}`}
               t={t}
             />
-            <XpCounter xp={xp} label={t.xpLabel} paused={menuOpen} onTick={() => sound.play('xp')} />
+            <XpCounter xp={xp} label={t.levelShort(levelFor(xp).level, lang === 'id' ? levelFor(xp).title.id : levelFor(xp).title.en)} paused={menuOpen} onTick={() => sound.play('xp')} />
             <XpCounter xp={balance} label={t.coinsLabel} icon="🪙" slot={1} paused={menuOpen} onTick={() => sound.play('xp')} />
             {newItem && (
               <div className="truck-toast" role="status">
@@ -448,7 +448,7 @@ export function TruckApp() {
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
         )}
-        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
+        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
           <TouchControls bridge={bridge} t={t} canvasParent={parentRef.current} onLens={() => setLens((on) => !on)} />
         )}

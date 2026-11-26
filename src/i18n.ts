@@ -151,6 +151,9 @@ const en = {
   phoneAnyway: 'Got it',
   badgesButton: '🏅 Badges & secrets',
   badgesTitle: 'Badges',
+  levelShort: (n: number, title: string) => `Lv ${n} · ${title}`,
+  levelLine: (n: number, title: string, xp: number, next: string | null, left: number) =>
+    next ? `Level ${n} · ${title} · ${xp} XP — ${left} more XP to ${next}` : `Level ${n} · ${title} · ${xp} XP — the top of the ladder!`,
   badgesIntro: 'Badges are earned by playing; none of them can be lost. Easter eggs are hidden: look around.',
   badgesEarned: (n: number, total: number) => `${n} of ${total} badges`,
   badgesStreak: (n: number) => `🔥 ${n}-day streak`,
@@ -434,6 +437,9 @@ const id: UiText = {
   phoneAnyway: 'Mengerti',
   badgesButton: '🏅 Lencana & rahasia',
   badgesTitle: 'Lencana',
+  levelShort: (n: number, title: string) => `Lv ${n} · ${title}`,
+  levelLine: (n: number, title: string, xp: number, next: string | null, left: number) =>
+    next ? `Level ${n} · ${title} · ${xp} XP — ${left} XP lagi menuju ${next}` : `Level ${n} · ${title} · ${xp} XP — puncak tangga karier!`,
   badgesIntro: 'Lencana didapat dengan bermain; tidak ada yang bisa hilang. Easter egg tersembunyi: lihat-lihatlah.',
   badgesEarned: (n: number, total: number) => `${n} dari ${total} lencana`,
   badgesStreak: (n: number) => `🔥 Beruntun ${n} hari`,
