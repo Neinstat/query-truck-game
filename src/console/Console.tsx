@@ -74,7 +74,7 @@ export function Console({ db, schema, level, lang, t, onCorrect, solvedPanel }: 
 
   return (
     <div className="console">
-      <SchemaPanel tables={schema} title={t.tables} />
+      <SchemaPanel tables={schema} title={t.tables} lang={lang} columnLabel={t.columnHeader} typeLabel={t.typeHeader} />
       <section className="workspace">
         {level.input.kind === 'blocks' ? (
           <BlockInput blocks={level.input.blocks} onChange={setSql} t={t} />
