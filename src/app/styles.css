@@ -3672,3 +3672,38 @@ a.menu-button { text-align: center; text-decoration: none; }
   font: 700 12px var(--code);
   cursor: pointer;
 }
+
+/* Simple pause menu: rows of short buttons, and the controls list in Settings. */
+.pause-row {
+  display: flex;
+  gap: 0.4rem;
+}
+.pause-row .menu-button {
+  flex: 1;
+  margin: 0;
+}
+.menu-button-quiet {
+  opacity: 0.8;
+}
+.settings-controls ul {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem;
+  margin: 0.2rem 0 0.6rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  text-align: left;
+}
+.settings-controls kbd {
+  padding: 0 0.3rem;
+  border: 1.5px solid #25304f;
+  border-radius: 4px;
+  background: #fffaf0;
+  font-family: var(--code);
+  font-size: 0.75rem;
+}
+.settings-controls h3 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.9rem;
+}

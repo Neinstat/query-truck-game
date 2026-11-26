@@ -33,9 +33,12 @@ export function devAllowed(): boolean {
   if (import.meta.env.DEV) return true;
   try {
     const asked = new URLSearchParams(window.location.search).get('dev');
-    if (asked === 'off') localStorage.removeItem(DEV_KEY);
-    else if (asked !== null) localStorage.setItem(DEV_KEY, '1');
-    return localStorage.getItem(DEV_KEY) === '1';
+    // Per tab session only: a normal visit never shows the developer tools (older copies kept
+    // the flag in localStorage, so that old flag is removed here).
+    localStorage.removeItem(DEV_KEY);
+    if (asked === 'off') sessionStorage.removeItem(DEV_KEY);
+    else if (asked !== null) sessionStorage.setItem(DEV_KEY, '1');
+    return sessionStorage.getItem(DEV_KEY) === '1';
   } catch {
     return false;
   }
@@ -111,7 +114,7 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
     <aside className="dev-panel" aria-label="Developer panel">
       <header className="dev-header">
         <strong>🛠 Developer</strong>
-        <span className="dev-key">F2 / 🛠</span>
+        <span className="dev-key" title="F2 panel · F3 serve · F4 +30 min · F8 next day">F2 · F3 serve · F4 +30m · F8 next day</span>
         <button className="dev-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
@@ -203,7 +206,7 @@ export function DevPanel({ bridge, day, past, place, hasOrder, onServe, onRestar
                   className="danger"
                   onClick={() => {
                     for (const k of savedKeys()) localStorage.removeItem(k);
-                    localStorage.setItem(DEV_KEY, '1');
+                    sessionStorage.setItem(DEV_KEY, '1');
                     window.location.reload();
                   }}
                 >

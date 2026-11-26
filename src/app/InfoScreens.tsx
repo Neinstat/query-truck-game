@@ -32,6 +32,16 @@ export function SettingsScreen({ lang, setLang, t, onClose, onDifficulty, onAbou
         <h2 className="pause-title">{t.settingsTitle}</h2>
         <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
+        <section className="settings-controls" aria-label={t.controlsTitle}>
+          <h3>{t.controlsTitle}</h3>
+          <ul>
+            {t.controlsList.map(([keys, what]) => (
+              <li key={keys}>
+                <kbd>{keys}</kbd> <span>{what}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
         <label className="settings-look">
           {t.settingsLook}
           <input

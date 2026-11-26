@@ -244,6 +244,24 @@ export function TruckApp() {
         bridge.emit('dev', { cmd: 'panel', open: !devOpen });
         return;
       }
+      if (canDev && screen === 'playing' && !consoleOpen) {
+        // Developer shortcuts (only with ?dev): F3 serve the order, F4 +30 minutes, F8 next day.
+        if (e.key === 'F3') {
+          e.preventDefault();
+          devServe();
+          return;
+        }
+        if (e.key === 'F4') {
+          e.preventDefault();
+          bridge.emit('dev', { cmd: 'clock', minutes: day.clock + 30 });
+          return;
+        }
+        if (e.key === 'F8') {
+          e.preventDefault();
+          startNextDay(past, day);
+          return;
+        }
+      }
       if (e.key !== 'Escape' || e.defaultPrevented) return;
       if (devOpen) {
         setDevOpen(false);
@@ -317,14 +335,11 @@ export function TruckApp() {
                 🛠 Dev
               </button>
             )}
-            <button
-              className="hud-menu"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => setScreen('paused')}
-              title={t.pausedTitle}
-            >
-              <kbd>Esc</kbd> {t.menuLabel}
-            </button>
+            {touchMode && (
+              <button className="hud-menu" onClick={() => setScreen('paused')} title={t.pausedTitle}>
+                ☰ {t.menuLabel}
+              </button>
+            )}
           </>
         )}
 
