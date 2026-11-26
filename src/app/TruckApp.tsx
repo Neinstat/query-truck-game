@@ -8,6 +8,9 @@ import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
 import { Coach } from './Coach';
+import { Objectives } from './Objectives';
+import { RewardPop } from './RewardPop';
+import { servedReward } from './objectives';
 import { coachStep, loadCoach, saveCoach, stepsDone, type CoachStepId } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
@@ -27,6 +30,7 @@ import { ShopScreen } from './ShopScreen';
 import { NEW_ITEM_KEY, useShop } from './useShop';
 import { dayCoins, itemName, shopItem, totalCoins } from '../sql-core/truck/shop';
 import { totalXp, dayXp, levelFor } from '../sql-core/truck/xp';
+import { coinsForOrder } from '../sql-core/truck/shop';
 import { sound } from '../audio/sound';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { skipTitleNextLoad } from './useTruckShift';
@@ -166,6 +170,12 @@ export function TruckApp() {
   const place = todaysPlace(dayNumber);
   useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
+  // A customer's patience runs low: a short warning sound (9.4).
+  const wasAnnoyed = useRef(false);
+  useEffect(() => {
+    if (mood === 'annoyed' && !wasAnnoyed.current && !menuOpen) sound.play('angry');
+    wasAnnoyed.current = mood === 'annoyed';
+  }, [mood, menuOpen]);
   const coachState = { front: front !== null, consoleOpen, lens, served: day.served.length };
   const coachDone = coachSeen === null || practice ? [] : stepsDone(coachState);
   useEffect(() => {
@@ -451,7 +461,8 @@ export function TruckApp() {
           >
             {mood && patienceLeft !== null && (
               <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
-                <span aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-icon" aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-word">{mood === 'annoyed' ? t.angryAlert : t.moodLabels[mood]}</span>
                 <span className="order-patience" aria-label={t.moodLabels[mood]}>
                   <span style={{ width: `${Math.round(patienceLeft * 100)}%` }} />
                 </span>
@@ -460,6 +471,20 @@ export function TruckApp() {
             <p className="order-bubble-text">{orderLine(order, lang)}</p>
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>
+        )}
+        {ready && !dayDone && !menuOpen && !consoleOpen && !lens && practice === null && (
+          <Objectives day={day} orders={orders} frontId={front?.orderId ?? null} lang={lang} t={t} />
+        )}
+        {ready && practice === null && (
+          <RewardPop
+            served={day.served.length}
+            reward={() => {
+              const last = day.served[day.served.length - 1];
+              return last ? servedReward(last, xp, (x) => levelFor(x).level, coinsForOrder) : null;
+            }}
+            levelTitle={lang === 'id' ? levelFor(xp).title.id : levelFor(xp).title.en}
+            text={{ xp: t.rewardXp, coins: t.rewardCoins, levelUp: t.levelUpPop }}
+          />
         )}
         {coachNow && <Coach step={coachNow} lang={lang} where={answerWhere ? t.truckAnswerAt(answerWhere) : null} />}
         {overlays}
