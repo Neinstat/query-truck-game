@@ -7,6 +7,8 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { Coach } from './Coach';
+import { coachStep, loadCoach, saveCoach, stepsDone, type CoachStepId } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
@@ -86,6 +88,8 @@ export function TruckApp() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   /** A new player's guide and tour (9.2): they cannot be closed early, and the first day starts after them. */
   const [onboarding, setOnboarding] = useState(false);
+  /** The first-day coach (9.3): the hints already seen (null: the coach is off). */
+  const [coachSeen, setCoachSeen] = useState<CoachStepId[] | null>(loadCoach);
   /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
@@ -162,6 +166,27 @@ export function TruckApp() {
   const place = todaysPlace(dayNumber);
   useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
+  const coachState = { front: front !== null, consoleOpen, lens, served: day.served.length };
+  const coachDone = coachSeen === null || practice ? [] : stepsDone(coachState);
+  useEffect(() => {
+    if (coachSeen === null || practice) return;
+    const next = [...new Set([...coachSeen, ...coachDone])];
+    if (next.length === coachSeen.length) return;
+    setCoachSeen(next);
+    saveCoach(next);
+  });
+  const coachNow = coachSeen === null || practice || menuOpen ? null : coachStep(coachState, coachSeen);
+  // The lens and rewards cards go away by themselves: they never take the mouse, so there is no button.
+  useEffect(() => {
+    if ((coachNow !== 'rewards' && coachNow !== 'lens') || coachSeen === null) return;
+    const step = coachNow;
+    const timer = window.setTimeout(() => {
+      const next = [...coachSeen, step];
+      setCoachSeen(next);
+      saveCoach(next);
+    }, step === 'lens' ? 12000 : 20000);
+    return () => window.clearTimeout(timer);
+  }, [coachNow, coachSeen]);
   const [lensCards, setLensCards] = useState<LensCard[]>([]);
   /** How hard it rains (0–1), for the clock card's icon. */
   const [rain, setRain] = useState(0);
@@ -214,6 +239,8 @@ export function TruckApp() {
       // The first guide and tour are done: into the first day.
       setOnboarding(false);
       setOnboardingPending(false);
+      saveCoach([]);
+      setCoachSeen([]);
       play();
       return;
     }
@@ -434,6 +461,7 @@ export function TruckApp() {
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>
         )}
+        {coachNow && <Coach step={coachNow} lang={lang} where={answerWhere ? t.truckAnswerAt(answerWhere) : null} />}
         {overlays}
         {devOpen && (
           <DevPanel

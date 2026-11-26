@@ -3849,3 +3849,23 @@ a.menu-button { text-align: center; text-decoration: none; }
   margin-left: 0.3rem;
   font-size: 0.95rem;
 }
+
+/* The first-day coach (9.3): a hint card that never takes the mouse. */
+.coach {
+  position: absolute;
+  left: 50%;
+  top: 4.2rem;
+  transform: translateX(-50%);
+  width: min(30rem, 88%);
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #f2b84b;
+  background: rgba(43, 29, 25, 0.94);
+  color: #fff6e3;
+  pointer-events: none;
+  z-index: 5;
+}
+.coach-title { margin: 0 0 0.25rem; font-weight: 700; color: #f2b84b; }
+.coach-text, .coach-where { margin: 0.2rem 0 0; font-size: 0.92rem; line-height: 1.4; }
+.coach-where { font-weight: 700; }
+.coach-points { margin: 0.4rem 0 0; padding-left: 1.1rem; font-size: 0.9rem; line-height: 1.45; }
