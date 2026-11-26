@@ -32,6 +32,7 @@ export type SoundEffect =
   | 'open'
   | 'close'
   | 'gaveUp'
+  | 'angry'
   | 'lesson'
   | 'lens'
   | 'dayEnd'
@@ -291,6 +292,11 @@ class SoundEngine {
       case 'gaveUp':
         // A falling tone: someone walked away.
         this.slide(520, 260, t, 0.5, 0.1, 'triangle');
+        break;
+      case 'angry':
+        // Two sharp low buzzes: a customer is about to leave.
+        this.tone(220, t, 0.14, 0.09, 'sawtooth');
+        this.tone(196, t + 0.18, 0.2, 0.09, 'sawtooth');
         break;
       case 'lesson':
         [392, 523.25, 659.25].forEach((f, i) => this.tone(f, t + i * 0.1, 0.6, 0.07, 'triangle'));
