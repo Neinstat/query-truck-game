@@ -3928,3 +3928,23 @@ a.menu-button { text-align: center; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .order-mood-annoyed, .reward-pop { animation: none; }
 }
+
+/* The Data Lens database menu (9.4b). */
+.db-list { list-style: none; margin: 0.6rem 0 1rem; padding: 0; display: grid; gap: 0.4rem; }
+.db-table {
+  display: grid;
+  grid-template-columns: 9rem 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border: 2px solid #25304f;
+  border-radius: 6px;
+  background: #fffaf0;
+  color: #25304f;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.db-table:hover:not(:disabled) { background: #fff0cf; }
+.db-where { font-size: 0.8rem; opacity: 0.7; }

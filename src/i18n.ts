@@ -272,7 +272,10 @@ const en = {
   } as Record<'condition' | 'free', string>,
   lensRows: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'row' : 'rows'}`,
   lensNeeded: 'needed for this order',
-  lensClickHint: 'Aim at an object and press E to open its tables · L to close the lens',
+  lensClickHint: 'Aim at an object and press E to open its tables · D for every table · L to close the lens',
+  databaseTitle: 'Database',
+  databaseIntro: 'Every table in the truck in one list. Click one to open it where it lives.',
+  databaseColumns: (n: number) => `${n} columns`,
   lensOpenAimed: 'open these tables',
   truckThings: {
     fridge: 'Fridge & stock',
@@ -606,7 +609,10 @@ const id: UiText = {
   },
   lensRows: (n: number) => `${n.toLocaleString('id-ID')} baris`,
   lensNeeded: 'dibutuhkan pesanan ini',
-  lensClickHint: 'Bidik sebuah benda lalu tekan E untuk membuka tabelnya · L untuk menutup lensa',
+  lensClickHint: 'Bidik sebuah benda lalu tekan E untuk membuka tabelnya · D untuk semua tabel · L untuk menutup lensa',
+  databaseTitle: 'Database',
+  databaseIntro: 'Semua tabel di truk dalam satu daftar. Klik salah satu untuk membukanya di tempatnya.',
+  databaseColumns: (n: number) => `${n} kolom`,
   lensOpenAimed: 'buka tabel ini',
   truckThings: {
     fridge: 'Kulkas & stok',

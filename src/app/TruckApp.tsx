@@ -8,6 +8,7 @@ import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
 import { Coach } from './Coach';
+import { DatabaseMenu } from './DatabaseMenu';
 import { Objectives } from './Objectives';
 import { RewardPop } from './RewardPop';
 import { servedReward } from './objectives';
@@ -110,6 +111,8 @@ export function TruckApp() {
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
+  /** The Data Lens database menu (D while the lens is on). */
+  const [dbMenuOpen, setDbMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const touchMode = useMemo(isTouchOnly, []);
@@ -117,8 +120,8 @@ export function TruckApp() {
   useEffect(() => bridge.emit('touch', touchMode), [bridge, touchMode, ready]);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
-  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe } =
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || dbMenuOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe, openTable } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
@@ -287,12 +290,12 @@ export function TruckApp() {
   const wasLocked = useRef(false);
   useEffect(() => {
     // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
-    const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
+    const objectMenuOpen = shopOpen || daysOpen || badgesOpen || dbMenuOpen;
     if (mouseLossMeansPause({ wasLocked: wasLocked.current, locked, playing: screen === 'playing', consoleOpen, lens, guideOpen, dayDone, devOpen, objectMenuOpen })) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen, dbMenuOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
@@ -304,7 +307,12 @@ export function TruckApp() {
         if (screen === 'playing') bridge.emit('lock', true);
         return;
       }
-      if (difficultyOpen || shopOpen) return; // their own keys (Esc closes them)
+      if (difficultyOpen || shopOpen || dbMenuOpen) return; // their own keys (Esc closes them)
+      if (e.code === 'KeyD' && !e.repeat && lens && screen === 'playing' && !consoleOpen && !dayDone && !menuOpen && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setDbMenuOpen(true);
+        return;
+      }
       if (badgesOpen && e.key === 'Escape') {
         e.preventDefault();
         setBadgesOpen(false);
@@ -554,6 +562,20 @@ export function TruckApp() {
         )}
         {shopOpen && (
           <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => closeToTruck(() => setShopOpen(false))} />
+        )}
+        {dbMenuOpen && (
+          <DatabaseMenu
+            tables={ALL_TABLES}
+            summaries={summaries}
+            needed={orderTables}
+            t={t}
+            onOpen={(object, table) => {
+              setDbMenuOpen(false);
+              setLens(false);
+              openTable(object, table);
+            }}
+            onClose={() => closeToTruck(() => setDbMenuOpen(false))}
+          />
         )}
         {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => closeToTruck(() => setBadgesOpen(false))} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
