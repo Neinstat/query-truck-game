@@ -193,6 +193,7 @@ const en = {
   difficultyNow: 'In use now',
   difficultyCancel: 'Keep it as it is',
   difficultyButton: 'Difficulty',
+  difficultyLevels: { cards: 'EASY', fill: 'MEDIUM', write: 'HARD', grow: 'AUTO' } as Record<Difficulty, string>,
   difficulties: {
     cards: { name: 'Cards', forWho: 'For a quick, light review', benefit: 'Build the query from word blocks, like a puzzle. Fastest, with almost no typing.' },
     fill: { name: 'Fill in', forWho: 'For players who know the shape', benefit: 'The query is partly written and you fill the gaps. You practise the key parts without starting from nothing.' },
@@ -479,6 +480,7 @@ const id: UiText = {
   difficultyNow: 'Sedang dipakai',
   difficultyCancel: 'Biarkan seperti ini',
   difficultyButton: 'Tingkat kesulitan',
+  difficultyLevels: { cards: 'MUDAH', fill: 'SEDANG', write: 'SULIT', grow: 'OTOMATIS' } as Record<Difficulty, string>,
   difficulties: {
     cards: { name: 'Kartu', forWho: 'Untuk latihan cepat dan ringan', benefit: 'Susun query dari kartu kata, seperti puzzle. Paling cepat, hampir tanpa mengetik.' },
     fill: { name: 'Isi yang kosong', forWho: 'Untuk yang sudah tahu bentuknya', benefit: 'Query sudah separuh tertulis dan kamu mengisi bagian yang kosong. Melatih bagian pentingnya tanpa mulai dari nol.' },

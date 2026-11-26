@@ -79,6 +79,7 @@ export function DifficultyPicker({
               onClick={() => onChoose(d)}
               autoFocus={d === (current ?? 'cards')}
             >
+              <span className="difficulty-level">{t.difficultyLevels[d]}</span>
               <span className="difficulty-name">{t.difficulties[d].name}</span>
               <span className="difficulty-for">{t.difficulties[d].forWho}</span>
               <Preview difficulty={d} />

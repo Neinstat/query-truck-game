@@ -3707,3 +3707,20 @@ a.menu-button { text-align: center; text-decoration: none; }
   margin: 0.4rem 0 0.2rem;
   font-size: 0.9rem;
 }
+
+/* The big level label on each difficulty card, readable without the description. */
+.difficulty-level {
+  align-self: flex-start;
+  padding: 0.15rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #25304f;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.difficulty-cards .difficulty-level { background: #b8e0a8; }
+.difficulty-fill .difficulty-level { background: #f4dc8c; }
+.difficulty-write .difficulty-level { background: #f0a58c; }
+.difficulty-grow .difficulty-level { background: #a8cfe8; }

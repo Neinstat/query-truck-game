@@ -532,7 +532,8 @@ The owner's review of the game part asked for the following; all of it is to be 
 |---|---|---|
 | 9.1 ✅ | **Quick fixes:** developer tools only with `?dev` (kept per tab session, never saved for later visits), dev shortcuts (F2 panel, F3 serve, F4 +30 min, F8 next day), the on-screen *Esc Menu* button only on touch screens, a simpler pause menu (Carry on, Days · Shop · Badges, How to play · Truck tour, Settings, Title), the controls list inside Settings | Tested; checked in the browser |
 | 9.2 | **Start flow:** title menu only Start and Settings; How to play and the Truck tour are required on the first run; a longer four-chapter story (Meet Query Truck, New spot every day, You are the new hire, The Manager) with the right picture for each chapter (the Manager's cinematic shows the Manager) | A new player cannot skip the guide |
-| 9.3 | **Difficulty cards** with the label big (Easy / Medium / Hard); a tour after choosing; an interactive assistant guide (main objective, first customer, "aim at the fridge", Data Lens) and what XP, coins, levels, the shop and days are for | |
+| 9.3a ✅ | **Difficulty cards** with the label big (EASY / MEDIUM / HARD / AUTO, coloured) so the choice reads without the description | Tested |
+| 9.3 | A tour after choosing; an interactive assistant guide (main objective, first customer, "aim at the fridge", Data Lens) and what XP, coins, levels, the shop and days are for | |
 | 9.4 | **Serving feel:** customer anger alert and sound, bigger mood icons with words, an objectives list (new / ongoing / done / failed, with where it went wrong) replacing the line above the customer, one Data Lens database menu with every table | |
 | 9.5 | **Drag-and-drop SQL cards** (insert a forgotten word without starting over) | |
 | 9.6 | **The map and the day loop:** start at home, a map with places that unlock over time, busy places pay more, the player presses *go home* to close the day, then the summary | |
