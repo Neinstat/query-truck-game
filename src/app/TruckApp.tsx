@@ -7,6 +7,7 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { RewardToast } from './RewardToast';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
@@ -179,6 +180,12 @@ export function TruckApp() {
     document.documentElement.lang = lang;
   }, [lang]);
   useEffect(() => bridge.on('locked', setLocked), [bridge]);
+  // A customer is about to leave: a double beep, even while the tablet is open.
+  const lastMood = useRef<string | null>(null);
+  useEffect(() => {
+    if (mood === 'annoyed' && lastMood.current !== 'annoyed' && !menuOpen) sound.play('alert');
+    lastMood.current = mood;
+  }, [mood, menuOpen]);
   useEffect(() => bridge.on('hover', setAimed), [bridge]);
   useEffect(() => bridge.on('anchor', setAnchor), [bridge]);
   // The Data Lens: L in the game, or the button; the game dissolves the view and places the cards.
@@ -417,14 +424,15 @@ export function TruckApp() {
         )}
         {front && order && anchor && !consoleOpen && !lens && !menuOpen && view.width > 0 && (
           <div
-            className="order-bubble"
+            className={`order-bubble${mood === 'annoyed' ? ' order-bubble-annoyed' : ''}`}
             role="status"
             aria-label={t.truckOrder}
             style={bubbleStyle(anchor, view.width, view.height)}
           >
             {mood && patienceLeft !== null && (
               <p className={`order-mood order-mood-${mood}`} title={t.moodLabels[mood]}>
-                <span aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-face" aria-hidden="true">{t.moods[mood]}</span>
+                <span className="order-mood-word">{t.moodWords[mood]}</span>
                 <span className="order-patience" aria-label={t.moodLabels[mood]}>
                   <span style={{ width: `${Math.round(patienceLeft * 100)}%` }} />
                 </span>
@@ -434,7 +442,15 @@ export function TruckApp() {
             {answerWhere && <p className="order-bubble-hint">👉 {t.truckAnswerAt(answerWhere)}</p>}
           </div>
         )}
+        {ready && screen === 'playing' && !menuOpen && !consoleOpen && !practice && past.length === 0 && day.served.length === 0 && (
+          <aside className="coach" role="status">
+            <strong>🎯 {t.coachTitle}</strong>
+            <span>{front && order ? t.coachServe : t.coachWait}</span>
+            {front && order && answerWhere && <span className="coach-where">👉 {t.truckAnswerAt(answerWhere)}</span>}
+          </aside>
+        )}
         {overlays}
+        {ready && screen === 'playing' && <RewardToast xp={xp} coins={balance} paused={menuOpen || practice !== null} t={t} />}
         {devOpen && (
           <DevPanel
             bridge={bridge}

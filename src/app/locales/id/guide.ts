@@ -143,6 +143,17 @@ export const GUIDE_ID: readonly GuidePage[] = [
     ],
   },
   {
+    id: 'rewards',
+    icon: '🏆',
+    title: 'XP, koin & upgrade',
+    paragraphs: [
+      'Setiap jawaban benar yang kamu serahkan memberi bintang: ⭐ untuk jawaban benar, ⭐⭐ tanpa petunjuk, ⭐⭐⭐ tanpa petunjuk dan tanpa kesalahan. Bintang menjadi XP, dan juga membayar koin. Pelanggan yang senang menambah tip.',
+      'XP adalah levelmu, dari Karyawan Baru sampai Kepala Data. Ini menunjukkan sejauh mana kamu berkembang sebagai orang data, dan tidak pernah turun. Saat pelanggan membayar, muncul catatan melayang: misalnya +30 🪙 dan +3 XP.',
+      'Koin untuk truck. Telepon di meja belakang membuka toko: upgrade membuat truck makin bagus. Pakai kapan saja kamu mau; koin tidak bisa hilang.',
+      'Tiap hari adalah satu hari kerja di satu tempat. Kalender di dinding belakang menampilkan semua hari: ulangi hari lama sebagai latihan (tanpa XP atau koin) atau mulai hari ini lagi. Papan pin di dinding depan menampilkan badge dan rahasiamu.',
+    ],
+  },
+  {
     id: 'days',
     note: { text: 'Pertanyaan lama bakal balik lagi. Itu bukan bug — begitulah caranya jadi jago.', from: '— Mira, yang jaga jendela ini sebelum kamu' },
     icon: '📅',

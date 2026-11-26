@@ -35,7 +35,8 @@ export type SoundEffect =
   | 'lesson'
   | 'lens'
   | 'dayEnd'
-  | 'xp';
+  | 'xp'
+  | 'alert';
 
 const SETTINGS_KEY = 'query-truck.sound';
 
@@ -304,6 +305,11 @@ class SoundEngine {
         // A tiny bright pling as a star lands on the XP counter.
         this.tone(1318.5, t, 0.18, 0.07, 'sine');
         this.tone(1975.5, t + 0.05, 0.25, 0.05, 'triangle');
+        break;
+      case 'alert':
+        // Two quick, slightly sharp beeps: a customer is about to leave.
+        this.tone(880, t, 0.14, 0.09, 'square', 2400);
+        this.tone(880, t + 0.2, 0.14, 0.09, 'square', 2400);
         break;
       case 'dayEnd':
         [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, t + i * 0.12, 1.2, 0.08, 'triangle'));
