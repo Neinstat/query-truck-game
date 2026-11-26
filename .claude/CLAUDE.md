@@ -9,6 +9,6 @@ Project: **Query Truck** — a **first-person 3D** web game for learning SQL, fo
 - SQL dialect taught: PostgreSQL (in the browser via PGlite). No backend for now.
 - Architecture: the **SQL core** (`src/sql-core/`: database, answer checking, level data, orders) is separate from the **game world** (`src/game/`: Three.js, no React). The SQL core must not depend on game code; the game world and React only talk through `src/game/truck/bridge.ts`.
 - Follow the phase roadmap in `GAME_DESIGN.md` §12 — do not build next-phase features before the current phase is done, unless asked.
-- Visuals and characters must be original; third-party assets only with a clear licence, recorded with source and licence in `CREDITS.md`. Track placeholder art in `docs/ASSETS.md`.
+- Visuals and sound may come from third parties (owner, 26 Nov 2026: be practical, don't let originality slow the work down) as long as the licence allows free use in a free, non-commercial game (CC0, CC-BY, CC-BY-SA, CC-BY-NC, OFL, MIT…). Always record the asset in `CREDITS.md` (name, author, source link, licence) in the same commit that adds it, and never use an asset with no licence or an unclear one. Track placeholder art in `docs/ASSETS.md`.
 - Work in small iterations: one feature → check in the browser → commit.
 - Git: **never add a `Co-Authored-By` line or any Claude attribution** to commit messages or PR descriptions.

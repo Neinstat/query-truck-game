@@ -6,6 +6,7 @@ import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
+import { mouseLossMeansPause } from './pauseRules';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
@@ -86,7 +87,7 @@ export function TruckApp() {
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
   const [dataReady, setDataReady] = useState(false);
-  /** The developer panel (F2): the game keeps running, with the mouse free for the panel. */
+  /** The developer panel (T): the game keeps running, with the mouse free for the panel. */
   const [devOpen, setDevOpen] = useState(false);
   const canDev = useMemo(() => devAllowed(), []);
   /** The week card of a new week's first morning: shown once, time stands still while it is up. */
@@ -183,6 +184,11 @@ export function TruckApp() {
   useEffect(() => bridge.emit('lens', lens), [bridge, lens, ready]);
 
   // Into the truck (from the title, the pause menu or the guide): capture the mouse again.
+  /** Close a menu opened from an object in the truck and go back to looking around. */
+  const closeToTruck = (close: () => void) => {
+    close();
+    if (screen === 'playing') bridge.emit('lock', true);
+  };
   const play = () => {
     setScreen('playing');
     bridge.emit('lock', true);
@@ -213,15 +219,28 @@ export function TruckApp() {
   // the next key or click (TruckGame), so closing anything goes straight back to first person.
   // The guide book on the back counter opens the guide.
   useEffect(() => bridge.on('use', (id) => id === 'guide-book' && setGuideOpen(true)), [bridge]);
+  // The phone (shop), the wall calendar (days) and the pinboard (badges): menus that used to sit
+  // in the pause menu now live on objects in the truck.
+  useEffect(
+    () =>
+      bridge.on('use', (id) => {
+        if (id === 'phone') setShopOpen(true);
+        else if (id === 'calendar') setDaysOpen(true);
+        else if (id === 'badge-board') setBadgesOpen(true);
+      }),
+    [bridge],
+  );
   // Esc frees the mouse (the browser does that itself): that opens the pause menu, unless a
   // console, the Data Lens or the guide took the mouse.
   const wasLocked = useRef(false);
   useEffect(() => {
-    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone && !devOpen) {
+    // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
+    const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
+    if (mouseLossMeansPause({ wasLocked: wasLocked.current, locked, playing: screen === 'playing', consoleOpen, lens, guideOpen, dayDone, devOpen, objectMenuOpen })) {
       setScreen('paused');
     }
     wasLocked.current = locked;
-  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen]);
+  }, [locked, screen, consoleOpen, lens, guideOpen, dayDone, devOpen, shopOpen, daysOpen, badgesOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // In the pause menu, Enter or Esc carries on (after Esc the browser wants one click before
@@ -230,15 +249,22 @@ export function TruckApp() {
       if (e.key === 'Escape' && daysOpen) {
         e.preventDefault();
         setDaysOpen(false);
+        if (screen === 'playing') bridge.emit('lock', true);
         return;
       }
       if (difficultyOpen || shopOpen) return; // their own keys (Esc closes them)
+      if (badgesOpen && e.key === 'Escape') {
+        e.preventDefault();
+        setBadgesOpen(false);
+        if (screen === 'playing') bridge.emit('lock', true);
+        return;
+      }
       if ((e.key === 'Enter' || (e.key === 'Escape' && !e.defaultPrevented)) && screen === 'paused' && !guideOpen && !daysOpen && tourStep === null) {
         e.preventDefault();
         play();
         return;
       }
-      if (canDev && (e.key === 'F2' || e.code === 'Backquote') && screen === 'playing') {
+      if (canDev && e.code === 'KeyT' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && screen === 'playing' && !consoleOpen) {
         e.preventDefault();
         setDevOpen(!devOpen);
         bridge.emit('dev', { cmd: 'panel', open: !devOpen });
@@ -312,18 +338,13 @@ export function TruckApp() {
                   setDevOpen(true);
                   bridge.emit('dev', { cmd: 'panel', open: true });
                 }}
-                title="Developer tools (F2)"
+                title="Developer tools (T)"
               >
                 🛠 Dev
               </button>
             )}
-            <button
-              className="hud-menu"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => setScreen('paused')}
-              title={t.pausedTitle}
-            >
-              <kbd>Esc</kbd> {t.menuLabel}
+            <button className="hud-menu" onMouseDown={(e) => e.preventDefault()} onClick={() => setScreen('paused')} title={t.pausedTitle}>
+              ☰ {t.menuLabel}
             </button>
           </>
         )}
@@ -440,9 +461,6 @@ export function TruckApp() {
             onResume={play}
             onGuide={() => setGuideOpen(true)}
             onTour={startTour}
-            onDays={() => setDaysOpen(true)}
-            onShop={() => setShopOpen(true)}
-            onBadges={() => setBadgesOpen(true)}
             onSettings={() => setSettingsOpen(true)}
             onTitle={() => setScreen('title')}
             lang={lang}
@@ -462,9 +480,9 @@ export function TruckApp() {
           />
         )}
         {shopOpen && (
-          <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => setShopOpen(false)} />
+          <ShopScreen shop={shop} balance={balance} lang={lang} t={t} onBuy={purchase} onEquip={putOn} onClose={() => closeToTruck(() => setShopOpen(false))} />
         )}
-        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => setBadgesOpen(false)} />}
+        {badgesOpen && <BadgesScreen input={{ past, shop, eggs }} xp={xp} lang={lang} t={t} onClose={() => closeToTruck(() => setBadgesOpen(false))} />}
         {touchMode && screen === 'playing' && !menuOpen && !consoleOpen && !devOpen && (
           <TouchControls bridge={bridge} t={t} canvasParent={parentRef.current} onLens={() => setLens((on) => !on)} />
         )}
@@ -500,7 +518,7 @@ export function TruckApp() {
             onRestartToday={() => restartDay(day)}
             onPractise={(from, mode) => startPractice(past, today, from, mode)}
             onEndPractice={endPractice}
-            onClose={() => setDaysOpen(false)}
+            onClose={() => closeToTruck(() => setDaysOpen(false))}
           />
         )}
         {tourStep !== null && (

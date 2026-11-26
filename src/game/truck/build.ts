@@ -280,6 +280,36 @@ export function buildTruck(): THREE.Group {
   g.add(book);
   g.add(guideSign(bx, gb.max.y - 0.06, gb.max.z - 0.02));
 
+  // The desk phone: a red body, a handset on top and a keypad.
+  const ph = LAYOUT.phone;
+  const phone = new THREE.Group();
+  phone.position.set((ph.min.x + ph.max.x) / 2, ph.min.y, (ph.min.z + ph.max.z) / 2);
+  phone.rotation.y = -0.2;
+  block(phone, 'red', [-0.15, 0, -0.11, 0.15, 0.06, 0.11]);
+  block(phone, 'ink', [-0.17, 0.06, -0.04, 0.17, 0.095, 0.04]);
+  for (const x of [-0.17, 0.17]) block(phone, 'ink', [x - 0.03, 0.06, -0.05, x + 0.03, 0.12, 0.05]);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) block(phone, 'paper', [-0.07 + c * 0.05, 0.06, -0.09 + r * 0.045, -0.04 + c * 0.05, 0.068, -0.056 + r * 0.045]);
+  g.add(phone);
+
+  // The wall calendar: a white sheet with a red header and a grid of days.
+  const cl = LAYOUT.calendar;
+  const calendar = new THREE.Group();
+  calendar.position.set((cl.min.x + cl.max.x) / 2, (cl.min.y + cl.max.y) / 2, cl.min.z - 0.01);
+  block(calendar, 'white', [-0.26, -0.34, -0.012, 0.26, 0.34, 0.004]);
+  block(calendar, 'red', [-0.25, 0.2, -0.016, 0.25, 0.33, 0.002]);
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) block(calendar, 'inkSoft', [-0.2 + c * 0.082, -0.27 + r * 0.1, -0.016, -0.14 + c * 0.082, -0.2 + r * 0.1, -0.012]);
+  g.add(calendar);
+
+  // The pinboard: cork with a wooden frame and a few pinned badges.
+  const bb = LAYOUT.badgeBoard;
+  const board = new THREE.Group();
+  board.position.set((bb.min.x + bb.max.x) / 2, (bb.min.y + bb.max.y) / 2, bb.max.z + 0.01);
+  block(board, 'woodDark', [-0.45, -0.35, -0.02, 0.45, 0.35, 0.02]);
+  block(board, 'wood', [-0.41, -0.31, 0.015, 0.41, 0.31, 0.03]);
+  const pins: [number, number, Ink][] = [[-0.25, 0.1, 'red'], [0, 0.12, 'teal'], [0.25, 0.08, 'red'], [-0.12, -0.12, 'teal'], [0.15, -0.14, 'white']];
+  for (const [x, y, ink] of pins) block(board, ink, [x - 0.08, y - 0.08, 0.03, x + 0.08, y + 0.08, 0.045]);
+  g.add(board);
+
   // A little retro radio: a teal body, a speaker grille, a tuning dial, a handle and an aerial.
   const rd = LAYOUT.radio;
   const radio = new THREE.Group();

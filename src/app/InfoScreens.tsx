@@ -28,10 +28,22 @@ export function SettingsScreen({ lang, setLang, t, onClose, onDifficulty, onAbou
   const [confirm, setConfirm] = useState(false);
   return (
     <div className="menu-screen" role="dialog" aria-label={t.settingsTitle}>
-      <div className="title-card">
+      <div className="title-card settings-card">
         <h2 className="pause-title">{t.settingsTitle}</h2>
-        <SoundControl t={t} />
-        <LangSwitch lang={lang} setLang={setLang} t={t} />
+        <div className="settings-top">
+          <SoundControl t={t} />
+          <LangSwitch lang={lang} setLang={setLang} t={t} />
+        </div>
+        <section className="settings-controls" aria-label={t.controlsTitle}>
+          <h3>{t.controlsTitle}</h3>
+          <ul>
+            {t.controlsList.map(([keys, what]) => (
+              <li key={keys}>
+                <kbd>{keys}</kbd> <span>{what}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
         <label className="settings-look">
           {t.settingsLook}
           <input

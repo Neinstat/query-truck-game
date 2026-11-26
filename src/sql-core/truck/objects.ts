@@ -5,9 +5,9 @@
  */
 import type { StationId } from '../stations';
 
-export type TruckObjectId = 'tablet' | 'fridge' | 'menu-board' | 'recipe-shelf' | 'back-door' | 'guide-book' | 'radio';
+export type TruckObjectId = 'tablet' | 'fridge' | 'menu-board' | 'recipe-shelf' | 'back-door' | 'guide-book' | 'radio' | 'phone' | 'calendar' | 'badge-board';
 
-export const TRUCK_OBJECTS: readonly TruckObjectId[] = ['tablet', 'fridge', 'menu-board', 'recipe-shelf', 'back-door', 'guide-book', 'radio'];
+export const TRUCK_OBJECTS: readonly TruckObjectId[] = ['tablet', 'fridge', 'menu-board', 'recipe-shelf', 'back-door', 'guide-book', 'radio', 'phone', 'calendar', 'badge-board'];
 
 /** The tables an object shows when the player looks around with it (null: nothing to query). */
 export const OBJECT_STATION: Record<TruckObjectId, StationId | null> = {
@@ -24,6 +24,10 @@ export const OBJECT_STATION: Record<TruckObjectId, StationId | null> = {
   'guide-book': null,
   // The radio on the back counter: no data, it changes the music.
   radio: null,
+  // The phone (truck shop), the wall calendar (days) and the pinboard (badges): menus, no data.
+  phone: null,
+  calendar: null,
+  'badge-board': null,
 };
 
 /** Where an order is answered: the object whose tables the order's level needs. */
