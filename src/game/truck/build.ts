@@ -62,6 +62,20 @@ function espressoMachine(g: THREE.Group, c: Box3): void {
   }
 }
 
+/** Herb pots on the back counter (7.2b): one at the first tier, two at the second. */
+function plants(g: THREE.Group): void {
+  const tier = truckLook().plants;
+  if (tier === 0) return;
+  const pots: [number, number][] = tier === 1 ? [[0.9, HZ - 0.25]] : [[0.9, HZ - 0.25], [1.5, HZ - 0.25]];
+  for (const [x, z] of pots) {
+    block(g, 'redDark', [x - 0.09, 0.95, z - 0.09, x + 0.09, 1.1, z + 0.09]);
+    block(g, 'grass', [x - 0.07, 1.1, z - 0.07, x + 0.07, 1.2, z + 0.07]);
+    block(g, 'grassDark', [x - 0.04, 1.2, z - 0.04, x + 0.04, 1.26, z + 0.04]);
+    block(g, 'grass', [x - 0.12, 1.12, z - 0.02, x - 0.07, 1.16, z + 0.02]);
+    block(g, 'grass', [x + 0.07, 1.12, z - 0.02, x + 0.12, 1.16, z + 0.02]);
+  }
+}
+
 export function buildTruck(): THREE.Group {
   const g = new THREE.Group();
   const w = LAYOUT.window;
@@ -169,6 +183,7 @@ export function buildTruck(): THREE.Group {
   block(g, 'white', [bc.min.x - 0.02, bc.max.y - 0.04, bc.min.z - 0.03, bc.max.x + 0.02, bc.max.y, bc.max.z]);
   const c = LAYOUT.coffeeMachine;
   espressoMachine(g, c);
+  plants(g);
   const m = LAYOUT.menuBoard;
   block(g, 'woodDark', [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
   block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z - 0.005]);

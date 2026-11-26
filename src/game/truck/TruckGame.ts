@@ -222,7 +222,7 @@ export class TruckGame {
       /** Make it rain today whatever the day's weather (`?rain` in the address, for testing). */
       forceRain?: boolean;
       /** What the player's upgrades make the truck look like (7.2). */
-      look?: { paint?: string; awning?: string; machine?: 0 | 1 | 2 };
+      look?: { paint?: string; awning?: string; machine?: 0 | 1 | 2; plants?: 0 | 1 | 2 };
     },
   ) {
     setTruckLook(start.look);

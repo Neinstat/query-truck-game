@@ -17,13 +17,13 @@ export const dayCoins = (log: DayLog): number =>
 
 export const totalCoins = (logs: readonly DayLog[]): number => logs.reduce((sum, log) => sum + dayCoins(log), 0);
 
-export type ShopSlot = 'paint' | 'awning' | 'machine';
-export const SHOP_SLOTS: readonly ShopSlot[] = ['machine', 'paint', 'awning'];
+export type ShopSlot = 'paint' | 'awning' | 'machine' | 'plants';
+export const SHOP_SLOTS: readonly ShopSlot[] = ['machine', 'paint', 'awning', 'plants'];
 
 export type ShopItem = {
   id: string;
   slot: ShopSlot;
-  /** The colour (an ink name) for paint and awning; the tier (0 old, 1 good, 2 modern) for the machine. */
+  /** The colour (an ink name) for paint and awning; the tier (0 old, 1 good, 2 modern) for the machine and the plants (0 none, 1 herbs, 2 herbs and a flower box). */
   value: string;
   price: number;
   /** A plain starting item: owned from the start, free. */
@@ -70,6 +70,15 @@ export const SHOP_ITEMS: readonly ShopItem[] = [
   { id: 'awning-pink', slot: 'awning', value: 'pink', price: 450,
     name: { en: 'Pink stripes', id: 'Garis merah muda' },
     text: { en: 'Pastel and friendly.', id: 'Pastel dan ramah.' } },
+  { id: 'plants-none', slot: 'plants', value: '0', price: 0, start: true,
+    name: { en: 'No plants', id: 'Tanpa tanaman' },
+    text: { en: 'A bare counter.', id: 'Meja yang kosong.' } },
+  { id: 'plants-herbs', slot: 'plants', value: '1', price: 200,
+    name: { en: 'Herb pots', id: 'Pot rempah' },
+    text: { en: 'Basil and mint on the back counter.', id: 'Kemangi dan mint di meja belakang.' } },
+  { id: 'plants-box', slot: 'plants', value: '2', price: 450,
+    name: { en: 'Herbs and a flower box', id: 'Rempah dan kotak bunga' },
+    text: { en: 'Plus a box of flowers on the serving window.', id: 'Plus kotak bunga di jendela pelayanan.' } },
 ];
 
 export const shopItem = (id: string): ShopItem | undefined => SHOP_ITEMS.find((i) => i.id === id);
@@ -127,9 +136,9 @@ export function equip(shop: ShopState, id: string): ShopState {
 }
 
 /** What the 3D truck shows (game/truck/look.ts reads this). */
-export type TruckLook = { paint: string; awning: string; machine: 0 | 1 | 2 };
+export type TruckLook = { paint: string; awning: string; machine: 0 | 1 | 2; plants: 0 | 1 | 2 };
 
 export function truckLook(shop: ShopState): TruckLook {
   const value = (slot: ShopSlot) => shopItem(shop.equipped[slot])!.value;
-  return { paint: value('paint'), awning: value('awning'), machine: Number(value('machine')) as 0 | 1 | 2 };
+  return { paint: value('paint'), awning: value('awning'), machine: Number(value('machine')) as 0 | 1 | 2, plants: Number(value('plants')) as 0 | 1 | 2 };
 }
