@@ -16,6 +16,24 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # The owner does not want Claude listed as a contributor on GitHub, so no commit may be
+      # authored or committed as Claude (see docs/AUTOMATION.md). Fails the check before a merge.
+      - name: No commits authored as Claude
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="origin/${{ github.base_ref }}..${{ github.event.pull_request.head.sha }}"
+          else
+            range="${{ github.event.before }}..${{ github.sha }}"
+            git cat-file -e "${{ github.event.before }}" 2>/dev/null || range="${{ github.sha }}"
+          fi
+          bad=$(git log "$range" --format='%h %an <%ae> / %cn <%ce> %s' | grep -i 'noreply@anthropic.com' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::These commits are authored or committed as Claude. Rewrite them with the owner as author (git commit --amend --reset-author, or git rebase -x 'git commit --amend --no-edit --reset-author')."
+            echo "$bad"
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 22
