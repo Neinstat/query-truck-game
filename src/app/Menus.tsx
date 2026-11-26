@@ -92,14 +92,12 @@ export function TitleScreen(props: {
   dataReady: boolean;
   dataError: string | null;
   onStart: () => void;
-  onGuide: () => void;
-  onTour: () => void;
   onSettings: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onGuide, onTour, onSettings, lang, setLang, t } = props;
+  const { dayNumber, practice, place, clock, worldReady, dataReady, dataError, onStart, onSettings, lang, setLang, t } = props;
   const ready = worldReady && dataReady;
   // The old code (7.3 easter egg): typed on the title screen.
   useEffect(() => {
@@ -134,16 +132,9 @@ export function TitleScreen(props: {
             <p>{dataError ? `${t.loadError} ${dataError}` : !worldReady ? t.loadingWorld : t.loadingData}</p>
           </div>
         )}
-        <button className="menu-button" onClick={onGuide}>
-          {t.howToPlay}
-        </button>
-        <button className="menu-button" onClick={onTour} disabled={!worldReady}>
-          {t.tourStart}
-        </button>
         <button className="menu-button" onClick={onSettings}>
           {t.settingsButton}
         </button>
-        <SoundControl t={t} />
         <LangSwitch lang={lang} setLang={setLang} t={t} />
         <button className="title-duck" onClick={() => findEgg('duck')} aria-label="🦆" title="🦆">
           🦆
@@ -213,10 +204,13 @@ export function Guide({
   onClose,
   pictures,
   onTour,
+  required = false,
 }: {
   lang: Lang;
   t: UiText;
   onClose: () => void;
+  /** A new player's first guide: no close button, no tour button, and it carries on to the tour. */
+  required?: boolean;
   /** Pictures of the truck's objects, taken in the game (object id → image URL). */
   pictures: Record<string, string>;
   /** Start the truck tour (shown on the pages that list the truck's objects). */
@@ -243,9 +237,11 @@ export function Guide({
             </span>
             {t.howToPlay}
           </h2>
-          <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
-            ✕
-          </button>
+          {!required && (
+            <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
+              ✕
+            </button>
+          )}
         </header>
         <div className="guide-body">
           <nav className="guide-tabs" aria-label={t.howToPlay}>
@@ -276,7 +272,7 @@ export function Guide({
                 <p className="guide-note-from">{page.note.from}</p>
               </aside>
             )}
-            {page.items?.some((item) => item.object) && (
+            {!required && page.items?.some((item) => item.object) && (
               <button className="menu-button menu-button-main guide-tour-button" onClick={onTour}>
                 🎥 {t.tourStart}
               </button>
@@ -301,7 +297,7 @@ export function Guide({
                 </button>
               ) : (
                 <button className="nav-button nav-button-main" onClick={onClose}>
-                  {t.guideDone} ✓
+                  {required ? t.guideThenTour : t.guideDone} ✓
                 </button>
               )}
             </footer>
@@ -361,12 +357,15 @@ export function TruckTour({
   onStep,
   onClose,
   t,
+  required = false,
 }: {
   items: GuideItem[];
   step: number;
   onStep: (step: number) => void;
   onClose: () => void;
   t: UiText;
+  /** A new player's first tour: it has to be watched to the last stop. */
+  required?: boolean;
 }) {
   const item = items[step];
   useEffect(() => {
@@ -389,9 +388,11 @@ export function TruckTour({
           <span className="tour-step">
             🎥 {t.tourTitle} · {step + 1}/{items.length}
           </span>
-          <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
-            ✕
-          </button>
+          {!required && (
+            <button className="close-button" onClick={onClose} aria-label={t.dialogueClose}>
+              ✕
+            </button>
+          )}
         </header>
         <h2 className="tour-name">{item.name}</h2>
         {item.where && <p className="guide-item-where">📍 {item.where}</p>}

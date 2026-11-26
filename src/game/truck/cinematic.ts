@@ -33,6 +33,8 @@ export const SHOTS: readonly Shot[] = [
   { name: 'cab', from: v(-8.6, 0.45, -2.4), to: v(-7.6, 0.55, -1.4), lookFrom: v(-4, 1.1, -0.4), lookTo: v(-3.6, 1.1, 0), seconds: 6 },
   // Over the roof: the giant cup, the steam and the flower box.
   { name: 'roof', from: v(3.6, 4.3, -3.6), to: v(0.6, 4.0, -3.8), lookFrom: v(-0.6, 3.0, 0), lookTo: v(-1.6, 3.0, 0), seconds: 6 },
+  // The back door opens on The Manager, waiting on the step in a suit.
+  { name: 'manager', from: v(0.5, 1.55, -0.45), to: v(1.5, 1.6, -0.3), lookFrom: v(3.4, 1.5, 0.05), lookTo: v(3.4, 1.5, 0.05), seconds: 6 },
   // Out by the seats where customers eat in, looking back at the truck.
   { name: 'seats', from: v(6, 3.6, -11), to: v(4, 3.3, -10.5), lookFrom: v(0.5, 0.8, -4.5), lookTo: v(0, 0.9, -4), seconds: 7 },
 ];

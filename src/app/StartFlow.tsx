@@ -114,7 +114,7 @@ export function DifficultyPicker({
 }
 
 /** The film shot behind each backstory page: the truck, the places, the window, the roof. */
-const BACKSTORY_SHOTS = ['truck', 'place', 'inside', 'roof'];
+const BACKSTORY_SHOTS = ['truck', 'place', 'inside', 'manager'];
 
 /** A new player's first start: a short, skippable backstory, then the difficulty choice. */
 export function StartFlow({

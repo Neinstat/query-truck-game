@@ -124,6 +124,7 @@ const en = {
   toTitle: 'Title screen',
   guidePrev: 'Back',
   guideNext: 'Next',
+  guideThenTour: 'On to the truck tour',
   guideDone: 'Got it',
   menuLabel: 'Menu',
   weekShort: (week: number, day: number, date: string) =>
@@ -182,10 +183,26 @@ const en = {
   backstoryDone: 'Choose how to play',
   backstorySkip: 'Skip the story',
   backstory: [
-    { icon: '🚚', title: 'Meet Query Truck', text: 'Query Truck is a little food truck. It sells coffee, tea, pastries and sandwiches, and everything it sells and buys is written down in a database.' },
-    { icon: '🗺️', title: 'A new spot every day', text: 'The truck never stays put. One day it is at the park, the next at the skatepark, the school, the harbour or the town square, so there are always new customers.' },
-    { icon: '🧑‍🍳', title: 'You are the new hire', text: 'You work the window. Customers tell you what they want to know, and you answer on the truck\'s tablet with SQL: the language for asking a database questions.' },
-    { icon: '🕴️', title: 'And then there is The Manager', text: 'The Manager wears a suit and is very bossy. Sometimes they knock on the back door with a business question, like "Why did sales drop?". Time to think like an analyst.' },
+    {
+      icon: '🚚',
+      title: 'Meet Query Truck',
+      text: 'This is your truck, for now. It is old and a bit worn out, because you bought it second-hand at the market in your town. But it is yours. The more you earn, the more you can fix it up and upgrade it, from the menu board to the till to the plants on the counter. Everything the truck sells and buys is written down in a database, and that is what you will learn to read with SQL.',
+    },
+    {
+      icon: '🗺️',
+      title: 'A new spot every day',
+      text: 'The truck never stays in one place. One day it parks at the park, the next at the skatepark, the school, the harbour or the town square, and every place has its own crowd and its own weather. Each morning you see where you are today. Busy places bring more customers, and more customers mean more XP and more coins for you.',
+    },
+    {
+      icon: '🧑‍🍳',
+      title: 'You are the new hire',
+      text: 'You work the serving window. Customers line up and each one asks for something: a price, a list, a total. You answer on the truck’s tablet with a SQL query. If you need to know where the data lives, switch on the Data Lens (L): it shows which table sits behind the fridge, the menu board, the recipe binders and the tablet. Do the order right and you earn XP and coins, and the customer leaves happy.',
+    },
+    {
+      icon: '🕴️',
+      title: 'And then there is The Manager',
+      text: 'The Manager owns the company, wears a suit and is very bossy. They do not care about one coffee; they care about the numbers: “How much did we make today?”, “Which day sold the most?”. Around the middle of the day they knock on the back door. You open it, look through the data with your own queries, pin 📌 the results that prove your answer, and tell them what you found. That is the job of a BI analyst, and it is what this game teaches you.',
+    },
   ] as { icon: string; title: string; text: string }[],
   difficultyTitle: 'How do you want to play?',
   difficultyIntro: 'Pick how much of each query you write. You can change it any time from the pause menu.',
@@ -435,6 +452,7 @@ const id: UiText = {
   toTitle: 'Layar judul',
   guidePrev: 'Kembali',
   guideNext: 'Lanjut',
+  guideThenTour: 'Lanjut ke tur truk',
   guideDone: 'Mengerti',
   menuLabel: 'Menu',
   weekShort: (week: number, day: number, date: string) =>
@@ -493,10 +511,26 @@ const id: UiText = {
   backstoryDone: 'Pilih cara bermain',
   backstorySkip: 'Lewati cerita',
   backstory: [
-    { icon: '🚚', title: 'Kenalan dengan Query Truck', text: 'Query Truck adalah food truck kecil. Truck ini menjual kopi, teh, kue, dan sandwich, dan semua yang dijual dan dibelinya dicatat di sebuah database.' },
-    { icon: '🗺️', title: 'Tempat baru setiap hari', text: 'Truck ini tidak pernah diam di satu tempat. Hari ini di taman, besok di skatepark, sekolah, pelabuhan, atau alun-alun kota, jadi selalu ada pelanggan baru.' },
-    { icon: '🧑‍🍳', title: 'Kamu karyawan baru', text: 'Kamu menjaga jendela pesanan. Pelanggan bilang apa yang ingin mereka ketahui, dan kamu menjawabnya di tablet truck dengan SQL: bahasa untuk bertanya kepada database.' },
-    { icon: '🕴️', title: 'Lalu ada The Manager', text: 'The Manager memakai jas dan sangat suka memerintah. Kadang dia mengetuk pintu belakang dengan pertanyaan bisnis, misalnya "Kenapa penjualan turun?". Saatnya berpikir seperti analis.' },
+    {
+      icon: '🚚',
+      title: 'Kenalan dengan Query Truck',
+      text: 'Ini truck-mu, untuk saat ini. Truck ini sudah tua dan agak usang, karena kamu membelinya bekas di pasar di kotamu. Tapi ini milikmu. Makin banyak kamu menghasilkan, makin banyak yang bisa kamu perbaiki dan upgrade, dari papan menu sampai mesin kasir dan tanaman di meja. Semua yang dijual dan dibeli truck dicatat di sebuah database, dan itulah yang akan kamu pelajari untuk dibaca dengan SQL.',
+    },
+    {
+      icon: '🗺️',
+      title: 'Tempat baru setiap hari',
+      text: 'Truck ini tidak pernah diam di satu tempat. Hari ini di taman, besok di skatepark, sekolah, pelabuhan, atau alun-alun kota, dan tiap tempat punya keramaian dan cuacanya sendiri. Setiap pagi kamu melihat hari ini kamu ada di mana. Tempat yang ramai membawa lebih banyak pelanggan, dan lebih banyak pelanggan berarti lebih banyak XP dan koin untukmu.',
+    },
+    {
+      icon: '🧑‍🍳',
+      title: 'Kamu karyawan baru',
+      text: 'Kamu menjaga jendela pesanan. Pelanggan antre dan tiap orang meminta sesuatu: sebuah harga, sebuah daftar, sebuah total. Kamu menjawabnya di tablet truck dengan query SQL. Kalau bingung data itu ada di mana, nyalakan Data Lens (L): ia menunjukkan tabel mana yang ada di balik kulkas, papan menu, rak resep, dan tablet. Kerjakan pesanan dengan benar, dapat XP dan koin, dan pelanggan pulang senang.',
+    },
+    {
+      icon: '🕴️',
+      title: 'Lalu ada The Manager',
+      text: 'The Manager pemilik perusahaan, memakai jas, dan sangat suka memerintah. Dia tidak peduli satu cangkir kopi; dia peduli angka: “Berapa pendapatan kita hari ini?”, “Hari apa yang paling laku?”. Sekitar tengah hari dia mengetuk pintu belakang. Kamu membukanya, menelusuri data dengan query-mu sendiri, menyematkan 📌 hasil yang membuktikan jawabanmu, lalu menyampaikan temuanmu. Itulah pekerjaan seorang analis BI, dan itulah yang diajarkan game ini.',
+    },
   ],
   difficultyTitle: 'Mau main dengan cara apa?',
   difficultyIntro: 'Pilih seberapa banyak query yang kamu tulis sendiri. Bisa diubah kapan saja lewat menu jeda.',
