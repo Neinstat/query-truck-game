@@ -6,6 +6,7 @@ import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
+import { mouseLossMeansPause } from './pauseRules';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
@@ -235,7 +236,7 @@ export function TruckApp() {
   useEffect(() => {
     // The phone (shop), calendar (days) and pinboard (badges) free the mouse too: that is not Esc.
     const objectMenuOpen = shopOpen || daysOpen || badgesOpen;
-    if (wasLocked.current && !locked && screen === 'playing' && !consoleOpen && !lens && !guideOpen && !dayDone && !devOpen && !objectMenuOpen) {
+    if (mouseLossMeansPause({ wasLocked: wasLocked.current, locked, playing: screen === 'playing', consoleOpen, lens, guideOpen, dayDone, devOpen, objectMenuOpen })) {
       setScreen('paused');
     }
     wasLocked.current = locked;
