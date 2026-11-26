@@ -5,7 +5,8 @@ import { TruckBridge, type LensCard } from '../game/truck/bridge';
 import { STATIONS } from '../sql-core/stations';
 import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
-import { endPractice, restartDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
+import { loadBonus } from './devBonus';
+import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
@@ -111,9 +112,10 @@ export function TruckApp() {
   const dayNumber = practice ? practice.from : past.length + 1;
   const { week, dayInWeek } = weekOfDay(dayNumber);
   // XP: the stars of all finished days plus today's; a practice run pays nothing (7.1).
-  const xp = totalXp(past) + (practice ? 0 : dayXp(day));
+  const [bonus] = useState(loadBonus);
+  const xp = totalXp(past) + (practice ? 0 : dayXp(day)) + bonus.xp;
   // Coins: like XP, worked out from the days (practice pays nothing); the shop's purchases are saved.
-  const earned = totalCoins(past) + (practice ? 0 : dayCoins(day));
+  const earned = totalCoins(past) + (practice ? 0 : dayCoins(day)) + bonus.coins;
   const { shop, balance, look, purchase, putOn } = useShop(earned, skipTitleNextLoad);
   // The page that follows a purchase says what is new.
   const [newItem] = useState(() => {
@@ -302,6 +304,19 @@ export function TruckApp() {
                 ✨ {t.shopNew(itemName(newItem, lang))}
               </div>
             )}
+            {canDev && !devOpen && (
+              <button
+                className="hud-dev"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setDevOpen(true);
+                  bridge.emit('dev', { cmd: 'panel', open: true });
+                }}
+                title="Developer tools (F2)"
+              >
+                🛠 Dev
+              </button>
+            )}
             <button
               className="hud-menu"
               onMouseDown={(e) => e.preventDefault()}
@@ -394,6 +409,7 @@ export function TruckApp() {
             onRestart={() => restartDay(day)}
             onNextDay={() => startNextDay(past, day)}
             onNextWeek={() => startNextWeek(past, day)}
+            onSkipTo={(n) => skipToDay(past, day, n)}
             onClose={() => {
               setDevOpen(false);
               bridge.emit('dev', { cmd: 'panel', open: false });
