@@ -7,6 +7,7 @@ import { DataLens, useTableSummaries } from './DataLens';
 import { placeOnScreen } from './overlayLayout';
 import { loadBonus } from './devBonus';
 import { mouseLossMeansPause } from './pauseRules';
+import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
 import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
@@ -83,6 +84,8 @@ export function TruckApp() {
   const [daysOpen, setDaysOpen] = useState(false);
   /** The truck tour: which stop the camera is at (null: no tour). */
   const [tourStep, setTourStep] = useState<number | null>(null);
+  /** A new player's guide and tour (9.2): they cannot be closed early, and the first day starts after them. */
+  const [onboarding, setOnboarding] = useState(false);
   /** Pictures of the truck's objects for the guide, taken in the game when the guide opens. */
   const [pictures, setPictures] = useState<Record<string, string>>({});
   // Time stops in the truck while a menu is open, and until the records are open.
@@ -207,7 +210,19 @@ export function TruckApp() {
   };
   const endTour = () => {
     setTourStep(null);
+    if (onboarding) {
+      // The first guide and tour are done: into the first day.
+      setOnboarding(false);
+      setOnboardingPending(false);
+      play();
+      return;
+    }
     if (screen === 'playing') bridge.emit('lock', true);
+  };
+  /** The required guide, then the required tour (a new player's first start). */
+  const beginOnboarding = () => {
+    setOnboarding(true);
+    setGuideOpen(true);
   };
   // Fresh pictures each time the guide opens (the sky changes over the day).
   useEffect(() => bridge.on('snapshots', setPictures), [bridge]);
@@ -276,6 +291,7 @@ export function TruckApp() {
         bridge.emit('dev', { cmd: 'panel', open: false });
         return;
       }
+      if (onboarding && (tourStep !== null || guideOpen)) return; // required: no leaving early
       if (tourStep !== null) endTour();
       else if (guideOpen) {
         setGuideOpen(false);
@@ -437,7 +453,7 @@ export function TruckApp() {
             }}
           />
         )}
-        {screen === 'title' && tourStep === null && !introOpen && (
+        {screen === 'title' && tourStep === null && !introOpen && !onboarding && (
           <TitleScreen
             dayNumber={dayNumber}
             practice={practice !== null}
@@ -446,9 +462,12 @@ export function TruckApp() {
             worldReady={ready}
             dataReady={dataReady}
             dataError={dbError}
-            onStart={() => (difficulty === null ? setIntroOpen(true) : play())}
-            onGuide={() => setGuideOpen(true)}
-            onTour={startTour}
+            onStart={() => {
+              const next = startAction(difficulty !== null, onboardingPending());
+              if (next === 'story') setIntroOpen(true);
+              else if (next === 'guide') beginOnboarding();
+              else play();
+            }}
             onSettings={() => setSettingsOpen(true)}
             lang={lang}
             setLang={setLang}
@@ -475,7 +494,8 @@ export function TruckApp() {
             onChoose={(d) => {
               chooseDifficulty(d);
               setIntroOpen(false);
-              play();
+              setOnboardingPending(true);
+              beginOnboarding();
             }}
           />
         )}
@@ -522,17 +542,20 @@ export function TruckApp() {
           />
         )}
         {tourStep !== null && (
-          <TruckTour items={tourItems} step={tourStep} onStep={setTourStep} onClose={endTour} t={t} />
+          <TruckTour items={tourItems} step={tourStep} onStep={setTourStep} onClose={endTour} t={t} required={onboarding} />
         )}
         {guideOpen && (
           <Guide
             lang={lang}
             t={t}
             pictures={pictures}
+            required={onboarding}
             onTour={startTour}
             onClose={() => {
               setGuideOpen(false);
-              if (screen === 'playing') bridge.emit('lock', true);
+              // A new player goes straight on to the truck tour.
+              if (onboarding) setTourStep(0);
+              else if (screen === 'playing') bridge.emit('lock', true);
             }}
           />
         )}

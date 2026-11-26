@@ -157,6 +157,8 @@ export class TruckGame {
   private keys = { forward: false, back: false, left: false, right: false };
   private dragging = false;
   private paused = false;
+  /** The title film is showing the Manager shot: the back door is open and The Manager stands on the step. */
+  private filmManager = false;
   private aimed: InteractableId | null = null;
   /** A touch screen: no mouse capture; the on-screen controls drive the view. */
   private touch = false;
@@ -776,10 +778,12 @@ export class TruckGame {
     // On a wide screen the title card covers the left third: frame the film to its right.
     this.setFilmOffset(filming && this.parent.clientWidth >= 800 ? 0.17 : 0);
     (this.veil.material as THREE.MeshBasicMaterial).opacity = 0;
+    this.filmManager = false;
     if (filming) {
       // The title film: slow shots round the world, with a fade between them (cinematic.ts).
       const pin = this.filmPin;
       const film = filmAt(pin ? pin.start + ((this.time - pin.since) % pin.seconds) : this.time);
+      this.filmManager = film.shot === 'manager';
       this.camera.position.set(film.at.x, film.at.y, film.at.z);
       this.camera.lookAt(film.look.x, film.look.y, film.look.z);
       (this.veil.material as THREE.MeshBasicMaterial).opacity = film.dark * 0.92;
@@ -810,9 +814,9 @@ export class TruckGame {
     this.lensAmount = Math.min(1, Math.max(0, this.lensAmount + (this.lensOn ? lensStep : -lensStep)));
     this.look.setLens(this.lensAmount);
     // The back door: opens for the Manager (even while time is stopped), rattles while they knock.
-    this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget ? 1 : -1) * seconds * 2.2));
+    this.doorAmount = Math.min(1, Math.max(0, this.doorAmount + (this.doorTarget || this.filmManager ? 1 : -1) * seconds * 2.2));
     this.setDoor(this.doorAmount, this.knocking && this.doorAmount === 0 ? this.walkClock : undefined);
-    this.manager.visible = this.knocking && this.doorAmount > 0.02;
+    this.manager.visible = (this.knocking || this.filmManager) && this.doorAmount > 0.02;
     // The OPEN sign turns to CLOSED at closing time.
     const open = this.clock < CLOSING;
     if (open !== this.signOpen) {
