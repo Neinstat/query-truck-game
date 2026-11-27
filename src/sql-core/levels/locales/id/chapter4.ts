@@ -35,7 +35,7 @@ export const chapter4Id: ChapterTranslation = {
         title: 'Menyimpan baris tanpa pasangan: LEFT JOIN',
         body: [
           'JOIN hanya menyimpan baris yang cocok di kedua sisi. LEFT JOIN menyimpan setiap baris tabel pertama, walau tanpa pasangan.',
-          'Kalau tidak ada yang cocok, kolom tabel kedua berisi NULL — jadi WHERE … IS NULL menemukan yang hilang.',
+          'Kalau tidak ada yang cocok, kolom tabel kedua berisi NULL, jadi WHERE … IS NULL menemukan yang hilang.',
         ],
       },
       dialogue: [

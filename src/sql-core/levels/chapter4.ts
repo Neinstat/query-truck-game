@@ -47,7 +47,7 @@ export const chapter4: Chapter = {
         title: 'Keeping rows without a match: LEFT JOIN',
         body: [
           'JOIN only keeps rows that match on both sides. LEFT JOIN keeps every row of the first table, even with no match.',
-          'Where nothing matched, the columns of the second table are NULL — so WHERE … IS NULL finds what is missing.',
+          'Where nothing matched, the columns of the second table are NULL, so WHERE … IS NULL finds what is missing.',
         ],
         example: 'SELECT m.name, r.ingredient FROM menu_items m LEFT JOIN recipes r ON r.item_id = m.item_id;',
       },

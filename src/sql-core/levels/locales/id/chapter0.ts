@@ -14,7 +14,7 @@ export const chapter0Id: ChapterTranslation = {
         title: 'Tabel',
         body: [
           'Database menyimpan informasi dalam tabel, seperti lembar di spreadsheet: tiap baris adalah satu hal (satu menu), tiap kolom adalah satu detail tentangnya (nama, harga…).',
-          'Untuk melihat tabel, pilih kolom dengan SELECT dan sebut nama tabelnya dengan FROM. Tanda bintang * artinya "semua kolom". Setiap query diakhiri titik koma ; — tanda bagi database bahwa query-mu sudah selesai.',
+          'Untuk melihat tabel, pilih kolom dengan SELECT dan sebut nama tabelnya dengan FROM. Tanda bintang * artinya "semua kolom". Setiap query diakhiri titik koma ;, tanda bagi database bahwa query-mu sudah selesai.',
         ],
       },
       dialogue: [
@@ -36,7 +36,7 @@ export const chapter0Id: ChapterTranslation = {
         title: 'Memilih satu kolom',
         body: [
           'Selain *, kamu bisa menulis nama kolom yang kamu mau.',
-          'Hasilnya hanya berisi kolom itu — lebih mudah dibaca saat kamu cuma butuh satu detail.',
+          'Hasilnya hanya berisi kolom itu, lebih mudah dibaca saat kamu cuma butuh satu detail.',
         ],
       },
       dialogue: [

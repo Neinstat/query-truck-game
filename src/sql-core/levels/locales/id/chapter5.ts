@@ -67,7 +67,7 @@ export const chapter5Id: ChapterTranslation = {
         title: 'Kasus Analisis: telusuri lebih dalam',
         body: [
           'Pertanyaan sungguhan, tanpa satu query yang benar. Bekerjalah dari gambaran besar ke bawah: berapa? → apa? → kapan? → kenapa?',
-          'Sematkan satu hasil untuk setiap jawaban. Komputer ini melihat semua tabel — penyebabnya bisa ada di ruangan lain di kafe.',
+          'Sematkan satu hasil untuk setiap jawaban. Komputer ini melihat semua tabel, penyebabnya bisa ada di ruangan lain di kafe.',
           'Alat yang berguna: DATE_TRUNC dan EXTRACT(HOUR FROM sold_at), JOIN dengan menu_items, serta tabel gudang inventory dan suppliers.',
         ],
       },

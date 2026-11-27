@@ -86,7 +86,7 @@ export function ExploreConsole({ db, station, schema, lang, t, table }: Props) {
 
   return (
     <div className="console">
-      <SchemaPanel tables={schema} title={t.tables} />
+      <SchemaPanel tables={schema} title={t.tables} lang={lang} columnLabel={t.columnHeader} typeLabel={t.typeHeader} />
       <section className="workspace">
         {schema.length > 0 && (
           <div className="explore-tables" role="group" aria-label={t.tables}>

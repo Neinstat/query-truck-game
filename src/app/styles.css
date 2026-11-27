@@ -32,7 +32,7 @@ body {
 
 .console {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -63,6 +63,51 @@ body {
   margin: 0 0 4px;
   font-family: var(--code);
   font-weight: 600;
+}
+
+.schema-table + .schema-table {
+  margin-top: 16px;
+}
+
+.schema-legend {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.schema-legend code {
+  font-family: var(--code);
+  color: var(--ink, inherit);
+}
+
+.schema-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--code);
+  font-size: 0.85rem;
+}
+
+.schema-grid th {
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding: 2px 6px 3px 0;
+}
+
+.schema-grid td {
+  padding: 3px 6px 3px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.schema-grid td.schema-type {
+  white-space: nowrap;
+  text-align: left;
 }
 
 .schema-columns {
@@ -3966,4 +4011,14 @@ a.menu-button { text-align: center; text-decoration: none; }
 }
 .block[draggable='true'] {
   cursor: grab;
+}
+
+.lesson-result {
+  margin-top: 10px;
+}
+
+.lesson-result-label {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }

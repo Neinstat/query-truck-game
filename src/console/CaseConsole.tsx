@@ -98,7 +98,7 @@ export function CaseConsole({ db, schema, level, lang, t, onSolved, solvedPanel 
 
   return (
     <div className="console">
-      <SchemaPanel tables={schema} title={t.tables} />
+      <SchemaPanel tables={schema} title={t.tables} lang={lang} columnLabel={t.columnHeader} typeLabel={t.typeHeader} />
       <section className="workspace">
         <div className="case-starters">
           <span className="case-label">{t.starters}</span>

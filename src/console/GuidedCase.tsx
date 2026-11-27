@@ -144,7 +144,7 @@ export function GuidedCase({ db, schema, level, lang, t, hintsUsed, onRevealHint
       </ol>
 
       <div className="console guided-console">
-        <SchemaPanel tables={schema} title={t.tables} />
+        <SchemaPanel tables={schema} title={t.tables} lang={lang} columnLabel={t.columnHeader} typeLabel={t.typeHeader} />
         <section className="workspace">
           <div className="guided-question">
             <p className="guided-asks">

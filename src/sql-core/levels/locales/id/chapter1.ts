@@ -45,7 +45,7 @@ export const chapter1Id: ChapterTranslation = {
         title: 'Teks butuh tanda kutip',
         body: [
           "Angka ditulis apa adanya, tapi nilai teks ditulis di dalam tanda kutip tunggal: 'coffee'.",
-          "Teks harus sama persis — 'Coffee' dengan huruf C besar adalah nilai yang berbeda.",
+          "Teks harus sama persis, 'Coffee' dengan huruf C besar adalah nilai yang berbeda.",
         ],
       },
       dialogue: [
@@ -128,7 +128,7 @@ export const chapter1Id: ChapterTranslation = {
       lesson: {
         title: 'Nilai kosong: IS NULL',
         body: [
-          'NULL artinya "tidak diketahui" — tidak ada yang mengisi nilainya. NULL bukan nol dan bukan teks kosong.',
+          'NULL artinya "tidak diketahui", tidak ada yang mengisi nilainya. NULL bukan nol dan bukan teks kosong.',
           'NULL tidak bisa dicari dengan = NULL. Pakai IS NULL (dan IS NOT NULL untuk kebalikannya).',
         ],
       },
@@ -152,7 +152,7 @@ export const chapter1Id: ChapterTranslation = {
         body: [
           'Mini Case tidak punya satu query yang benar. Jalankan query sebanyak yang kamu mau untuk menyelidiki.',
           'Kalau ada hasil yang menunjukkan hal penting, sematkan 📌 ke catatanmu.',
-          'Lalu jawab pertanyaannya. Setiap jawaban butuh hasil 📌 sebagai bukti — analis selalu mendukung kesimpulannya dengan data.',
+          'Lalu jawab pertanyaannya. Setiap jawaban butuh hasil 📌 sebagai bukti, analis selalu mendukung kesimpulannya dengan data.',
         ],
       },
       dialogue: [
