@@ -76,10 +76,19 @@ export const GUIDE: readonly GuidePage[] = [
       {
         icon: '🧊',
         object: 'fridge',
-        name: 'Fridge & stock shelves — the storeroom records',
-        where: 'Left end of the truck',
-        tables: ['inventory', 'suppliers'],
-        text: 'What was delivered each day, how much, and at what time it ran out (inventory); and which company supplies each product, when it delivers, and since when (suppliers). Answer stock and delivery questions here.',
+        name: 'Fridge — the stock records',
+        where: 'Left end of the truck, front',
+        tables: ['inventory'],
+        text: 'What was delivered each day, how much, and at what time it ran out (inventory). Answer stock questions here.',
+        example: '"Do you still have oat milk?"',
+      },
+      {
+        icon: '📦',
+        object: 'stock-shelves',
+        name: 'Stock shelves — the suppliers',
+        where: 'Left end of the truck, back',
+        tables: ['suppliers'],
+        text: 'Which company supplies each product, when it delivers, and since when (suppliers). It opens the same storeroom ledger as the fridge, so a question that joins stock and suppliers works at either.',
         example: '"Who brings your milk now, and when?"',
       },
       {

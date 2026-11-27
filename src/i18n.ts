@@ -52,6 +52,7 @@ const en = {
   truckWhere: {
     tablet: 'on the tablet',
     fridge: 'at the fridge',
+    'stock-shelves': 'at the stock shelves',
     'menu-board': 'at the menu board',
     'recipe-shelf': 'at the recipe binders',
     'back-door': 'at the back door',
@@ -292,7 +293,8 @@ const en = {
   databaseColumns: (n: number) => `${n} columns`,
   lensOpenAimed: 'open these tables',
   truckThings: {
-    fridge: 'Fridge & stock',
+    fridge: 'Fridge',
+    'stock-shelves': 'Stock shelves',
     tablet: 'Tablet',
     'menu-board': 'Menu board',
     'recipe-shelf': 'Recipe binders',
@@ -404,6 +406,7 @@ const id: UiText = {
   truckWhere: {
     tablet: 'di tablet',
     fridge: 'di kulkas',
+    'stock-shelves': 'di rak stok',
     'menu-board': 'di papan menu',
     'recipe-shelf': 'di binder resep',
     'back-door': 'di pintu belakang',
@@ -643,7 +646,8 @@ const id: UiText = {
   databaseColumns: (n: number) => `${n} kolom`,
   lensOpenAimed: 'buka tabel ini',
   truckThings: {
-    fridge: 'Kulkas & stok',
+    fridge: 'Kulkas',
+    'stock-shelves': 'Rak stok',
     tablet: 'Tablet',
     'menu-board': 'Papan menu',
     'recipe-shelf': 'Binder resep',

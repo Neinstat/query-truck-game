@@ -8,7 +8,7 @@ import type { Level } from '../sql-core/levels';
 import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { managerCaseFor, managerCaseIdFor, managerIntroFor } from '../sql-core/truck/manager';
-import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
+import { OBJECT_STATION, objectForOrder, type TruckObjectId } from '../sql-core/truck/objects';
 import { CLOSING, missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
 import type { PlaceId } from '../sql-core/truck/places';
 import { starsFor } from './rewards';
@@ -265,7 +265,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     [order, lang, stage, difficulty, masteryBefore],
   );
   /** Where the current order is answered. */
-  const orderObject = level ? objectForStation(level.station) : null;
+  const orderObject = level ? objectForOrder(level.station, tablesInQuery(level.solution)) : null;
 
   // Each new order starts with a clean console.
   useEffect(() => {

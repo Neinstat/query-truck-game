@@ -161,6 +161,86 @@ function menuBoard(g: THREE.Group): void {
   if (tier === 3) block(g, 'tealLight', [m.min.x + 0.02, m.min.y + 0.02, z0, m.max.x - 0.02, m.min.y + 0.05, z1]);
 }
 
+/**
+ * The driver's cab, seen through the opening in the left end wall (9.8): a dashboard with
+ * gauges, a steering wheel, two seats, a gear lever and a hanging air freshener. You can look at
+ * it but not walk in. The cab shell and the windscreen are built in exterior.ts.
+ */
+function cockpit(g: THREE.Group): void {
+  const front = -HX - T - 1.15; // the cab's front (exterior.ts)
+  // The cab floor and a mat under the pedals.
+  block(g, 'woodDark', [front + 0.04, -0.1, -HZ + 0.02, -HX, 0, HZ - 0.02]);
+  block(g, 'inkSoft', [front + 0.2, 0, 0.0, front + 0.6, 0.012, 0.6]);
+  // The dashboard, low and long, under the windscreen, with a glovebox and gauges.
+  block(g, 'inkSoft', [front + 0.04, 0.78, -HZ + 0.04, front + 0.3, 1.02, HZ - 0.04]);
+  block(g, 'ink', [front + 0.3, 0.98, -HZ + 0.04, front + 0.34, 1.02, HZ - 0.04]);
+  block(g, 'woodDark', [front + 0.3, 0.8, -0.9, front + 0.32, 0.95, -0.2]);
+  block(g, 'tealLight', [front + 0.3, 0.88, 0.1, front + 0.32, 0.96, 0.3]);
+  for (const z of [0.4, 0.6]) block(g, 'mustard', [front + 0.3, 0.88, z - 0.05, front + 0.32, 0.93, z + 0.05]);
+  block(g, 'red', [front + 0.3, 0.86, 0.75, front + 0.32, 0.92, 0.8]);
+  // The steering wheel on its column, tilted towards the driver.
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 6, 18), mat('ink'));
+  wheel.position.set(front + 0.5, 0.98, 0.4);
+  wheel.rotation.y = Math.PI / 2;
+  wheel.rotation.x = 0.35;
+  g.add(wheel);
+  block(g, 'inkSoft', [front + 0.3, 0.9, 0.38, front + 0.5, 0.94, 0.42]);
+  block(g, 'mustard', [front + 0.495, 0.95, 0.37, front + 0.51, 1.01, 0.43]);
+  // Two seats (the driver's and a passenger's), facing the windscreen.
+  for (const z of [0.4, -0.4]) {
+    block(g, 'redDark', [front + 0.75, 0.38, z - 0.22, front + 1.1, 0.5, z + 0.22]);
+    block(g, 'red', [front + 1.08, 0.5, z - 0.22, front + 1.15, 1.2, z + 0.22]);
+    block(g, 'redDark', [front + 1.05, 1.0, z - 0.12, front + 1.15, 1.3, z + 0.12]);
+    block(g, 'inkSoft', [front + 0.8, 0, z - 0.04, front + 0.95, 0.38, z + 0.04]);
+  }
+  // A gear lever and the handbrake between the seats.
+  block(g, 'ink', [front + 0.55, 0.0, -0.02, front + 0.65, 0.4, 0.02]);
+  block(g, 'mustard', [front + 0.54, 0.4, -0.04, front + 0.66, 0.46, 0.04]);
+  // The rear-view mirror and a pink air freshener swinging from it (an easter egg: a tiny dice).
+  block(g, 'ink', [front + 0.12, 1.88, -0.1, front + 0.16, 1.94, 0.1]);
+  block(g, 'pink', [front + 0.12, 1.66, 0.0, front + 0.17, 1.8, 0.06]);
+  // A paper cup left on the passenger seat.
+  block(g, 'white', [front + 0.85, 0.5, -0.45, front + 0.93, 0.62, -0.37]);
+  // A glow from inside the cab, so it never reads as a black hole.
+  const lamp = new THREE.PointLight(0xfff0d0, 0.9, 3.2);
+  lamp.position.set(front + 0.7, 1.9, 0);
+  g.add(lamp);
+}
+
+/**
+ * The little things that make the truck feel lived in (9.8): a rug at the window, ceiling lamps,
+ * a rail of utensils, a fire extinguisher, a mop and bucket and crates under the back counter.
+ */
+function details(g: THREE.Group): void {
+  block(g, 'teal', [-1.1, 0.002, -0.55, 1.1, 0.008, 0.55]);
+  block(g, 'paper', [-1.0, 0.008, -0.45, 1.0, 0.012, 0.45]);
+  for (const x of [-1.2, 1.2]) {
+    block(g, 'inkSoft', [x - 0.02, H - 0.2, -0.02, x + 0.02, H, 0.02]);
+    const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.17, 0.12, 10), mat('mustard'));
+    shade.position.set(x, H - 0.24, 0);
+    g.add(shade);
+    block(g, 'paper', [x - 0.07, H - 0.31, -0.07, x + 0.07, H - 0.29, 0.07]);
+  }
+  // A rail of utensils on the back wall, left of the clock.
+  block(g, 'inkSoft', [-2.0, 1.72, HZ - 0.05, -1.4, 1.74, HZ - 0.03]);
+  const utensils: [number, Ink, number][] = [[-1.92, 'wood', 0.3], [-1.78, 'inkSoft', 0.34], [-1.64, 'redDark', 0.26], [-1.5, 'teal', 0.3]];
+  for (const [x, ink, len] of utensils) block(g, ink, [x - 0.02, 1.72 - len, HZ - 0.06, x + 0.02, 1.72, HZ - 0.04]);
+  // Fire extinguisher by the door, and a mop and bucket.
+  const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.4, 10), mat('red'));
+  ext.position.set(HX - 0.12, 0.75, 0.8);
+  g.add(ext);
+  block(g, 'ink', [HX - 0.16, 0.95, 0.77, HX - 0.08, 1.0, 0.83]);
+  block(g, 'tealLight', [HX - 0.3, 0, -0.95, HX - 0.1, 0.25, -0.75]);
+  block(g, 'wood', [HX - 0.21, 0.25, -0.86, HX - 0.19, 1.3, -0.84]);
+  block(g, 'paperShade', [HX - 0.27, 1.2, -0.9, HX - 0.13, 1.3, -0.8]);
+  // Crates under the back counter.
+  const bc = LAYOUT.backCounter;
+  for (const [x, ink] of [[-0.9, 'wood'], [0.2, 'woodDark'], [1.3, 'wood']] as const) {
+    block(g, ink, [x, 0, bc.min.z - 0.02, x + 0.5, 0.32, bc.min.z + 0.38]);
+    block(g, 'mustard', [x + 0.05, 0.32, bc.min.z + 0.05, x + 0.45, 0.4, bc.min.z + 0.35]);
+  }
+}
+
 export function buildTruck(): THREE.Group {
   const g = new THREE.Group();
   const w = LAYOUT.window;
@@ -188,7 +268,8 @@ export function buildTruck(): THREE.Group {
   const dr = LAYOUT.door;
   for (const [x1, z1, x2, z2] of [
     [-HX, HZ, HX, HZ + T],
-    [-HX - T, -HZ, -HX, HZ],
+    [-HX - T, -HZ, -HX, LAYOUT.cabOpening.min.z],
+    [-HX - T, LAYOUT.cabOpening.max.z, -HX, HZ],
     [HX, -HZ, HX + T, dr.min.z],
     [HX, dr.max.z, HX + T, HZ],
   ] as const) {
@@ -196,6 +277,12 @@ export function buildTruck(): THREE.Group {
     block(g, 'teal', [x1, 0, z1, x2, 0.9, z2]);
   }
   block(g, 'paper', [HX, dr.max.y, dr.min.z, HX + T, H, dr.max.z]);
+  // The cab opening on the left end: wall above it, and the cockpit beyond (9.8).
+  const co = LAYOUT.cabOpening;
+  block(g, 'paper', [-HX - T, co.max.y, co.min.z, -HX, H, co.max.z]);
+  block(g, 'woodDark', [-HX - T - 0.02, co.max.y - 0.06, co.min.z - 0.04, -HX + 0.02, co.max.y, co.max.z + 0.04]);
+  cockpit(g);
+  details(g);
   // A metal step outside the door, where the Manager stands.
   block(g, 'inkSoft', [HX + T, -0.08, -0.55, HX + 0.75, 0, 0.55]);
 
@@ -226,8 +313,8 @@ export function buildTruck(): THREE.Group {
   for (let shelf = 0; shelf < 4; shelf++) {
     const y = 0.3 + shelf * 0.4;
     block(g, 'inkSoft', [f.max.x + 0.01, y - 0.02, f.min.z + 0.08, f.max.x + 0.05, y, f.max.z - 0.08]);
-    for (let i = 0; i < 6; i++) {
-      const z = f.min.z + 0.14 + i * 0.1;
+    for (let i = 0; i < 4; i++) {
+      const z = f.min.z + 0.12 + i * 0.1;
       block(g, inks[(i + shelf) % inks.length], [f.max.x + 0.01, y, z, f.max.x + 0.07, y + 0.22 + (i % 2) * 0.04, z + 0.07]);
     }
   }
@@ -238,7 +325,7 @@ export function buildTruck(): THREE.Group {
   for (let shelf = 0; shelf < 3; shelf++) {
     const y = 0.35 + shelf * 0.6;
     block(g, 'woodDark', [s.min.x, y - 0.04, s.min.z, s.max.x, y, s.max.z]);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const z = s.min.z + 0.08 + i * 0.36;
       if ((i + shelf) % 3 === 2) {
         const sack = new THREE.Mesh(new THREE.DodecahedronGeometry(0.16, 0), mat('wood'));

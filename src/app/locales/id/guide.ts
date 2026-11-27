@@ -51,10 +51,19 @@ export const GUIDE_ID: readonly GuidePage[] = [
       {
         icon: '🧊',
         object: 'fridge',
-        name: 'Kulkas & rak stok — catatan gudang',
-        where: 'Ujung kiri truck',
-        tables: ['inventory', 'suppliers'],
-        text: 'Apa yang dikirim setiap hari, berapa banyak, dan jam berapa habisnya (inventory); serta perusahaan mana yang memasok setiap barang, kapan mengantarnya, dan sejak kapan (suppliers). Pertanyaan soal stok dan pengiriman dijawab di sini.',
+        name: 'Kulkas — catatan stok',
+        where: 'Ujung kiri truck, depan',
+        tables: ['inventory'],
+        text: 'Apa yang dikirim setiap hari, berapa banyak, dan jam berapa habisnya (inventory). Pertanyaan soal stok dijawab di sini.',
+        example: '"Masih ada susu oat?"',
+      },
+      {
+        icon: '📦',
+        object: 'stock-shelves',
+        name: 'Rak stok — para pemasok',
+        where: 'Ujung kiri truck, belakang',
+        tables: ['suppliers'],
+        text: 'Perusahaan mana yang memasok setiap barang, kapan mengantarnya, dan sejak kapan (suppliers). Rak ini membuka buku catatan gudang yang sama dengan kulkas, jadi pertanyaan yang menggabungkan stok dan pemasok bisa dijawab di keduanya.',
         example: '"Siapa yang mengantar susu sekarang, dan jam berapa?"',
       },
       {

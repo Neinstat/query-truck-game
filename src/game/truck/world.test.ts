@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { OBJECT_STATION } from '../../sql-core/truck/objects';
 import { STATIONS, tablesInQuery } from '../../sql-core/stations';
-import { objectForStation } from '../../sql-core/truck/objects';
+import { objectForOrder } from '../../sql-core/truck/objects';
 import { TEMPLATES } from '../../sql-core/truck/templates';
 import { PLACES } from '../../sql-core/truck/places';
 import { QUEUE, spotX } from './queue';
@@ -136,16 +136,25 @@ describe('the Data Lens', () => {
     expect(new Set(LENS_SPOTS.flatMap((s) => s.tables))).toEqual(all);
   });
 
-  it('shows every table an order needs on the card of the object where it is answered', () => {
+  it('shows every table an order needs on a card of the same storeroom or station as the object where it is answered', () => {
     for (const template of TEMPLATES) {
-      const object = objectForStation(template.station);
-      const onCards = LENS_SPOTS.filter((s) => s.object === object).flatMap((s) => s.tables);
-      // The customer at the window carries the `customers` card, and the tablet opens it (TruckGame).
-      if (object === 'tablet') onCards.push('customers');
       for (const v of template.variants) {
-        for (const table of tablesInQuery(template.solution(v.params))) expect(onCards, `${template.id}: ${table}`).toContain(table);
+        const tables = tablesInQuery(template.solution(v.params));
+        const object = objectForOrder(template.station, tables);
+        // The fridge and the stock shelves open the same ledger (9.8), so either one's cards count.
+        const onCards = LENS_SPOTS.filter((s) => OBJECT_STATION[s.object] === OBJECT_STATION[object]).flatMap((s) => s.tables);
+        // The customer at the window carries the `customers` card, and the tablet opens it (TruckGame).
+        if (object === 'tablet') onCards.push('customers');
+        for (const table of tables) expect(onCards, `${template.id}: ${table}`).toContain(table);
       }
     }
+  });
+
+  it('answers an order about only suppliers at the stock shelves, and anything with inventory at the fridge', () => {
+    expect(objectForOrder('stock-ledger', ['suppliers'])).toBe('stock-shelves');
+    expect(objectForOrder('stock-ledger', ['inventory'])).toBe('fridge');
+    expect(objectForOrder('stock-ledger', ['inventory', 'suppliers'])).toBe('fridge');
+    expect(OBJECT_STATION['stock-shelves']).toBe(OBJECT_STATION.fridge);
   });
 
   it('keeps every card inside the truck', () => {

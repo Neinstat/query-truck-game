@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import type { UiText } from '../i18n';
-import { objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
+import { objectForOrder, type TruckObjectId } from '../sql-core/truck/objects';
 import { STATIONS } from '../sql-core/stations';
 import type { StationId } from '../sql-core/stations';
 
 /** Where a table is looked at: the object whose station shows it (first match; a table can be on more than one). */
 export function objectForTable(table: string): TruckObjectId | null {
   const station = (Object.keys(STATIONS) as StationId[]).find((id) => STATIONS[id].tables.includes(table));
-  return station ? objectForStation(station) : null;
+  return station ? objectForOrder(station, [table]) : null;
 }
 
 type Summary = { columns: string[]; count: number };
