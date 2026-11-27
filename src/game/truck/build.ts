@@ -169,14 +169,14 @@ function menuBoard(g: THREE.Group): void {
 function cockpit(g: THREE.Group): void {
   const front = -HX - T - 1.15; // the cab's front (exterior.ts)
   // The cab floor and a mat under the pedals.
-  block(g, 'woodDark', [front + 0.04, -0.1, -HZ + 0.02, -HX, 0, HZ - 0.02]);
+  block(g, 'woodDark', [front + 0.04, -0.09, -HZ + 0.02, -HX, 0, HZ - 0.02]);
   block(g, 'inkSoft', [front + 0.2, 0, 0.0, front + 0.6, 0.012, 0.6]);
   // The dashboard, low and long, under the windscreen, with a glovebox and gauges.
   block(g, 'inkSoft', [front + 0.04, 0.78, -HZ + 0.04, front + 0.3, 1.02, HZ - 0.04]);
   block(g, 'ink', [front + 0.3, 0.98, -HZ + 0.04, front + 0.34, 1.02, HZ - 0.04]);
   block(g, 'woodDark', [front + 0.3, 0.8, -0.9, front + 0.32, 0.95, -0.2]);
   block(g, 'tealLight', [front + 0.3, 0.88, 0.1, front + 0.32, 0.96, 0.3]);
-  for (const z of [0.4, 0.6]) block(g, 'mustard', [front + 0.3, 0.88, z - 0.05, front + 0.32, 0.93, z + 0.05]);
+  for (const z of [0.56, 0.68]) block(g, 'mustard', [front + 0.3, 0.88, z - 0.05, front + 0.32, 0.93, z + 0.05]);
   block(g, 'red', [front + 0.3, 0.86, 0.75, front + 0.32, 0.92, 0.8]);
   // The steering wheel on its column, tilted towards the driver.
   const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 6, 18), mat('ink'));
@@ -184,13 +184,13 @@ function cockpit(g: THREE.Group): void {
   wheel.rotation.y = Math.PI / 2;
   wheel.rotation.x = 0.35;
   g.add(wheel);
-  block(g, 'inkSoft', [front + 0.3, 0.9, 0.38, front + 0.5, 0.94, 0.42]);
+  block(g, 'inkSoft', [front + 0.34, 0.9, 0.38, front + 0.5, 0.94, 0.42]);
   block(g, 'mustard', [front + 0.495, 0.95, 0.37, front + 0.51, 1.01, 0.43]);
   // Two seats (the driver's and a passenger's), facing the windscreen.
   for (const z of [0.4, -0.4]) {
-    block(g, 'redDark', [front + 0.75, 0.38, z - 0.22, front + 1.1, 0.5, z + 0.22]);
-    block(g, 'red', [front + 1.08, 0.5, z - 0.22, front + 1.15, 1.2, z + 0.22]);
-    block(g, 'redDark', [front + 1.05, 1.0, z - 0.12, front + 1.15, 1.3, z + 0.12]);
+    block(g, 'redDark', [front + 0.72, 0.38, z - 0.22, front + 1.05, 0.5, z + 0.22]);
+    block(g, 'red', [front + 1.02, 0.5, z - 0.22, front + 1.09, 1.2, z + 0.22]);
+    block(g, 'redDark', [front + 0.99, 1.0, z - 0.12, front + 1.07, 1.3, z + 0.12]);
     block(g, 'inkSoft', [front + 0.8, 0, z - 0.04, front + 0.95, 0.38, z + 0.04]);
   }
   // A gear lever and the handbrake between the seats.
@@ -313,7 +313,7 @@ export function buildTruck(): THREE.Group {
   for (let shelf = 0; shelf < 4; shelf++) {
     const y = 0.3 + shelf * 0.4;
     block(g, 'inkSoft', [f.max.x + 0.01, y - 0.02, f.min.z + 0.08, f.max.x + 0.05, y, f.max.z - 0.08]);
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       const z = f.min.z + 0.12 + i * 0.1;
       block(g, inks[(i + shelf) % inks.length], [f.max.x + 0.01, y, z, f.max.x + 0.07, y + 0.22 + (i % 2) * 0.04, z + 0.07]);
     }
