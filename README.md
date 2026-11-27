@@ -34,10 +34,10 @@ You are the new hire at **Query Truck**, a coffee food truck that parks somewher
 
 ## How to play
 
-1. Click the screen to look around (**Esc** frees the mouse).
+1. The mouse looks around by itself once you press *Start* (**Esc** frees it and pauses the game).
 2. **WASD** or the arrow keys to walk around the truck, the **mouse** to look.
 3. Aim the crosshair at something and press **E** (or click). Each object sees its own tables: the **tablet** (sales, customers, menu), the **fridge** (stock, suppliers), the **menu board** and the **recipe binders**. The speech bubble tells you where to answer each order; any other object lets you look around its data freely.
-4. Press **L** (or 🔍 Data Lens) to see the data behind everything: the truck turns into a blueprint and every object shows its tables, with the ones the current order needs starred. Click a table on a card to open it.
+4. Press **L** (or 🔍 Data Lens) to see the data behind everything: the truck turns into a blueprint and every object shows its tables, with the ones the current order needs starred. Press **E** on an object while the lens is on to open its tables, or **D** for a list of every table.
 5. Read the customer's request, write SQL, press **Run** (or Ctrl/⌘ + Enter). Your *result* is graded, not your text, with specific feedback when it isn't right yet.
 6. **Hand over the order**, and the next customer steps up. Every order you serve becomes real rows in the `sales` table (`channel = 'truck'`), so you can query your own day.
 7. Watch the clock: the truck opens 10:00–17:00. Time stops while a console is open and speeds up when nobody is waiting. Customers get impatient (😊 → 😐 → 😠) and tip less, or leave. At closing time you get a summary of the day, with the SQL that counted your revenue.
@@ -68,11 +68,11 @@ The world is **low-poly**: flat-shaded shapes in a small palette with a thin ink
 
 ## Status
 
-🚚 **Query Truck 1.0 is planned for 9 Dec 2026** (free, in desktop browsers; simplified touch controls work on phones). The game is feature-complete and in playtesting:
+🚚 **Query Truck 1.0 is planned for 9 Dec 2026** (free, in desktop browsers; simplified touch controls work on phones). The game is feature-complete and waiting for its final playtest:
 
 - **A six-week curriculum** with a backstory and a difficulty choice: `SELECT` and `WHERE`, sorting, counting and grouping, `JOIN`s, and a final analysis case, *October Sales Dropped*. After it the days go on in a free mode with spaced repetition.
 - **The Manager's cases** follow the BI analyst's five steps: the business question, the metric, the pattern, the opportunity, the recommendation.
-- **A truck that grows:** stars turn into XP, coins buy upgrades that change how the truck looks, and there are badges, a streak, credits and a few easter eggs.
+- **A truck that grows:** stars turn into XP and player levels, coins buy repairs and upgrades that change how the truck looks, and there are badges, a streak, credits and a few easter eggs. Each morning a map lets you choose where to park; busier places pay more.
 - **Settings and About page**, English and Bahasa Indonesia, and a first page of about 320 KB gzipped (the SQL editor and the 3D world load when needed).
 
 The SQL core has 34 levels in six chapters and thousands of automated tests: every order template variant is solvable, and Indonesian text has the same shape as English.
@@ -140,4 +140,4 @@ docs/
 
 ## Credits
 
-No third-party art is used yet: the palette, models and shader are original. See [CREDITS.md](CREDITS.md).
+The art, models and sound are original (sound is synthesized); the menu lettering uses open-licence fonts. See [CREDITS.md](CREDITS.md).

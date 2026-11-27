@@ -46,7 +46,7 @@ The owner was new to Claude Code and git, so the process was designed to be easy
 
 ## Numbers
 
-About 28,600 lines of TypeScript and content in roughly 160 files, with about 3,300 of those lines tests (`npm run size`). The first page is about 320 KB gzipped; PostgreSQL itself (about 5.4 MB gzipped) loads in a worker.
+About 30,900 lines of TypeScript and content in 186 files, with about 3,600 of those lines tests (`npm run size`). The first page is about 330 KB gzipped; PostgreSQL itself (about 5.4 MB gzipped) loads in a worker.
 
 ## Try it
 
