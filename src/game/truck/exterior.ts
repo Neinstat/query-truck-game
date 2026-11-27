@@ -156,7 +156,14 @@ export function buildExterior(): THREE.Group {
   const cab = -HX - T;
   const cabFront = cab - 1.15;
   const cabTop = H - 0.12;
-  block(g, 'white', [cabFront, BAND.bottom, -HZ - 0.02, cab, cabTop, HZ + 0.02]);
+  // A hollow shell, so the cockpit shows through the opening in the truck's left end wall (9.8):
+  // the two sides, a low front under the windscreen, a strip over it, the roof and the underside.
+  block(g, 'white', [cabFront, BAND.bottom, -HZ - 0.02, cab, cabTop, -HZ + 0.04]);
+  block(g, 'white', [cabFront, BAND.bottom, HZ - 0.04, cab, cabTop, HZ + 0.02]);
+  block(g, 'white', [cabFront, BAND.bottom, -HZ - 0.02, cabFront + 0.04, 1.03, HZ + 0.02]);
+  block(g, 'white', [cabFront, 2.07, -HZ - 0.02, cabFront + 0.04, cabTop, HZ + 0.02]);
+  block(g, 'white', [cabFront, cabTop - 0.06, -HZ - 0.02, cab, cabTop, HZ + 0.02]);
+  block(g, 'white', [cabFront, BAND.bottom, -HZ - 0.02, cab, -0.1, HZ + 0.02]);
   block(g, 'white', [cabFront - 0.04, cabTop, -HZ - 0.06, cab + 0.02, cabTop + 0.1, HZ + 0.06]);
   edge(g, 'z', 2 * HZ + 0.12, 0.09, cabFront - 0.02, cabTop + 0.06, 0);
   // The nose: a low step out in front, carrying the grille panel and the lights.

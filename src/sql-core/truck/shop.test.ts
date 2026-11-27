@@ -24,7 +24,7 @@ describe('the shop', () => {
   it('starts plain: the starting items are owned and on the truck, and cost nothing', () => {
     const shop = newShop();
     expect(spent(shop)).toBe(0);
-    expect(truckLook(shop)).toEqual({ paint: 'paperShade', awning: 'paperShade', machine: 0, plants: 0 });
+    expect(truckLook(shop)).toEqual({ paint: 'paperShade', awning: 'paperShade', machine: 0, plants: 0, till: 0, board: 0 });
     for (const slot of SHOP_SLOTS) expect(SHOP_ITEMS.filter((i) => i.slot === slot && i.start)).toHaveLength(1);
   });
 

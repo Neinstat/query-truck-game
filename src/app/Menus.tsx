@@ -166,11 +166,13 @@ export function PauseMenu(props: {
   onTour: () => void;
   onSettings: () => void;
   onTitle: () => void;
+  /** Close for today (9.6): offered once a customer has been handled. */
+  onHome?: () => void;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: UiText;
 }) {
-  const { onResume, onGuide, onTour, onSettings, onTitle, t } = props;
+  const { onResume, onGuide, onTour, onSettings, onTitle, onHome, t } = props;
   return (
     <div className="menu-screen pause-screen" role="dialog" aria-label={t.pausedTitle}>
       <div className="title-card pause-card">
@@ -186,6 +188,11 @@ export function PauseMenu(props: {
             {t.tourStart}
           </button>
         </div>
+        {onHome && (
+          <button className="menu-button" onClick={onHome}>
+            {t.goHome}
+          </button>
+        )}
         <button className="menu-button" onClick={onSettings}>
           {t.settingsButton}
         </button>

@@ -40,8 +40,10 @@ export const LAYOUT = {
   frontCounter: box(-1.8, 0, -HZ, 1.8, 1.0, -HZ + 0.45),
   tablet: box(0.7, 1.0, -HZ + 0.12, 1.06, 1.26, -HZ + 0.3),
   tipJar: box(-1.3, 1.0, -HZ + 0.15, -1.12, 1.22, -HZ + 0.33),
-  fridge: box(-HX, 0, -HZ + 0.05, -HX + 0.75, 2.0, -0.2),
-  stockShelves: box(-HX, 0, 0.05, -HX + 0.55, 2.0, HZ),
+  fridge: box(-HX, 0, -HZ + 0.05, -HX + 0.75, 2.0, -0.65),
+  stockShelves: box(-HX, 0, 0.55, -HX + 0.55, 2.0, HZ),
+  /** The opening in the left end wall between the fridge and the shelves: the driver's cab shows through it (9.8). */
+  cabOpening: box(-HX - 0.08, 0, -0.5, -HX, 2.0, 0.5),
   backCounter: box(-1.6, 0, HZ - 0.45, 1.8, 0.95, HZ),
   coffeeMachine: box(-1.25, 0.95, HZ - 0.4, -0.6, 1.5, HZ - 0.05),
   menuBoard: box(-0.1, 1.35, HZ - 0.05, 1.0, 2.1, HZ),
@@ -70,7 +72,7 @@ export const START = { x: 0, z: 0.1, yaw: 0 } as const;
 export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = [
   { id: 'tablet', box: LAYOUT.tablet },
   { id: 'fridge', box: LAYOUT.fridge },
-  { id: 'fridge', box: LAYOUT.stockShelves },
+  { id: 'stock-shelves', box: LAYOUT.stockShelves },
   { id: 'menu-board', box: LAYOUT.menuBoard },
   { id: 'recipe-shelf', box: LAYOUT.recipeShelf },
   { id: 'back-door', box: LAYOUT.door },
@@ -90,7 +92,7 @@ export const INTERACTABLE_BOXES: readonly { id: InteractableId; box: Box3 }[] = 
 export const LENS_SPOTS: readonly { id: string; tables: string[]; object: InteractableId; box: Box3 }[] = [
   { id: 'tablet', tables: ['sales', 'menu_items'], object: 'tablet', box: LAYOUT.tablet },
   { id: 'fridge', tables: ['inventory'], object: 'fridge', box: LAYOUT.fridge },
-  { id: 'shelves', tables: ['suppliers'], object: 'fridge', box: LAYOUT.stockShelves },
+  { id: 'shelves', tables: ['suppliers'], object: 'stock-shelves', box: LAYOUT.stockShelves },
   { id: 'menu-board', tables: ['menu_items'], object: 'menu-board', box: LAYOUT.menuBoard },
   { id: 'recipes', tables: ['recipes', 'menu_items'], object: 'recipe-shelf', box: LAYOUT.recipeShelf },
 ];
@@ -187,9 +189,9 @@ const centre = (b: Box3): Vec3 => ({ x: (b.min.x + b.max.x) / 2, y: (b.min.y + b
  */
 export const TOUR_STOPS: readonly { object: InteractableId; eye: Vec3; target: Vec3 }[] = [
   { object: 'tablet', eye: { x: 0.2, y: EYE_Y, z: 0.15 }, target: centre(LAYOUT.tablet) },
-  // Far back across the truck, so the fridge and the stock shelves beside it both show (owner's
-  // feedback: the close-up showed only the fridge).
-  { object: 'fridge', eye: { x: 0.9, y: EYE_Y, z: 0.3 }, target: { x: -2.5, y: 1.05, z: -0.45 } },
+  // The fridge and the stock shelves are two objects (9.8), each with its own stop.
+  { object: 'fridge', eye: { x: -1.0, y: EYE_Y, z: -0.35 }, target: { x: -2.7, y: 1.1, z: -0.9 } },
+  { object: 'stock-shelves', eye: { x: -1.0, y: EYE_Y, z: 0.25 }, target: { x: -2.7, y: 1.1, z: 0.9 } },
   { object: 'recipe-shelf', eye: { x: 1.2, y: EYE_Y, z: -0.25 }, target: centre(LAYOUT.recipeShelf) },
   { object: 'menu-board', eye: { x: 0.45, y: EYE_Y, z: -0.35 }, target: centre(LAYOUT.menuBoard) },
   { object: 'back-door', eye: { x: 0.4, y: EYE_Y, z: 0 }, target: centre(LAYOUT.door) },
