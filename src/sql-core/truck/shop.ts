@@ -6,14 +6,16 @@
  */
 import type { Lang } from '../feedback';
 import type { DayLog } from './day';
+import { placePay } from './map';
 
 /** Coins for one served order: 10 per star plus the tip (a whole coin per 10 cents of tip). */
 export const coinsForOrder = (stars: number, tip: number): number => stars * 10 + Math.round(tip * 10);
 /** Coins for a Manager case: 20 per star. */
 export const coinsForCase = (stars: number): number => stars * 20;
 
+/** A busier place pays more coins per order (9.6, `map.ts`). */
 export const dayCoins = (log: DayLog): number =>
-  log.served.reduce((sum, s) => sum + coinsForOrder(s.stars, s.tip), 0) + (log.manager ? coinsForCase(log.manager.stars) : 0);
+  log.served.reduce((sum, s) => sum + Math.round(coinsForOrder(s.stars, s.tip) * placePay(log.place)), 0) + (log.manager ? coinsForCase(log.manager.stars) : 0);
 
 export const totalCoins = (logs: readonly DayLog[]): number => logs.reduce((sum, log) => sum + dayCoins(log), 0);
 

@@ -14,7 +14,7 @@ import { RewardPop } from './RewardPop';
 import { servedReward } from './objectives';
 import { coachStep, loadCoach, saveCoach, stepsDone, type CoachStepId } from './coach';
 import { onboardingPending, setOnboardingPending, startAction } from './onboarding';
-import { endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
+import { chooseParking, endPractice, restartDay, skipToDay, SKIP_TITLE_KEY, startNextDay, startNextWeek, startPractice, useTruckShift } from './useTruckShift';
 import { DaysScreen } from './DaysScreen';
 import { Guide, LoadingScreen, PauseMenu, TitleScreen, TruckTour } from './Menus';
 import { guideFor } from './guide';
@@ -24,7 +24,9 @@ import { DifficultyPicker, StartFlow } from './StartFlow';
 import { useDifficulty } from './useDifficulty';
 import { useSound } from './useSound';
 import { DevPanel, devAllowed } from './DevPanel';
-import { PLACES, placeForDay } from '../sql-core/truck/places';
+import { PLACES, placeForDay, type PlaceId } from '../sql-core/truck/places';
+import { needsMap } from '../sql-core/truck/map';
+import { MapScreen } from './MapScreen';
 import { CLOSING, formatClock, OPENING } from '../sql-core/truck/day';
 import { XpCounter } from './XpCounter';
 import { ShopScreen } from './ShopScreen';
@@ -47,9 +49,9 @@ const ALL_TABLES = [...new Set(Object.values(STATIONS).flatMap((s) => s.tables))
 
 /** After "next day" or "play again" the page reloads straight into the truck (no title). */
 /** Where the truck parks today; `?place=harbour` in the address picks a place (for testing). */
-function todaysPlace(dayNumber: number) {
+function todaysPlace(dayNumber: number, chosen?: PlaceId) {
   const asked = new URLSearchParams(window.location.search).get('place');
-  return PLACES.find((p) => p.id === asked) ?? placeForDay(dayNumber);
+  return PLACES.find((p) => p.id === asked) ?? PLACES.find((p) => p.id === chosen) ?? placeForDay(dayNumber);
 }
 
 function skipTitleOnce(): boolean {
@@ -104,6 +106,11 @@ export function TruckApp() {
   const canDev = useMemo(() => devAllowed(), []);
   /** The week card of a new week's first morning: shown once, time stands still while it is up. */
   const [weekCardOpen, setWeekCardOpen] = useState(false);
+  /** The morning map (9.6): where to park today. */
+  const [mapOpen, setMapOpen] = useState(false);
+  const mapChecked = useRef(false);
+  /** Asking whether to close early ("go home"). */
+  const [homeAsk, setHomeAsk] = useState(false);
   const weekCardChecked = useRef(false);
   const [difficulty, chooseDifficulty] = useDifficulty();
   /** A new player's backstory and difficulty choice (before the first day), and the picker in the pause menu. */
@@ -120,8 +127,8 @@ export function TruckApp() {
   useEffect(() => bridge.emit('touch', touchMode), [bridge, touchMode, ready]);
   const eggs = useEggs();
   const [eggToast, closeEggToast] = useEggToast();
-  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || dbMenuOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen;
-  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, knocking, mood, patienceLeft, consoleOpen, overlays, devServe, openTable } =
+  const menuOpen = introOpen || difficultyOpen || shopOpen || badgesOpen || dbMenuOpen || settingsOpen || aboutOpen || phoneNotice || screen !== 'playing' || guideOpen || daysOpen || tourStep !== null || !ready || !dataReady || weekCardOpen || mapOpen || homeAsk;
+  const { front, order, answerWhere, orderTables, db, dbError, day, orders, past, practice, today, dayDone, wentHome, goHome, knocking, mood, patienceLeft, consoleOpen, overlays, devServe, openTable } =
     useTruckShift(bridge, lang, t, menuOpen, difficulty ?? 'grow');
   /** The day number shown: today's, or the day a practice run comes from. */
   const dayNumber = practice ? practice.from : past.length + 1;
@@ -149,7 +156,7 @@ export function TruckApp() {
   useEffect(() => {
     if (weekCardChecked.current) return;
     weekCardChecked.current = true;
-    if (!practice && isWeekStart(dayNumber) && day.clock <= OPENING && day.served.length === 0 && day.missed.length === 0) {
+    if (!practice && !needsMap(dayNumber, day, OPENING) && isWeekStart(dayNumber) && day.clock <= OPENING && day.served.length === 0 && day.missed.length === 0) {
       setWeekCardOpen(true);
     }
   }, [practice, dayNumber, day]);
@@ -164,13 +171,19 @@ export function TruckApp() {
     // Practice runs are for the customers' orders: the Manager doesn't come.
     managerDone: day.manager !== null || practice !== null,
     // A different place each day (sql-core/truck/places.ts); a practice is where that day was.
-    place: todaysPlace(dayNumber).id,
+    place: todaysPlace(dayNumber, day.place).id,
     // `?rain` in the address: rain today whatever the weather (for testing).
     forceRain: new URLSearchParams(window.location.search).has('rain'),
     // What the upgrades bought in the shop make the truck look like (7.2).
     look,
   });
-  const place = todaysPlace(dayNumber);
+  const place = todaysPlace(dayNumber, day.place);
+  // A fresh morning from day 2: the map opens first (once the records are loaded, in the truck).
+  useEffect(() => {
+    if (mapChecked.current || screen !== 'playing' || !ready || !dataReady) return;
+    mapChecked.current = true;
+    if (!practice && needsMap(dayNumber, day, OPENING)) setMapOpen(true);
+  }, [screen, ready, dataReady, practice, dayNumber, day]);
   useEffect(() => sound.setPlace(place.id), [place.id]);
   const [lens, setLens] = useState(false);
   // A customer's patience runs low: a short warning sound (9.4).
@@ -416,6 +429,18 @@ export function TruckApp() {
             🚪 {t.knockAlert}
           </p>
         )}
+        {mapOpen && screen === 'playing' && ready && dataReady && (
+          <MapScreen dayNumber={dayNumber} suggested={placeForDay(dayNumber).id} lang={lang} t={t} onChoose={(id) => chooseParking(day, id)} />
+        )}
+        {homeAsk && (
+          <div className="home-ask" role="dialog" aria-label={t.goHome}>
+            <p>{t.goHomeAsk(Math.max(0, day.orders.length - day.served.length - day.missed.length))}</p>
+            <div className="home-ask-buttons">
+              <button className="primary-button" onClick={() => { setHomeAsk(false); goHome(); }}>{t.goHomeYes}</button>
+              <button className="link-button" onClick={() => setHomeAsk(false)}>{t.goHomeNo}</button>
+            </div>
+          </div>
+        )}
         {weekCardOpen && screen === 'playing' && ready && dataReady && (
           <WeekCard
             week={week}
@@ -427,7 +452,7 @@ export function TruckApp() {
             }}
           />
         )}
-        {ready && dayDone && !front && !consoleOpen && !menuOpen && (
+        {ready && dayDone && (!front || wentHome) && !consoleOpen && !menuOpen && (
           <DaySummary
             weekLabel={free ? t.freeLabel(freeDay) : t.weekLabel(week, dayInWeek)}
             db={db}
@@ -543,6 +568,7 @@ export function TruckApp() {
             onTour={startTour}
             onSettings={() => setSettingsOpen(true)}
             onTitle={() => setScreen('title')}
+            onHome={!dayDone && day.served.length + day.missed.length > 0 ? () => { setScreen('playing'); setHomeAsk(true); } : undefined}
             lang={lang}
             setLang={setLang}
             t={t}

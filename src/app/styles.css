@@ -4022,3 +4022,113 @@ a.menu-button { text-align: center; text-decoration: none; }
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+/* The morning map (9.6): at home, choosing where to park. */
+.map-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(37, 48, 79, 0.88);
+  overflow-y: auto;
+}
+.map-card {
+  width: min(36rem, 100%);
+  padding: 1.1rem 1.4rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  background: #f4ead5;
+  color: #25304f;
+  box-shadow: 4px 4px 0 #e4573d;
+  text-align: center;
+}
+.map-hint {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.9rem;
+}
+.map-places {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.map-place {
+  display: grid;
+  grid-template-columns: 2rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.map-place.picked {
+  background: #ffe9a8;
+  box-shadow: 3px 3px 0 #25304f;
+}
+.map-place.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.map-place-icon {
+  font-size: 1.5rem;
+  text-align: center;
+}
+.map-place-text {
+  display: grid;
+  font-size: 0.85rem;
+}
+.map-place-pay {
+  display: grid;
+  justify-items: end;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.map-place-pay em {
+  font-style: normal;
+  color: #e4573d;
+}
+.hud-home {
+  position: absolute;
+  top: 14px;
+  right: 120px;
+  z-index: 20;
+  padding: 0.4rem 0.7rem;
+  border: 2px solid #25304f;
+  border-radius: 10px;
+  background: rgba(244, 234, 213, 0.94);
+  color: #25304f;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.home-ask {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  z-index: 35;
+  display: grid;
+  gap: 0.6rem;
+  width: min(24rem, calc(100% - 2rem));
+  padding: 1rem 1.2rem;
+  border: 2px solid #25304f;
+  border-radius: 8px;
+  background: #f4ead5;
+  color: #25304f;
+  box-shadow: 4px 4px 0 #e4573d;
+  text-align: center;
+}
+.home-ask-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}

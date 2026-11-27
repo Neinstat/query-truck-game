@@ -9,7 +9,8 @@ import { stationTables, tablesInQuery } from '../sql-core/stations';
 import { isFreeMode, isWeekStart, weekOfDay } from '../sql-core/truck/weeks';
 import { managerCaseFor, managerCaseIdFor, managerIntroFor } from '../sql-core/truck/manager';
 import { OBJECT_STATION, objectForStation, type TruckObjectId } from '../sql-core/truck/objects';
-import { missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
+import { CLOSING, missOrder, moodFor, newDay, parseDayLog, saleSql, serveOrder, TIPS, type DayLog } from '../sql-core/truck/day';
+import type { PlaceId } from '../sql-core/truck/places';
 import { starsFor } from './rewards';
 import { sound } from '../audio/sound';
 import { inputFor, type Difficulty } from '../sql-core/truck/difficulty';
@@ -112,7 +113,7 @@ export function hasPlayedBefore(): boolean {
 export function startPractice(past: readonly DayLog[], today: DayLog, from: number, mode: PracticeMode): void {
   const source = from <= past.length ? past[from - 1] : today;
   const orders = mode === 'replay' ? source.orders : practiceOrders(source.orders, `${from} ${Date.now()}`);
-  write(PRACTICE_KEY, { from, mode, log: newDay(today.date, orders) } satisfies Practice);
+  write(PRACTICE_KEY, { from, mode, log: { ...newDay(today.date, orders), ...(source.place ? { place: source.place } : {}) } } satisfies Practice);
   skipTitleNextLoad();
   window.location.reload();
 }
@@ -124,6 +125,13 @@ export function endPractice(): void {
   } catch {
     // Nothing saved, nothing to remove.
   }
+  skipTitleNextLoad();
+  window.location.reload();
+}
+
+/** The map (9.6): park at the chosen place today. The page reloads so the world is built there. */
+export function chooseParking(day: DayLog, place: PlaceId): void {
+  saveDay({ ...day, place });
   skipTitleNextLoad();
   window.location.reload();
 }
@@ -213,6 +221,8 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
   const [patience, setPatience] = useState<{ orderId: string; left: number } | null>(null);
   /** The game says the day is over (closing time, or nobody left to come, and the line is empty). */
   const [closed, setClosed] = useState(false);
+  /** The player pressed "go home" and closed early (9.6). */
+  const [wentHome, setWentHome] = useState(false);
   /** The Manager: knocking on the back door, and their case once the door is opened. */
   const [knocking, setKnocking] = useState(false);
   const [managerLevel, setManagerLevel] = useState<Level | null>(null);
@@ -352,7 +362,7 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
 
   // Time stops while a console is open.
   const open = orderOpen || exploring !== null || managerOpen || managerTalk;
-  useEffect(() => bridge.emit('pause', open || menuOpen), [bridge, open, menuOpen]);
+  useEffect(() => bridge.emit('pause', open || menuOpen || wentHome), [bridge, open, menuOpen, wentHome]);
 
   const closeOrder = useCallback(() => {
     setOrderOpen(false);
@@ -380,6 +390,16 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     db?.write(saleSql(order, day.date, served.at)).catch((err) => setToast(String(err)));
     bridge.emit('serve', true);
   }, [bridge, order, day, db, updateDay]);
+
+  /** Close for today (9.6): customers still to come count as missed, and the summary follows. */
+  const goHome = useCallback(() => {
+    updateDay((log) => {
+      let next = log;
+      for (const id of log.orders) next = missOrder(next, id);
+      return { ...next, clock: Math.max(next.clock, CLOSING) };
+    });
+    setWentHome(true);
+  }, [updateDay]);
 
   const closeExplore = useCallback(() => setExploring(null), []);
 
@@ -513,7 +533,10 @@ export function useTruckShift(bridge: TruckBridge, lang: Lang, t: UiText, menuOp
     /** Today as saved (the real day, also while a practice run is played). */
     today: progressOnLoad.today,
     /** Every order of the day has been served. */
-    dayDone: closed,
+    dayDone: closed || wentHome,
+    /** The player closed early with "go home": the summary shows even with a customer at the window. */
+    wentHome,
+    goHome,
     /** The Manager is knocking and has not been answered yet. */
     knocking,
     /** The mood of the customer at the window (null when nobody is there). */

@@ -7,6 +7,7 @@
  * Times are minutes since midnight (10:00 = 600).
  */
 import { isOrderId, orderFromId, type TruckOrder } from './orders';
+import { PLACES, type PlaceId } from './places';
 
 /** The first play day: the truck's history (Aug–Oct 2026) ends the day before. */
 export const FIRST_PLAY_DATE = '2026-11-01';
@@ -71,6 +72,8 @@ export type DayLog = {
   missed: string[];
   /** The Manager's case, once answered: the stars earned. Not answered yet: null. */
   manager: { stars: number } | null;
+  /** Where the truck parked, chosen on the map (9.6); a day without a choice uses the fixed rotation. */
+  place?: PlaceId;
 };
 
 /** A day that has not started yet: opening time, nothing served. */
@@ -139,6 +142,7 @@ export function parseDayLog(raw: string | null): DayLog | null {
         data.manager && typeof data.manager === 'object' && [1, 2, 3].includes((data.manager as { stars: number }).stars)
           ? { stars: (data.manager as { stars: number }).stars }
           : null,
+      ...(PLACES.some((p) => p.id === data.place) ? { place: data.place } : {}),
     };
   } catch {
     return null;
