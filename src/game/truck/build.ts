@@ -76,6 +76,91 @@ function plants(g: THREE.Group): void {
   }
 }
 
+/**
+ * The till on the front counter by upgrade tier (9.7): 0 a pad of paper notes, 1 the tablet on its
+ * stand, 2 a computer with a monitor and a keyboard. It is always the "tablet" object.
+ */
+function till(g: THREE.Group): void {
+  const tier = truckLook().till;
+  const t = LAYOUT.tablet;
+  const cx = (t.min.x + t.max.x) / 2;
+  const cz = (t.min.z + t.max.z) / 2;
+  if (tier === 0) {
+    // A clipboard and a few loose, curling sheets.
+    const pad = new THREE.Group();
+    block(pad, 'woodDark', [-0.16, -0.12, -0.01, 0.16, 0.12, 0.01]);
+    block(pad, 'paper', [-0.14, -0.1, 0.01, 0.14, 0.1, 0.018]);
+    for (let i = 0; i < 4; i++) block(pad, 'inkSoft', [-0.11, 0.06 - i * 0.045, 0.018, 0.02 + (i % 2) * 0.07, 0.068 - i * 0.045, 0.021]);
+    block(pad, 'red', [0.06, -0.09, 0.018, 0.12, -0.07, 0.021]);
+    pad.position.set(cx, t.min.y + 0.1, cz);
+    pad.rotation.x = -1.0;
+    g.add(pad);
+    block(g, 'paperShade', [cx + 0.18, t.min.y, cz - 0.1, cx + 0.3, t.min.y + 0.012, cz + 0.02]);
+    return;
+  }
+  if (tier === 2) {
+    // A monitor on a neck, and a keyboard lying in front of it.
+    block(g, 'ink', [cx - 0.12, t.min.y, cz - 0.05, cx + 0.12, t.min.y + 0.03, cz + 0.07]);
+    block(g, 'inkSoft', [cx - 0.03, t.min.y + 0.03, cz - 0.01, cx + 0.03, t.min.y + 0.2, cz + 0.02]);
+    const screen = new THREE.Group();
+    block(screen, 'ink', [-0.27, -0.16, -0.015, 0.27, 0.16, 0.015]);
+    block(screen, 'tealDark', [-0.25, -0.14, 0.015, 0.25, 0.14, 0.02]);
+    block(screen, 'mustard', [-0.22, 0.07, 0.02, -0.04, 0.095, 0.022]);
+    for (let i = 0; i < 3; i++) block(screen, 'tealLight', [-0.22, 0.03 - i * 0.045, 0.02, 0.12 - i * 0.05, 0.048 - i * 0.045, 0.022]);
+    block(screen, 'pink', [0.14, -0.12, 0.02, 0.22, 0.04, 0.022]);
+    screen.position.set(cx, t.min.y + 0.36, cz + 0.02);
+    screen.rotation.x = -0.12;
+    g.add(screen);
+    block(g, 'inkSoft', [cx - 0.2, t.min.y, cz + 0.14, cx + 0.2, t.min.y + 0.025, cz + 0.24]);
+    block(g, 'paperShade', [cx - 0.18, t.min.y + 0.025, cz + 0.15, cx + 0.18, t.min.y + 0.03, cz + 0.23]);
+    return;
+  }
+  // Tablet (POS) on a stand, tilted towards the player.
+  block(g, 'ink', [t.min.x + 0.15, t.min.y, t.min.z + 0.06, t.max.x - 0.15, t.min.y + 0.08, t.max.z - 0.06]);
+  const tablet = new THREE.Group();
+  block(tablet, 'ink', [-0.18, -0.12, -0.012, 0.18, 0.12, 0.012]);
+  block(tablet, 'tealDark', [-0.16, -0.1, 0.012, 0.16, 0.1, 0.016]);
+  block(tablet, 'mustard', [-0.13, 0.05, 0.016, -0.02, 0.065, 0.018]);
+  block(tablet, 'tealLight', [-0.13, 0.02, 0.016, 0.1, 0.03, 0.018]);
+  block(tablet, 'tealLight', [-0.13, -0.01, 0.016, 0.06, 0.0, 0.018]);
+  tablet.position.set(cx, t.min.y + 0.14, cz);
+  tablet.rotation.x = -0.5;
+  g.add(tablet);
+}
+
+/**
+ * The menu board by state (9.7): 0 worn (faded, scribbled, a curling corner), 1 clean (black
+ * board, plain lines), 2 good (coloured heading and prices), 3 modern (a glowing screen menu).
+ */
+function menuBoard(g: THREE.Group): void {
+  const tier = truckLook().board;
+  const m = LAYOUT.menuBoard;
+  const frame = tier === 3 ? 'white' : 'woodDark';
+  block(g, frame, [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
+  const face = tier === 0 ? 'paperShade' : tier === 3 ? 'inkSoft' : 'ink';
+  block(g, face, [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z - 0.005]);
+  const z0 = m.min.z - 0.03;
+  const z1 = m.min.z - 0.02;
+  if (tier === 0) {
+    // Faint scribbles, a stain and a torn-off corner.
+    for (let i = 0; i < 4; i++) block(g, 'inkSoft', [m.min.x + 0.08, m.max.y - 0.2 - i * 0.13, z0, m.min.x + 0.3 + (i % 3) * 0.14, m.max.y - 0.17 - i * 0.13, z1]);
+    block(g, 'wood', [m.min.x + 0.45, m.min.y + 0.15, z0, m.min.x + 0.7, m.min.y + 0.3, z1]);
+    block(g, 'woodDark', [m.max.x - 0.12, m.max.y - 0.12, z0, m.max.x, m.max.y, z1]);
+    return;
+  }
+  if (tier === 1) {
+    for (let i = 0; i < 5; i++) block(g, 'paper', [m.min.x + 0.08, m.max.y - 0.2 - i * 0.12, z0, m.min.x + 0.45 + (i % 3) * 0.12, m.max.y - 0.17 - i * 0.12, z1]);
+    return;
+  }
+  block(g, tier === 3 ? 'tealLight' : 'mustard', [m.min.x + 0.2, m.max.y - 0.14, z0, m.max.x - 0.2, m.max.y - 0.1, z1]);
+  for (let i = 0; i < 5; i++) {
+    const y = m.max.y - 0.24 - i * 0.1;
+    block(g, tier === 3 ? 'tealLight' : 'paper', [m.min.x + 0.08, y, z0, m.min.x + 0.45 + (i % 3) * 0.12, y + 0.03, z1]);
+    block(g, i % 2 ? 'pink' : tier === 3 ? 'mustard' : 'tealLight', [m.max.x - 0.22, y, z0, m.max.x - 0.08, y + 0.03, z1]);
+  }
+  if (tier === 3) block(g, 'tealLight', [m.min.x + 0.02, m.min.y + 0.02, z0, m.max.x - 0.02, m.min.y + 0.05, z1]);
+}
+
 export function buildTruck(): THREE.Group {
   const g = new THREE.Group();
   const w = LAYOUT.window;
@@ -120,18 +205,7 @@ export function buildTruck(): THREE.Group {
   block(g, 'white', [fc.min.x - 0.02, fc.max.y - 0.04, fc.min.z - 0.05, fc.max.x + 0.02, fc.max.y, fc.max.z + 0.03]);
   for (let x = fc.min.x + 0.1; x < fc.max.x - 0.5; x += 0.6) block(g, 'woodDark', [x, 0.12, fc.max.z, x + 0.5, 0.8, fc.max.z + 0.01]);
 
-  // Tablet (POS) on a stand, tilted towards the player.
-  const t = LAYOUT.tablet;
-  block(g, 'ink', [t.min.x + 0.15, t.min.y, t.min.z + 0.06, t.max.x - 0.15, t.min.y + 0.08, t.max.z - 0.06]);
-  const tablet = new THREE.Group();
-  block(tablet, 'ink', [-0.18, -0.12, -0.012, 0.18, 0.12, 0.012]);
-  block(tablet, 'tealDark', [-0.16, -0.1, 0.012, 0.16, 0.1, 0.016]);
-  block(tablet, 'mustard', [-0.13, 0.05, 0.016, -0.02, 0.065, 0.018]);
-  block(tablet, 'tealLight', [-0.13, 0.02, 0.016, 0.1, 0.03, 0.018]);
-  block(tablet, 'tealLight', [-0.13, -0.01, 0.016, 0.06, 0.0, 0.018]);
-  tablet.position.set((t.min.x + t.max.x) / 2, t.min.y + 0.14, (t.min.z + t.max.z) / 2);
-  tablet.rotation.x = -0.5;
-  g.add(tablet);
+  till(g);
 
   // Tip jar and a potted plant.
   const j = LAYOUT.tipJar;
@@ -184,15 +258,7 @@ export function buildTruck(): THREE.Group {
   const c = LAYOUT.coffeeMachine;
   espressoMachine(g, c);
   plants(g);
-  const m = LAYOUT.menuBoard;
-  block(g, 'woodDark', [m.min.x - 0.04, m.min.y - 0.04, m.min.z - 0.01, m.max.x + 0.04, m.max.y + 0.04, m.max.z]);
-  block(g, 'ink', [m.min.x, m.min.y, m.min.z - 0.02, m.max.x, m.max.y, m.max.z - 0.005]);
-  block(g, 'mustard', [m.min.x + 0.2, m.max.y - 0.14, m.min.z - 0.03, m.max.x - 0.2, m.max.y - 0.1, m.min.z - 0.02]);
-  for (let i = 0; i < 5; i++) {
-    const y = m.max.y - 0.24 - i * 0.1;
-    block(g, 'paper', [m.min.x + 0.08, y, m.min.z - 0.03, m.min.x + 0.45 + (i % 3) * 0.12, y + 0.03, m.min.z - 0.02]);
-    block(g, i % 2 ? 'pink' : 'tealLight', [m.max.x - 0.22, y, m.min.z - 0.03, m.max.x - 0.08, y + 0.03, m.min.z - 0.02]);
-  }
+  menuBoard(g);
   const r = LAYOUT.recipeShelf;
   block(g, 'woodDark', [r.min.x - 0.05, r.min.y - 0.04, r.min.z, r.max.x + 0.05, r.min.y, r.max.z]);
   const binders: Ink[] = ['red', 'teal', 'mustard', 'red', 'inkSoft', 'teal'];
